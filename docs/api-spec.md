@@ -34,14 +34,14 @@
     - 성공: HTTP 204 No Content
     - 실패
     
-    | **상황** | **HTTP Status** | **detail 메시지 예시** |
+    | **상황** | **HTTP Status** | **detail 메시지** |
     | --- | --- | --- |
     | 이메일 중복 | 409 Conflict | "Email already registered" |
     | 아이디 중복 | 409 Conflict | "Username already taken" |
     | 요청값 누락/
     형식 오류 | 400 Bad Request | "Missing or invalid fields" |
     | 비밀번호 형식 불일치 | 400 Bad Request | "Password does not meet security requirements" |
-    | 서버 오류 | 500 Internal Server Error | "Internal server error" |
+    | 서버 내부 오류 | 500 Internal Server Error | "Unexpected server error" |
 </aside>
 
 <aside>
@@ -67,18 +67,19 @@
     
     ```json
     {
-      "access_token": "jwt_token_here",
+      "access_token": "jwt_access_token_here",
+      "refresh_token": "jwt_refresh_token_here",
       "token_type": "bearer"
     }
     ```
     
     - 실패
     
-    | **상황** | **HTTP Status** | **detail 메시지 예시** |
+    | **상황** | **HTTP Status** | **detail 메시지** |
     | --- | --- | --- |
     | 아이디 또는 비밀번호 오류 | 401 Unauthorized | "Invalid username or password" |
     | 요청값 누락/형식 오류 | 400 Bad Request | "Missing username or password" |
-    | 서버 오류 | 500 Internal Server Error | "Internal server error" |
+    | 서버 내부 오류 | 500 Internal Server Error | "Unexpected server error" |
 </aside>
 
 <aside>
@@ -104,21 +105,60 @@
     
     ```json
     {
-      "access_token": "jwt_token_here",
+      "access_token": "jwt_access_token_here",
+      "refresh_token": "jwt_refresh_token_here",
       "token_type": "bearer"
     }
     ```
     
     - 실패
     
-    | **상황** | **HTTP Status** | **detail 메시지 예시** |
+    | **상황** | **HTTP Status** | **detail 메시지** |
     | --- | --- | --- |
     | 지원하지 않는 provider | 400 Bad Request | "Unsupported provider" |
-    | social_token 누락 또는 비어있음 | 400 Bad Request | "Missing social token" |
-    | provider 누락 또는 비어있음 | 400 Bad Request | "Missing provider" |
+    | social_token 누락 | 400 Bad Request | "Missing social token" |
+    | provider 누락 | 400 Bad Request | "Missing provider" |
     | 소셜 서버 검증 실패 | 401 Unauthorized | "Invalid social token" |
     | 소셜 서버 응답 오류 | 502 Bad Gateway | "Social server error" |
-    | 서버 내부 오류 | 500 Internal Server Error | "Internal server error" |
+    | 서버 내부 오류 | 500 Internal Server Error | "Unexpected server error" |
+</aside>
+
+<aside>
+
+### [POST]  /auth/token/refresh
+
+- 클라이언트에서 Refresh Token을 보내면 새 Access Token 발급
+- 다른 엔드포인트에서 Access Token이 만료되어 401 “Expired token”이 발생할 경우, 이 엔드포인트로 재발급받고 다시 요청해야 함
+- **요청**
+    - Content-Type: application/json
+    - Request Body 예시
+    
+    ```json
+    {
+      "refresh_token": "refresh_token_here"
+    }
+    ```
+    
+- **응답 예시**
+    - 성공: HTTP 200 OK
+    - 응답 데이터 예시
+    
+    ```json
+    {
+      "access_token": "new_access_token_here",
+      "token_type": "bearer"
+    }
+    ```
+    
+    - 실패
+    
+    | **상황** | **HTTP Status** | **detail 메시지** |
+    | --- | --- | --- |
+    | Refresh Token 누락 | 400 Bad Request | "Missing refresh token" |
+    | 형식 오류 또는 인증 실패 | 401 Unauthorized | "Invalid token" |
+    | Refresh Token 만료됨 | 401 Unauthorized | "Expired token" |
+    | Refresh Token 폐기됨 | 403 Forbidden | "Revoked token" |
+    | 서버 오류 | 500 Internal Server Error | "Unexpected server error" |
 </aside>
 
 <aside>
@@ -147,13 +187,12 @@
     
     - 실패
     
-    | **상황** | **HTTP Status** | **detail 메시지 예시** |
+    | **상황** | **HTTP Status** | **detail 메시지** |
     | --- | --- | --- |
-    | Authorization 헤더 누락 | 401 Unauthorized | "Missing access token" |
-    | 토큰 형식 오류 | 401 Unauthorized | "Invalid token format" |
-    | 토큰 만료 | 401 Unauthorized | "Expired access token" |
-    | 토큰 검증 실패(위조 등) | 401 Unauthorized | "Invalid access token" |
-    | 서버 내부 오류 | 500 Internal Server Error | "Internal server error" |
+    | 토큰 누락 | 401 Unauthorized | “Missing token” |
+    | 토큰 형식 오류 또는 검증 실패 | 401 Unauthorized | “Invalid token” |
+    | 토큰 만료됨 | 401 Unauthorized | “Expired token” |
+    | 서버 내부 오류 | 500 Internal Server Error | "Unexpected server error" |
 </aside>
 
 <aside>
@@ -176,11 +215,11 @@
     - 성공: HTTP 204 No Content
     - 실패
     
-    | **상황** | **HTTP Status** | **detail 메시지 예시** |
+    | **상황** | **HTTP Status** | **detail 메시지** |
     | --- | --- | --- |
     | 이메일 포맷 오류 | 400 Bad Request | "Invalid email format" |
     | 요청값 누락 | 400 Bad Request | "Missing email" |
-    | 서버 내부 오류 | 500 Internal Server Error | "Internal server error" |
+    | 서버 내부 오류 | 500 Internal Server Error | "Unexpected server error" |
 </aside>
 
 <aside>
@@ -203,13 +242,13 @@
     - 성공: HTTP 204 No Content
     - 실패
     
-    | **상황** | **HTTP Status** | **detail 메시지 예시** |
+    | **상황** | **HTTP Status** | **detail 메시지** |
     | --- | --- | --- |
-    | token 누락 | 400 Bad Request | "Missing token" |
-    | token 형식 오류/만료/검증 실패 | 401 Unauthorized | "Invalid or expired token" |
+    | 토큰 누락 | 400 Bad Request | "Missing token" |
+    | 토큰 형식 오류, 만료, 검증 실패 | 401 Unauthorized | "Invalid or expired token" |
     | new_password 누락 | 400 Bad Request | "Missing new password" |
     | 비밀번호 형식 불일치 | 400 Bad Request | "Password does not meet security requirements" |
-    | 서버 내부 오류 | 500 Internal Server Error | "Internal server error" |
+    | 서버 내부 오류 | 500 Internal Server Error | "Unexpected server error” |
 </aside>
 
 <aside>
@@ -238,12 +277,15 @@
     - 성공: HTTP 204 No Content
     - 실패
     
-    | **상황** | **HTTP Status** | **detail 메시지 예시** |
+    | **상황** | **HTTP Status** | **detail 메시지** |
     | --- | --- | --- |
-    | old_password 또는 new_password 누락 | 400 Bad Request | "Missing password fields" |
-    | 비밀번호 형식 불일치 | 400 Bad Request | "Password does not meet security requirements" |
-    | 인증 실패(기존 비밀번호 틀림) | 401 Unauthorized | "Invalid current password" |
-    | 서버 내부 오류 | 500 Internal Server Error | "Internal server error" |
+    | 토큰 누락 | 401 Unauthorized | “Missing token” |
+    | 토큰 형식 오류 또는 검증 실패 | 401 Unauthorized | “Invalid token” |
+    | 토큰 만료됨 | 401 Unauthorized | “Expired token” |
+    | old_password 또는 new_password 누락 | 400 Bad Request | “Missing password fields” |
+    | 비밀번호 형식 불일치 | 400 Bad Request | “Password does not meet security requirements” |
+    | 인증 실패(기존 비밀번호 틀림) | 401 Unauthorized | “Invalid current password” |
+    | 서버 내부 오류 | 500 Internal Server Error | "Unexpected server error" |
 </aside>
 
 <aside>
@@ -262,13 +304,13 @@
     - 성공: HTTP 204 No Content
     - 실패
     
-    | **상황** | **HTTP Status** | **detail 메시지 예시** |
+    | **상황** | **HTTP Status** | **detail 메시지** |
     | --- | --- | --- |
-    | Authorization 헤더 누락 | 401 Unauthorized | "Missing access token" |
-    | 토큰 형식 오류 | 401 Unauthorized | "Invalid token format" |
-    | 토큰 만료 또는 검증 실패 | 401 Unauthorized | "Invalid or expired token" |
-    | 사용자 정보 없음(DB 문제) | 500 Internal Server Error | "Internal server error" |
-    | 서버 내부 오류 | 500 Internal Server Error | "Internal server error" |
+    | 토큰 누락 | 401 Unauthorized | “Missing token” |
+    | 토큰 형식 오류 또는 검증 실패 | 401 Unauthorized | “Invalid token” |
+    | 토큰 만료됨 | 401 Unauthorized | “Expired token” |
+    | 사용자 정보 없음(DB 문제) | 500 Internal Server Error | “User not found” |
+    | 서버 내부 오류 | 500 Internal Server Error | "Unexpected server error" |
 </aside>
 
 ---
@@ -291,19 +333,21 @@
     Authorization: Bearer <access_token>
     ```
     
-    - Content-Type: multipart/form-data
+    - **Content-Type: multipart/form-data**
     - Field name: audio_file
 - **응답**
     - 성공: HTTP 202 Accepted
     - 실패
     
-    | **상황** | **HTTP Status** | **detail 메시지 예시** |
+    | **상황** | **HTTP Status** | **detail 메시지** |
     | --- | --- | --- |
+    | 토큰 누락 | 401 Unauthorized | “Missing token” |
+    | 토큰 형식 오류 또는 검증 실패 | 401 Unauthorized | “Invalid token” |
+    | 토큰 만료됨 | 401 Unauthorized | “Expired token” |
     | 파일 누락 또는 필드 오류 | 400 Bad Request | “Missing or invalid audio file” |
     | 허용되지 않는 파일 형식 | 415 Unsupported Media Type | “Unsupported audio format” |
     | 파일 용량 초과 | 413 Payload Too Large | “Audio file is too large” |
-    | 인증 실패 | 401 Unauthorized | “Missing or invalid access token” |
-    | 서버 오류 | 500 Internal Server Error | “Internal server error” |
+    | 서버 내부 오류 | 500 Internal Server Error | "Unexpected server error" |
 </aside>
 
 <aside>
@@ -338,11 +382,13 @@
     
     - 실패
     
-    | **상황** | **HTTP Status** | **detail 메시지 예시** |
+    | **상황** | **HTTP Status** | **detail 메시지** |
     | --- | --- | --- |
-    | 인증 실패 | 401 Unauthorized | “Missing or invalid access token” |
+    | 토큰 누락 | 401 Unauthorized | “Missing token” |
+    | 토큰 형식 오류 또는 검증 실패 | 401 Unauthorized | “Invalid token” |
+    | 토큰 만료됨 | 401 Unauthorized | “Expired token” |
     | 업로드 요청 없음 또는 만료됨 | 404 Not Found | “No audio data for this user” |
-    | 서버 오류 | 500 Internal Server Error | “Internal server error” |
+    | 서버 내부 오류 | 500 Internal Server Error | "Unexpected server error" |
 </aside>
 
 <aside>
@@ -365,12 +411,14 @@
     - 성공: HTTP 204 No Content
     - 실패
     
-    | **상황** | **HTTP Status** | **detail 메시지 예시** |
+    | **상황** | **HTTP Status** | **detail 메시지** |
     | --- | --- | --- |
+    | 토큰 누락 | 401 Unauthorized | “Missing token” |
+    | 토큰 형식 오류 또는 검증 실패 | 401 Unauthorized | “Invalid token” |
+    | 토큰 만료됨 | 401 Unauthorized | “Expired token” |
     | 취소 가능한 상태가 아님 | 409 Conflict | “Cannot cancel at this stage” |
     | 업로드 요청 없음 또는 이미 만료됨 | 404 Not Found | “No audio data for this user” |
-    | 인증 실패 | 401 Unauthorized | “Missing or invalid access token” |
-    | 서버 오류 | 500 Internal Server Error | “Internal server error” |
+    | 서버 내부 오류 | 500 Internal Server Error | "Unexpected server error" |
 </aside>
 
 <aside>
@@ -392,12 +440,14 @@
     - 성공: HTTP 202 Accepted
     - 실패
     
-    | **상황** | **HTTP Status** | **detail 메시지 예시** |
+    | **상황** | **HTTP Status** | **detail 메시지** |
     | --- | --- | --- |
+    | 토큰 누락 | 401 Unauthorized | “Missing token” |
+    | 토큰 형식 오류 또는 검증 실패 | 401 Unauthorized | “Invalid token” |
+    | 토큰 만료됨 | 401 Unauthorized | “Expired token” |
     | 음성 업로드 또는 텍스트 변환 미완료/실패 | 409 Conflict | “Transcription not ready” |
-    | 인증 실패 | 401 Unauthorized | “Missing or invalid access token” |
     | 음성 업로드 요청 없음 또는 만료됨 | 404 Not Found | “No audio data for this user” |
-    | 서버 오류 | 500 Internal Server Error | “Internal server error” |
+    | 서버 내부 오류 | 500 Internal Server Error | "Unexpected server error" |
 </aside>
 
 <aside>
@@ -411,14 +461,14 @@
     3. “failed”
     4. “cancelled”
 - 생성 완료 시 contract_id 반환
-- 요청
+- **요청**
     - Request Header
     
     ```json
     Authorization: Bearer <access_token>
     ```
     
-- 응답
+- **응답**
     - 성공: HTTP 200 OK
     - 응답 데이터 예시
     
@@ -437,11 +487,13 @@
     
     - 실패
     
-    | **상황** | **HTTP Status** | **detail 메시지 예시** |
+    | **상황** | **HTTP Status** | **detail 메시지** |
     | --- | --- | --- |
+    | 토큰 누락 | 401 Unauthorized | “Missing token” |
+    | 토큰 형식 오류 또는 검증 실패 | 401 Unauthorized | “Invalid token” |
+    | 토큰 만료됨 | 401 Unauthorized | “Expired token” |
     | 생성 요청 없음 또는 만료됨 | 404 Not Found | “No contract generation in progress” |
-    | 인증 실패 | 401 Unauthorized | “Missing or invalid access token” |
-    | 서버 오류 | 500 Internal Server Error | “Internal server error” |
+    | 서버 내부 오류 | 500 Internal Server Error | "Unexpected server error" |
 </aside>
 
 <aside>
@@ -461,12 +513,14 @@
     - 성공: HTTP 204 No Content
     - 실패
     
-    | **상황** | **HTTP Status** | **detail 메시지 예시** |
+    | **상황** | **HTTP Status** | **detail 메시지** |
     | --- | --- | --- |
+    | 토큰 누락 | 401 Unauthorized | “Missing token” |
+    | 토큰 형식 오류 또는 검증 실패 | 401 Unauthorized | “Invalid token” |
+    | 토큰 만료됨 | 401 Unauthorized | “Expired token” |
     | 생성 요청이 없거나 만료됨 | 404 Not Found | “No contract generation in progress” |
     | 이미 완료되었거나 취소 불가능한 상태 | 409 Conflict | “Cannot cancel generation at this stage” |
-    | 인증 실패 | 401 Unauthorized | “Missing or invalid access token” |
-    | 서버 오류 | 500 Internal Server Error | “Internal server error” |
+    | 서버 내부 오류 | 500 Internal Server Error | "Unexpected server error" |
 </aside>
 
 ---
@@ -477,18 +531,96 @@
 
 ### [GET]  /contracts
 
-- 사용자가 생성한 계약서 목록 및 각각의 메타데이터 조회
-- 요청
-- 응답
+- 사용자가 생성한 계약서 목록 조회
+- 각 계약서는 생성일 기준으로 최신순 정렬됨
+- **요청**
+    - Request Header
+    
+    ```json
+    Authorization: Bearer <access_token>
+    ```
+    
+- **응답**
+    - 성공: HTTP 200 OK
+    - 응답 데이터 예시
+    
+    ```json
+    [
+      {
+        "id": "contract_uuid_1",
+        "contract_type": "고용",
+        "generation_status": "done",
+        "created_at": "2024-05-01T12:00:00Z",
+        "updated_at": "2024-05-02T15:30:00Z"
+      },
+      {
+        "id": "contract_uuid_2",
+        "contract_type": "매매",
+        "generation_status": "done",
+        "created_at": "2024-04-25T09:10:00Z",
+        "updated_at": "2024-04-25T09:20:00Z"
+      }
+    ]
+    ```
+    
+    - 실패
+    
+    | **상황** | **HTTP Status** | **detail 메시지** |
+    | --- | --- | --- |
+    | 토큰 누락 | 401 Unauthorized | “Missing token” |
+    | 토큰 형식 오류 또는 검증 실패 | 401 Unauthorized | “Invalid token” |
+    | 토큰 만료됨 | 401 Unauthorized | “Expired token” |
+    | DB 조회 실패 | 500 Internal Server Error | “Database query failed” |
+    | 서버 내부 오류 | 500 Internal Server Error | “Unexpected server error” |
 </aside>
 
 <aside>
 
 ### [GET]  /contracts/{contract_id}
 
-- 저장된 특정 계약서 내용 상세 조회 (JSON 데이터)
-- 요청
-- 응답
+- 특정 계약서 내용 상세 조회 (JSON 데이터)
+- **요청**
+    - Request Header
+    
+    ```json
+    Authorization: Bearer <access_token>
+    ```
+    
+- **응답**
+    - 성공: HTTP 200 OK
+    - 계약서 데이터(contents)는 **계약서 규격화** 페이지의 정의된 형식을 따름
+    - 응답 데이터 예시
+    
+    ```json
+    {
+      "contract_type": "고용",
+      "contents": {
+        "contract_type": "근로계약서",
+        "employer": {
+          "company_name": "ABC 주식회사",
+          "representative_name": "홍길동"
+        },
+        "employee": {
+          "name": "김영희",
+          "resident_number": "900101-1234567"
+        },
+        ...
+      },
+      "created_at": "2024-05-01T12:00:00Z",
+      "updated_at": "2024-05-02T15:30:00Z",
+    }
+    ```
+    
+    - 실패
+    
+    | **상황** | **HTTP Status** | **detail 메시지** |
+    | --- | --- | --- |
+    | 토큰 누락 | 401 Unauthorized | “Missing token” |
+    | 토큰 형식 오류 또는 검증 실패 | 401 Unauthorized | “Invalid token” |
+    | 토큰 만료됨 | 401 Unauthorized | “Expired token” |
+    | 존재하지 않는 계약서 | 404 Not Found | “Contract not found” |
+    | DB 조회 실패 | 500 Internal Server Error | “Database query failed” |
+    | 서버 내부 오류 | 500 Internal Server Error | “Unexpected server error” |
 </aside>
 
 <aside>
@@ -496,8 +628,104 @@
 ### [PUT]  /contracts/{contract_id}
 
 - 특정 계약서 내용 수정 및 저장
-- 요청
-- 응답
+- 프론트엔드에서는 수정한 계약서 JSON 전송
+- **요청**
+    - Request Header
+    
+    ```json
+    Authorization: Bearer <access_token>
+    ```
+    
+    - Content-Type: application/json
+    - Request Body 예시
+    
+    ```json
+    {
+      "contents": { ... }  // 수정된 전체 계약서 JSON
+    }
+    ```
+    
+- **응답**
+    - 성공: HTTP 204 No Content
+    - 실패
+    
+    | **상황** | **HTTP Status** | **detail 메시지** |
+    | --- | --- | --- |
+    | 토큰 누락 | 401 Unauthorized | “Missing token” |
+    | 토큰 형식 오류 또는 검증 실패 | 401 Unauthorized | “Invalid token” |
+    | 토큰 만료됨 | 401 Unauthorized | “Expired token” |
+    | 대상 계약서가 존재하지 않음 | 404 Not Found | “Contract not found” |
+    | 계약서 JSON 형식 오류 또는 필드 누락 | 400 Bad Request | “Missing or invalid contract fields” |
+    | DB 저장 실패 | 500 Internal Server Error | “Database update failed” |
+    | 서버 내부 오류 | 500 Internal Server Error | “Unexpected server error” |
+</aside>
+
+<aside>
+
+### [GET]  /contracts/{contract_id}/suggestions
+
+- 초기 계약서 생성 시의 빈 필드에 대한 GPT 제안 텍스트 조회
+- 프론트엔드에서는 해당 필드가 비어 있고 제안이 존재하면 표시
+- **요청**
+    - Request Header
+    
+    ```json
+    Authorization: Bearer <access_token>
+    ```
+    
+- **응답**
+    - 성공: HTTP 200 OK
+    - Content-Type: application/json
+    - 응답 데이터 예시
+    
+    ```json
+    [
+      {
+        "field_path": "wage_details.wage_amount"
+        "suggestion_text": "2025년 최저임금은 시간당 10,030원입니다"
+      },
+      ...
+    ]
+    ```
+    
+    - 실패
+    
+    | **상황** | **HTTP Status** | **detail 메시지** |
+    | --- | --- | --- |
+    | 토큰 누락 | 401 Unauthorized | "Missing token" |
+    | 토큰 형식 오류 또는 검증 실패 | 401 Unauthorized | "Invalid token" |
+    | 토큰 만료됨 | 401 Unauthorized | “Expired token” |
+    | 대상 계약서가 존재하지 않음 | 404 Not Found | "Contract not found" |
+    | DB 조회 실패 | 500 Internal Server Error | "Database query failed" |
+    | 기타 서버 오류 | 500 Internal Server Error | "Unexpected server error" |
+</aside>
+
+<aside>
+
+### [POST]  /contracts/{contract_id}/restore
+
+- 최초 생성된 버전(initial_contents)으로 계약서 내용 되돌리기
+- 최초 버전으로 덮어쓴 이후에는 되돌릴 수 없음
+- **요청**
+    - Request Header
+    
+    ```json
+    Authorization: Bearer <access_token>
+    ```
+    
+- **응답**
+    - 성공: HTTP 204 No Content
+    - 실패
+    
+    | **상황** | **HTTP Status** | **detail 메시지** |
+    | --- | --- | --- |
+    | 토큰 누락 | 401 Unauthorized | "Missing token" |
+    | 토큰 형식 오류 또는 검증 실패 | 401 Unauthorized | "Invalid token" |
+    | 토큰 만료됨 | 401 Unauthorized | “Expired token” |
+    | 대상 계약서가 존재하지 않음 | 404 Not Found | "Contract not found" |
+    | 초기 생성본 없음 | 500 Internal Server Error | "Initial contents missing" |
+    | DB 저장 실패 | 500 Internal Server Error | "Database update failed" |
+    | 기타 서버 오류 | 500 Internal Server Error | "Unexpected server error" |
 </aside>
 
 <aside>
@@ -505,8 +733,23 @@
 ### [DELETE]  /contracts/{contract_id}
 
 - 특정 계약서 삭제
-- 요청
-- 응답
+- **요청**
+    - Request Header
+    
+    ```json
+    Authorization: Bearer <access_token>
+    ```
+    
+- **응답**
+    - 성공: HTTP 204 No Content
+    - 실패
+    
+    | **상황** | **HTTP Status** | **detail 메시지** |
+    | --- | --- | --- |
+    | 토큰 누락 | 401 Unauthorized | “Missing token” |
+    | 토큰 형식 오류 또는 검증 실패 | 401 Unauthorized | “Invalid token” |
+    | 토큰 만료됨 | 401 Unauthorized | “Expired token” |
+    | 대상 계약서가 존재하지 않음 | 404 Not Found | “Contract not found” |
+    | DB 삭제 실패 | 500 Internal Server Error | “Database update failed” |
+    | 서버 내부 예외 | 500 Internal Server Error | “Unexpected server error” |
 </aside>
-
----
