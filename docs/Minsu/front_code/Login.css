@@ -1,0 +1,90 @@
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+  
+  .login-box {
+    background-color: white;
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    width: 360px;
+  }
+  
+  .input-group {
+    margin-bottom: 20px;
+  }
+  
+  .input-group label {
+    font-size: 14px;
+    margin-bottom: 5px;
+    display: block;
+  }
+  
+  .input-icon {
+    display: flex;
+    align-items: center;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 10px;
+  }
+  
+  .input-icon span {
+    margin-right: 10px;
+  }
+  
+  .input-icon input {
+    border: none;
+    outline: none;
+    flex: 1;
+  }
+  
+  .find-password {
+    text-align: right;
+    margin-top: 5px;
+    font-size: 12px;
+  }
+  
+  .btn {
+    width: 100%;
+    padding: 12px;
+    margin-top: 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .login-btn {
+    background-color: #f0f0f0;
+  }
+  
+  .google-btn {
+    background-color: #f0f0f0;
+    border: 1px solid #ddd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  
+  .google-btn img {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .signup-btn {
+    background-color: #f0f0f0;
+    margin-top: 7px;
+  }
+  
+  .user_icon{
+    width: 25px;
+    height: 25px;
+  }
+
+  .password_icon{
+    font-size: 20px;
+  }
+  
