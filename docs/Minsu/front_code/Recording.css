@@ -1,0 +1,74 @@
+.recording-container {
+    background-color: #eee;
+    min-height: 100vh;
+    padding: 20px;
+  }
+  
+  .recording-title {
+    font-size: 14px;
+    color: #777;
+    margin-bottom: 10px;
+  }
+  
+  .recording-content {
+    background-color: #fff;
+    border-radius: 8px;
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 60px;
+    font-family: sans-serif;
+  }
+  
+  .listening-text {
+    font-size: 22px;
+    font-weight: 500;
+  }
+  
+  .mic-section {
+    text-align: center;
+  }
+  
+  .mic-icon {
+    font-size: 42px;
+    background-color: #fcfafa;
+    border-radius: 50%;
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: auto;
+  }
+  
+  .timer {
+    margin-top: 10px;
+    font-size: 20px;
+  }
+  
+  .recording-buttons {
+    text-align: center;
+    margin-top: 20px;
+  }
+  
+  .stop-btn, .finish-btn {
+    padding: 10px 20px;
+    font-size: 16px;
+    margin: 5px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .stop-btn {
+    background-color: #ff4c4c;
+    color: white;
+  }
+  
+  .finish-btn {
+    background-color: #4caf50;
+    color: white;
+  }
+
+  
