@@ -1,0 +1,27 @@
+.converting-container {
+    background-color: #eee;
+    min-height: 100vh;
+    padding: 20px;
+    font-family: sans-serif;
+  }
+  
+  .top-text {
+    font-size: 13px;
+    color: #777;
+    margin-bottom: 15px;
+  }
+  .exchange_icon{
+    width: 100px;
+    height: 100px;
+  }
+  .center-content {
+    background-color: white;
+    border-radius: 10px;
+    padding: 80px;
+    text-align: center;
+  }
+  
+  .arrows {
+    font-size: 40px;
+    margin-bottom: 20px;
+  }
