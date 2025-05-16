@@ -71,6 +71,13 @@ function Recording() {
         </div>
       </div>
 
+      {isStopped && audioBlob && (
+          <div className="preview-section">
+            <p>녹음 미리 듣기:</p>
+            <audio controls src={URL.createObjectURL(audioBlob)} />
+          </div>
+      )}
+      
       <div className="recording-buttons">
         {isRecording ? (
           <button className="stop-btn" onClick={stopRecording}>🟥 녹음 중단</button>

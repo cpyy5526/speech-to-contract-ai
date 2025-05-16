@@ -1,4 +1,4 @@
-/* 기본 레이아웃 */
+
 .home-container {
     display: flex;
     height: 100vh;
@@ -79,7 +79,7 @@
     color: #999;
   }
   
-  /* 메인 콘텐츠 */
+  
   .main-area {
     flex: 1;
     display: flex;
@@ -94,7 +94,7 @@
     margin-bottom: 60px;
   }
   
-  /* 녹음 안내 박스 */
+  
   .record-box {
     background-color: #eeeeee;
     border-radius: 10px;
@@ -117,7 +117,7 @@
     cursor: pointer;
   }
   
-  /* 하단 버튼 */
+ 
   .home-buttons {
     margin-top: 30px;
     display: flex;
