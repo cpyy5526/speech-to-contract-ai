@@ -5,7 +5,7 @@
     
   }
   
-  /* 왼쪽 네비게이션 */
+   왼쪽 네비게이션 
   .sidebar {
     width: 260px;
     background-color: #f3f4f5;
@@ -14,25 +14,25 @@
     flex-shrink: 0;
   }
   
-  /* 오른쪽 미리보기 영역 */
+  오른쪽 미리보기 영역 
   .preview-area {
     flex: 1;
     display: flex;
     flex-direction: column;
-    align-items: center; /* ✅ 중앙 정렬 */
+    align-items: center; 
     justify-content: start;
     padding: 40px;
     overflow-y: auto;
   }
   
-  /* 이미지 계약서 영역 */
+  이미지 계약서 영역 
   .contract-image-wrap {
     background-color: white;
     padding: 30px;
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    max-width: 800px;       /* ✅ 최대 너비 제한 */
-    width: 100%;            /* ✅ 반응형 대응 */
+    max-width: 800px;       
+    width: 100%;            
     text-align: center;
   }
   
@@ -42,7 +42,7 @@
     border-radius: 6px;
   }
   
-  /* 하단 다운로드 버튼 */
+   하단 다운로드 버튼 
   .download-button-wrap {
     margin-top: 20px;
   }
