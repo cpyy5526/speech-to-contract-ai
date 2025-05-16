@@ -4,6 +4,7 @@ import micIcon from "./images/mic_icon.png";
 import docIcon from "./images/doc_icon.png";
 import { auth, signOut } from "./firebase";
 import { useNavigate } from "react-router-dom";
+import { useRef } from "react";
 
 function Home() {
     const user = auth.currentUser;
@@ -16,7 +17,21 @@ function Home() {
         })
         .catch((err) => console.error("로그아웃 실패:", err));
     };
+
+    const fileInputRef = useRef();
+    const handleUploadClick = () => {
+      fileInputRef.current.click(); // input[type="file"] 
+    };
     
+    const handleFileChange = (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        console.log("선택된 파일:", file);
+        alert("파일 업로드 완료: " + file.name);
+        
+      }
+    };
+
   return (
     <div className="home-container">
           {/* 오른쪽 상단 사용자 정보 */}
@@ -49,7 +64,14 @@ function Home() {
           <p className="record-text">대화 내용의 녹음을 시작하거나 대화 내용 녹음 파일을 업로드해주세요</p>
           <div className="record-icons">
             <img src={micIcon} onClick={()=>navigate("/recording")} alt="Mic" />
-            <img src={docIcon} alt="Doc" />
+            <img src={docIcon} onClick={handleUploadClick} alt="Doc" />
+            <input
+              type="file"
+              accept="audio/*"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              style={{ display: "none" }}
+            />
           </div>
         </div>
 
