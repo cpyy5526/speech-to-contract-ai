@@ -7,6 +7,8 @@ backend/
 │   ├── __init__.py              # 패키지(app/) 인식용 파일
 │   │
 │   ├── core/                  # 서버 전반에서 사용하는 설정 및 공통 기능 모음
+│   │   ├── llm.py               # ChatGPT API 호출
+│   │   ├── stt.py               # STT API(OpenAI Whisper) 호출
 │   │   ├── config.py            # 환경 변수 및 설정값 로드 (.env 파일 불러오기 등)
 │   │   ├── security.py          # JWT 발급 및 검증, 비밀번호 암호화 관련 함수
 │   │   ├── dependencies.py      # 공통으로 필요한 객체(DB 세션, 사용자 정보 등) 주입 함수
