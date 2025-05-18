@@ -10,7 +10,7 @@ app/services/generations.py
 * contracts_contents / gpt_suggestions 테이블에 데이터 영속화
 * 생성 상태 조회‧취소 지원
 
-❗ 이 모듈은 GPT 호출을 직접 구현하지 않습니다.
+   이 모듈은 GPT 호출을 직접 구현하지 않습니다.
    프롬프트 팀 함수에 `call_gpt_api`(의존성 주입)만 전달합니다.
 """
 

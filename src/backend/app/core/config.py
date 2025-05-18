@@ -1,9 +1,8 @@
-# app/core/config.py
 """
 애플리케이션 전역 설정 모듈
 ==========================
 • .env 파일을 우선적으로 로드하여 환경변수를 읽어옵니다.
-• Pydantic BaseSettings **미사용**: 순수 파이썬 클래스로 선언합니다.
+• Pydantic BaseSettings(미사용): 순수 파이썬 클래스로 선언합니다.
 • settings = Settings()  단일 인스턴스를 내보내 FastAPI, Celery 등에서 import 하여 사용합니다.
 """
 
