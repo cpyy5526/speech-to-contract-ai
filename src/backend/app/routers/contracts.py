@@ -58,7 +58,7 @@ async def get_suggestions(contract_id: str, session: AsyncSession = Depends(get_
     except Exception:
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Unexpected server error")
 
-의
+
 @router.post("/{contract_id}/restore", status_code=status.HTTP_204_NO_CONTENT)
 async def restore_contract(contract_id: str, session: AsyncSession = Depends(get_session)):
     """

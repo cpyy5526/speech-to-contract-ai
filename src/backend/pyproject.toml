@@ -1,1 +1,35 @@
-.
+[tool.poetry]
+name = "ai-contract-generator"
+version = "0.1.0"
+description = "FastAPI + SQLModel + Celery 기반 음성-기반 계약서 자동 생성 백엔드"
+authors = ["Your Name <you@example.com>"]
+readme = "README.md"
+packages = [{ include = "app" }]
+python = ">=3.10,<3.12"
+
+[tool.poetry.dependencies]
+python = ">=3.10,<3.12"
+fastapi = "^0.110.0"
+uvicorn = { version = "^0.29.0", extras = ["standard"] }
+sqlmodel = "^0.0.16"
+sqlalchemy = "^2.0.30"
+asyncpg = "^0.29.0"
+celery = "^5.4.0"
+redis = "^5.0.0"
+openai = "^1.25.0"
+python-dotenv = "^1.0.1"
+python-jose = { version = "^3.3.0", extras = ["cryptography"] }
+bcrypt = "^4.1.2"
+aiofiles = "^23.2.0"
+pydantic = "^2.7.1"
+
+[tool.poetry.group.dev.dependencies]
+black = "^24.4.2"
+isort = "^5.13.2"
+ruff = "^0.4.7"
+pytest = "^8.1.1"
+pytest-asyncio = "^0.23.6"
+
+[build-system]
+requires = ["poetry-core>=1.8.0"]
+build-backend = "poetry.core.masonry.api"
