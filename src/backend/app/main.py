@@ -8,14 +8,13 @@ from app.core.config import settings  # noqa: F401  # (미사용 경고 방지)
 from app.db.init_db import init_db
 
 # 각 라우터 모듈
-from app.routers import transcriptions, generations, contracts
-from app.routers.auth import router as auth_router, user_router
+from app.routers import auth, contracts, generations, transcriptions
 
 
 # FastAPI 애플리케이션 인스턴스 -------------------------------------------------
 app = FastAPI(
-    title=getattr(settings, "PROJECT_NAME", "AI Contract Generation API"),
-    description="음성 기반 계약서 자동 생성 웹서비스 백엔드",
+    title=getattr(settings, "PROJECT_NAME", "speech-to-contract-ai"),
+    description="구두계약 음성 기반 계약서 생성 서비스 백엔드",
     version=getattr(settings, "VERSION", "0.1.0"),
 )
 
@@ -31,8 +30,8 @@ app.add_middleware(
 
 
 # 라우터 등록 --------------------------------------------------------------------
-app.include_router(auth_router)          # /auth
-app.include_router(user_router)          # /auth/user (prefix="/user")
+app.include_router(auth.router)            # /auth
+app.include_router(auth.user_router)       # /user
 app.include_router(transcriptions.router)
 app.include_router(generations.router)
 app.include_router(contracts.router)
@@ -41,7 +40,7 @@ app.include_router(contracts.router)
 # 애플리케이션 라이프사이클 -------------------------------------------------------
 @app.on_event("startup")
 async def _startup() -> None:
-    """애플리케이션 기동 시 1회 실행: 데이터베이스 초기화"""
+    """애플리케이션 시작 시 1회 실행: 데이터베이스 초기화"""
     await init_db()
 
 

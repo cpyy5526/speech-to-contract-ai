@@ -1,11 +1,9 @@
 [tool.poetry]
-name = "ai-contract-generator"
+name = "speech-to-contract-ai"
 version = "0.1.0"
-description = "FastAPI + SQLModel + Celery 기반 음성-기반 계약서 자동 생성 백엔드"
-authors = ["Your Name <you@example.com>"]
-readme = "README.md"
+description = "구두계약 음성 기반 계약서 생성 서비스 백엔드"
+authors = ["Minseok Kim <cpyy5526@knu.ac.kr>"]
 packages = [{ include = "app" }]
-python = ">=3.10,<3.12"
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.12"
