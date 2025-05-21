@@ -1,0 +1,162 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1000 1050">
+  <defs>
+    <style>
+      .box {
+        fill: #f0f8ff;
+        stroke: #4682b4;
+        stroke-width: 2;
+        rx: 10;
+        ry: 10;
+      }
+      .subgraph {
+        fill: #e6f3ff;
+        stroke: #6495ed;
+        stroke-width: 2;
+        stroke-dasharray: 5,3;
+        rx: 15;
+        ry: 15;
+      }
+      .arrow {
+        stroke: #4682b4;
+        stroke-width: 2;
+        fill: none;
+        marker-end: url(#arrowhead);
+      }
+      .dashed-arrow {
+        stroke: #4682b4;
+        stroke-width: 2;
+        stroke-dasharray: 5,3;
+        fill: none;
+        marker-end: url(#arrowhead);
+      }
+      .text {
+        font-family: Arial, sans-serif;
+        font-size: 14px;
+        fill: #333;
+        text-anchor: middle;
+      }
+      .title {
+        font-family: Arial, sans-serif;
+        font-size: 16px;
+        font-weight: bold;
+        fill: #2c3e50;
+        text-anchor: middle;
+      }
+      .condition {
+        fill: #ffe6cc;
+        stroke: #d79b00;
+        stroke-width: 2;
+      }
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#4682b4" />
+    </marker>
+  </defs>
+  
+  <rect x="10" y="10" width="980" height="1030" fill="#f9f9f9" rx="20" ry="20" />
+  <text x="500" y="40" class="title" font-size="24">음성 파일 처리 및 텍스트 전처리 흐름도</text>
+  
+  <!-- main() 함수 -->
+  <rect x="350" y="70" width="300" height="200" class="subgraph" />
+  <text x="500" y="90" class="title">main() 함수</text>
+  <rect x="400" y="100" width="200" height="30" class="box" />
+  <text x="500" y="120" class="text">시작</text>
+  <rect x="400" y="150" width="200" height="30" class="box" />
+  <text x="500" y="170" class="text">오디오 파일 로드</text>
+  <line x1="500" y1="130" x2="500" y2="150" class="arrow" />
+  <line x1="500" y1="180" x2="500" y2="200" class="arrow" />
+  <line x1="500" y1="230" x2="500" y2="250" class="arrow" />
+  
+  <!-- diarized_transcription() 함수 -->
+  <rect x="50" y="280" width="400" height="280" class="subgraph" />
+  <text x="250" y="300" class="title">diarized_transcription() 함수</text>
+  <rect x="100" y="320" width="300" height="30" class="box" />
+  <text x="250" y="340" class="text">audio_path 로드 (load_file 활용)</text>
+  <rect x="100" y="370" width="300" height="30" class="box" />
+  <text x="250" y="390" class="text">Whisper 모델 로드</text>
+  <rect x="100" y="420" width="300" height="30" class="box" />
+  <text x="250" y="440" class="text">오디오 파일 텍스트 변환</text>
+  <rect x="100" y="470" width="300" height="30" class="box" />
+  <text x="250" y="490" class="text">화자 분리 파이프라인 로드</text>
+  <rect x="100" y="520" width="300" height="30" class="box" />
+  <text x="250" y="540" class="text">텍스트와 화자 정보 매핑</text>
+  
+  <!-- data_preprocess() 함수 -->
+  <rect x="550" y="280" width="400" height="280" class="subgraph" />
+  <text x="750" y="300" class="title">data_preprocess() 함수</text>
+  <rect x="600" y="320" width="300" height="30" class="box" />
+  <text x="750" y="340" class="text">불용어 목록 로드</text>
+  <rect x="600" y="370" width="300" height="30" class="box" />
+  <text x="750" y="390" class="text">원본 텍스트 파일 로드</text>
+  <rect x="600" y="420" width="300" height="30" class="box" />
+  <text x="750" y="440" class="text">텍스트 청크 분할 및 맞춤법 교정</text>
+  <rect x="600" y="470" width="300" height="30" class="box" />
+  <text x="750" y="490" class="text">텍스트 정제 (clean_text)</text>
+  <rect x="600" y="520" width="300" height="30" class="box" />
+  <text x="750" y="540" class="text">불용어 제거 및 결과 저장</text>
+  
+  <!-- load_file() 함수 -->
+  <rect x="50" y="600" width="400" height="200" class="subgraph" />
+  <text x="250" y="620" class="title">load_file() 함수</text>
+  <rect x="100" y="640" width="300" height="30" class="box" />
+  <text x="250" y="660" class="text">기준 디렉토리 경로 구하기</text>
+  <rect x="100" y="690" width="300" height="30" class="box" />
+  <text x="250" y="710" class="text">파일 경로 조합</text>
+  <polygon points="250,740 350,770 250,800 150,770" class="condition" />
+  <text x="250" y="775" class="text">파일 존재 확인</text>
+  
+  <!-- load_stopwords_from_file() 함수 -->
+  <rect x="550" y="600" width="400" height="150" class="subgraph" />
+  <text x="750" y="620" class="title">load_stopwords_from_file() 함수</text>
+  <rect x="600" y="640" width="300" height="30" class="box" />
+  <text x="750" y="660" class="text">불용어 파일 경로 조합</text>
+  <rect x="600" y="690" width="300" height="30" class="box" />
+  <text x="750" y="710" class="text">불용어 집합 생성 및 반환</text>
+  
+  <!-- clean_text() 함수 -->
+  <rect x="300" y="820" width="400" height="150" class="subgraph" />
+  <text x="500" y="840" class="title">clean_text() 함수</text>
+  <rect x="350" y="860" width="300" height="30" class="box" />
+  <text x="500" y="880" class="text">텍스트 소문자화</text>
+  <rect x="350" y="910" width="300" height="30" class="box" />
+  <text x="500" y="930" class="text">한글과 공백만 남기기 (정규식)</text>
+  
+  <!-- Arrows for main flow -->
+  <path d="M500 200 L500 260 L250 260 L250 320" class="arrow" />
+  <path d="M500 250 L500 260 L750 260 L750 320" class="arrow" />
+  
+  <!-- Vertical connections in subgraphs -->
+  <line x1="250" y1="350" x2="250" y2="370" class="arrow" />
+  <line x1="250" y1="400" x2="250" y2="420" class="arrow" />
+  <line x1="250" y1="450" x2="250" y2="470" class="arrow" />
+  <line x1="250" y1="500" x2="250" y2="520" class="arrow" />
+  
+  <line x1="750" y1="350" x2="750" y2="370" class="arrow" />
+  <line x1="750" y1="400" x2="750" y2="420" class="arrow" />
+  <line x1="750" y1="450" x2="750" y2="470" class="arrow" />
+  <line x1="750" y1="500" x2="750" y2="520" class="arrow" />
+  
+  <line x1="250" y1="670" x2="250" y2="690" class="arrow" />
+  <line x1="250" y1="720" x2="250" y2="740" class="arrow" />
+  
+  <line x1="750" y1="670" x2="750" y2="690" class="arrow" />
+  
+  <line x1="500" y1="890" x2="500" y2="910" class="arrow" />
+  
+  <!-- Condition arrows -->
+  <path d="M150 770 L100 770 L100 820" class="arrow" />
+  <text x="125" y="760" class="text" text-anchor="start">미존재</text>
+  
+  <path d="M350 770 L400 770 L400 820" class="arrow" />
+  <text x="375" y="760" class="text" text-anchor="end">존재</text>
+  
+  <!-- Dashed connections between functions -->
+  <path d="M100 340 L50 340 L50 580 L80 660" class="dashed-arrow" />
+  <path d="M600 340 L550 340 L550 580 L600 660" class="dashed-arrow" />
+  <path d="M600 490 L580 490 L580 880 L550 880" class="dashed-arrow" />
+  
+  <!-- File flow diagram at bottom -->
+  <rect x="150" y="970" width="700" height="60" fill="#f0fff0" stroke="#3cb371" stroke-width="2" rx="10" ry="10" />
+  <text x="500" y="995" class="title" fill="#2e8b57">파일 흐름: audio_input.wav → diarized_output.txt → processed_output.txt</text>
+  <text x="500" y="1020" class="text">보조 파일: korean_stopwords.txt (한국어 불용어 목록)</text>
+</svg>
