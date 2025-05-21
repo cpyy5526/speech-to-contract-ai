@@ -23,7 +23,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.contract import Contract
 from app.models.suggestion import GptSuggestion
-from app.schemas.contracts import (
+from app.schemas.contract import (
     ContractResponse,
     ContractUpdateRequest,
     GPTSuggestionResponse,
