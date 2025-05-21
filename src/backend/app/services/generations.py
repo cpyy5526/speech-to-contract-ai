@@ -25,7 +25,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.contract import Contract, GenerationStatus
 from app.models.suggestion import GptSuggestion
 from app.models.transcription import Transcription, TranscriptionStatus
-from app.schemas.generations import GenerationStatusResponse
+from app.schemas.generation import GenerationStatusResponse
 
 # 프롬프트 팀 모듈 – 내부 구현은 알 수 없음 (호출만 수행)
 from app.prompts.contract_generation import (

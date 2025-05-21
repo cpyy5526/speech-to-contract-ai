@@ -96,6 +96,17 @@ class Settings:
         Path(self.AUDIO_UPLOAD_DIR).mkdir(parents=True, exist_ok=True)
         Path(self.TEXT_UPLOAD_DIR).mkdir(parents=True, exist_ok=True)
 
+        # ------------------------------------------------------------------ #
+        # 음성파일 형식 및 크기 제한
+        # ------------------------------------------------------------------ #
+        exts = os.getenv("ALLOWED_AUDIO_EXTENSIONS", ".mp3,.wav")
+        self.ALLOWED_AUDIO_EXTENSIONS: set[str] = {
+            ext.strip().lower() for ext in exts.split(",") if ext.strip()
+        }
+        self.MAX_UPLOAD_SIZE_BYTES: int = int(
+            os.getenv("MAX_UPLOAD_SIZE_BYTES", 40 * 1024 * 1024)  # 기본 40MiB
+        )
+
 
 # 단일 인스턴스
 settings = Settings()

@@ -10,11 +10,11 @@ from __future__ import annotations
 
 상태 흐름
 ---------
-uploading → uploaded → transcribing → done
-                   ↘︎                     ↘︎
-              upload_failed      transcription_failed
-                   ↘︎                     ↘︎
-                        cancelled  (사용자 취소)
+     ------ cancelled -------
+     |           |          |
+uploading -> uploaded -> transcribing -> done
+                 |               |    
+            upload_failed   transcription_failed
 """
 
 import os
@@ -22,6 +22,7 @@ import uuid
 from datetime import datetime
 from pathlib import Path
 from typing import Final, Iterable
+from uuid import UUID
 
 import aiofiles        # 비동기 파일 I/O
 from fastapi import UploadFile
@@ -29,24 +30,13 @@ from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
 from app.models.transcription import Transcription, TranscriptionStatus
-from app.schemas.transcriptions import UploadStatusResponse
+from app.schemas.transcription import UploadStatusResponse
 
 # Celery 태스크 – **구현은 별도 모듈** (`app.tasks.transcription`)
 from app.tasks.transcription import start_whisper_transcription  # type: ignore
 
-# --------------------------------------------------------------------------- #
-# 설정 상수
-# --------------------------------------------------------------------------- #
-ALLOWED_EXT: Final[set[str]] = {".mp3", ".wav"}
-MAX_FILE_BYTES: Final[int] = 40 * 1024 * 1024  # 40 MiB
-
-AUDIO_DIR = Path("uploads/audio")
-TEXT_DIR = Path("uploads/text")
-
-# 보장: 런타임 최초 호출 시 한 번만 디렉터리 생성
-AUDIO_DIR.mkdir(parents=True, exist_ok=True)
-TEXT_DIR.mkdir(parents=True, exist_ok=True)
 
 # --------------------------------------------------------------------------- #
 # 공개 API
@@ -96,10 +86,17 @@ class DatabaseError(Exception):
 # --------------------------------------------------------------------------- #
 # 내부 헬퍼
 # --------------------------------------------------------------------------- #
-async def _latest_transcription(session: AsyncSession) -> Transcription | None:
-    stmt = select(Transcription).order_by(Transcription.created_at.desc()).limit(1)
-    res = await session.execute(stmt)
-    return res.scalar_one_or_none()
+async def _latest_transcription(
+        session: AsyncSession, user_id: UUID
+) -> Transcription | None:
+    stmt = (
+        select(Transcription)
+        .where(Transcription.user_id == user_id)
+        .order_by(Transcription.created_at.desc())
+        .limit(1)
+    )
+    result = await session.execute(stmt)
+    return result.scalar_one_or_none()
 
 
 async def _save_upload(file: UploadFile) -> tuple[str, int]:
@@ -109,13 +106,15 @@ async def _save_upload(file: UploadFile) -> tuple[str, int]:
     """
     ext = Path(file.filename or "").suffix.lower()
     uid = f"{uuid.uuid4()}{ext}"
-    out_path = AUDIO_DIR / uid
+    out_path = Path(settings.AUDIO_UPLOAD_DIR) / uid
 
+    # chunk 단위로 복사하며 파일 용량 제한을 체크하는 방식이 다소 비효율적일 수 있으나,
+    # 파일 용량을 먼저 체크하는 방식은 비동기 환경에서 안정성과 이식성 이슈가 있으므로 일단 현재 방식 사용
     size = 0
     async with aiofiles.open(out_path, "wb") as out_stream:
         while chunk := await file.read(1024 * 1024):  # 1 MiB씩
             size += len(chunk)
-            if size > MAX_FILE_BYTES:
+            if size > settings.MAX_UPLOAD_SIZE_BYTES:
                 # 부분 저장된 파일 정리
                 await out_stream.close()
                 out_path.unlink(missing_ok=True)
@@ -136,7 +135,7 @@ def _status_response(model: Transcription) -> UploadStatusResponse:
 # 비즈니스 로직 (라우터에서 호출)
 # --------------------------------------------------------------------------- #
 async def upload_audio(
-    file: UploadFile, session: AsyncSession
+    file: UploadFile, session: AsyncSession, user_id: UUID
 ) -> UploadStatusResponse:
     """
     1. 포맷·크기 검증 → `uploading` 레코드 생성
@@ -147,12 +146,12 @@ async def upload_audio(
         raise MissingFile
 
     ext = Path(file.filename).suffix.lower()
-    if ext not in ALLOWED_EXT:
+    if ext not in settings.ALLOWED_AUDIO_EXTENSIONS:
         raise UnsupportedAudioFormat
 
     # ――― DB: uploading ----------------------------------------------------- #
     transcription = Transcription(
-        user_id=None,  # 🔖 실제 서비스에서는 토큰 → user_id 주입
+        user_id=user_id,
         status=TranscriptionStatus.uploading,
     )
 
@@ -196,10 +195,12 @@ async def upload_audio(
     return _status_response(transcription)
 
 
-async def get_audio_status(session: AsyncSession) -> UploadStatusResponse:
+async def get_audio_status(
+    session: AsyncSession, user_id: UUID
+) -> UploadStatusResponse:
     """가장 최근 Transcription 상태만 반환합니다."""
     try:
-        transcription = await _latest_transcription(session)
+        transcription = await _latest_transcription(session, user_id)
         if transcription is None:
             raise NoAudioData
         return _status_response(transcription)
@@ -207,7 +208,7 @@ async def get_audio_status(session: AsyncSession) -> UploadStatusResponse:
         raise DatabaseError from exc
 
 
-async def cancel_audio(session: AsyncSession) -> None:
+async def cancel_audio(session: AsyncSession, user_id: UUID) -> None:
     """
     uploading / uploaded / transcribing 단계에서만 취소 가능.
 
@@ -215,7 +216,7 @@ async def cancel_audio(session: AsyncSession) -> None:
     * 저장된 파일(음성·텍스트) 삭제
     """
     try:
-        transcription = await _latest_transcription(session)
+        transcription = await _latest_transcription(session, user_id)
         if transcription is None:
             raise NoAudioData
 
