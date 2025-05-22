@@ -32,7 +32,7 @@ def _write_text_to_file(text: str) -> str:
     return file_path
 
 
-@celery_app.task(name="tasks.start_whisper_transcription", bind=True)
+@celery_app.task(name="tasks.jobs.start_whisper_transcription", bind=True)
 def start_whisper_transcription(self, transcription_id: str) -> None:  # noqa: ANN001
     """지정된 Transcription 레코드에 대해 Whisper STT를 실행합니다."""
 
