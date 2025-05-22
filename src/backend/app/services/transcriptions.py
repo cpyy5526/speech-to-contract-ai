@@ -35,7 +35,7 @@ from app.models.transcription import Transcription, TranscriptionStatus
 from app.schemas.transcription import UploadStatusResponse
 
 # Celery 태스크 – **구현은 별도 모듈** (`app.tasks.transcription`)
-from app.tasks.transcription import start_whisper_transcription  # type: ignore
+from app.tasks.jobs import start_whisper_transcription  # type: ignore
 
 
 # --------------------------------------------------------------------------- #
@@ -126,7 +126,9 @@ async def _save_upload(file: UploadFile) -> tuple[str, int]:
 
 def _status_response(model: Transcription) -> UploadStatusResponse:
     status_str = (
-        model.status.value if hasattr(model.status, "value") else str(model.status)
+        model.status.value
+        if hasattr(model.status, "value")
+        else str(model.status)
     )
     return UploadStatusResponse(status=status_str)
 

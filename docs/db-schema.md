@@ -66,6 +66,7 @@ speech_to_contract_platform
 | id | UUID (PK) | Primary Key |
 | user_id | UUID (FK) | 업로드한 사용자(auth_users.id, **ON DELETE CASCADE**) |
 | status | ENUM | “uploading”, “uploaded”, “transcribing”, “done”, “upload_failed”, “transcription_failed”, “cancelled” |
+| upload_url | TEXT(nullable) | 클라이언트에게 제공한 업로드 전용 URL |
 | audio_file | TEXT | 업로드된 음성 파일 내부 식별자(UUID) |
 | script_file | TEXT | 변환(및 전처리된) 대화 텍스트 파일 내부 식별자(UUID) |
 | created_at | TIMESTAMP | 업로드 시각 |

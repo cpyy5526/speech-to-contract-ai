@@ -1,5 +1,3 @@
-# API 명세
-
 ## 공통 에러 응답
 
 - 요청 실패 시 모든 API는 다음 형태의 응답으로 에러 메시지를 반환합니다.
@@ -315,17 +313,17 @@
 
 ---
 
-## 2.  계약서 생성
+## 2.  음성 업로드 및 텍스트 변환
 
 <aside>
 
-### [POST]  /contracts/audio
+### [POST]  /transcription/initiate
 
-- 현재 사용자의 녹음 파일을 서버에 업로드
-- 파일 용량은 40MB로 제한 (일반적인 모바일 환경에서 30-35분 정도 용량)
+- 음성파일 업로드(+ 텍스트 변환) 예약 요청
+- 실제 업로드는 반환된 upload_url로 별도 요청해야 함 (PUT /transcription/upload/{id})
 - 서버에서는 업로드 요청을 수락했는지만 바로 응답
-- 실제 파일 업로드는 백그라운드에서 계속 진행됨
-    - Polling: 프론트엔드에서는 해당 엔드포인트 호출 후 아래 status 엔드포인트를 수시로 요청하여 진행상황을 확인하고 다음 단계(generate) 진행
+- 실제 파일 업로드 및 텍스트 변환은 백그라운드에서 계속 진행됨
+    - Polling: 프론트엔드에서는 업로드 요청 후 GET /transcription/status를 수시로 요청하여 진행상황을 확인하고 완료 시 다음 단계(POST /contracts/generate) 진행
 - **요청**
     - Request Header
     
@@ -333,10 +331,25 @@
     Authorization: Bearer <access_token>
     ```
     
-    - **Content-Type: multipart/form-data**
-    - Field name: audio_file
+    - Content-Type: application/json
+    - Request Body 예시
+    
+    ```json
+    {
+      "filename": "recording.wav"
+    }
+    ```
+    
 - **응답**
     - 성공: HTTP 202 Accepted
+    - 응답 데이터 예시
+    
+    ```json
+    {
+      "upload_url": "https://upload.myservice.com/upload/audio/abc123-def456-uuid"
+    }
+    ```
+    
     - 실패
     
     | **상황** | **HTTP Status** | **detail 메시지** |
@@ -344,15 +357,41 @@
     | 토큰 누락 | 401 Unauthorized | “Missing token” |
     | 토큰 형식 오류 또는 검증 실패 | 401 Unauthorized | “Invalid token” |
     | 토큰 만료됨 | 401 Unauthorized | “Expired token” |
-    | 파일 누락 또는 필드 오류 | 400 Bad Request | “Missing or invalid audio file” |
+    | 파일명 누락 | 400 Bad Request | “Missing file name” |
     | 허용되지 않는 파일 형식 | 415 Unsupported Media Type | “Unsupported audio format” |
-    | 파일 용량 초과 | 413 Payload Too Large | “Audio file is too large” |
     | 서버 내부 오류 | 500 Internal Server Error | "Unexpected server error" |
 </aside>
 
 <aside>
 
-### [GET]  /contracts/audio/status
+### [PUT]  /transcription/upload/{id}
+
+- 음성 파일을 업로드를 위한 전용 엔드포인트
+- **실제 호출 시 경로는 “/transcription/upload/{id}”가 아님**
+    - 해당 경로는 API 명세를 위한 형식적인 제목. 실제 업로드 주소가 아님
+    - **POST /transcription/initiate에서 반환된 upload_url로 요청해야 함**
+- 내부적으로는 FastAPI 서버가 아닌 업로드 전용 서버(nginx)로의 요청
+- **요청**
+    - [PUT]  {upload_url}
+        - 예: [PUT] https://upload.myservice.com/upload/audio/abc123-def456-uuid
+    - **Content-Type: application/octet-stream**
+    - Request Body: 업로드할 음성 파일의 바이너리 데이터
+        - 파일 내용을 multipart/form-data로 감싸지 않고, 원시 데이터를 직접 포함
+- **응답**
+    - 성공: HTTP 204 No Content
+    - 실패
+    
+    | **상황** | **HTTP Status** | **detail 메시지** |
+    | --- | --- | --- |
+    | 잘못된 upload_url 또는 만료 | 400 Bad Request | “Invalid or expired upload_url” |
+    | 파일 용량 초과 | 413 Payload Too Large | “Audio file is too large” |
+    | 허용되지 않는 형식 | 415 Unsupported Media Type | “Unsupported audio format” |
+    | 서버 오류 | 500 Internal Server Error | “Unexpected server error” |
+</aside>
+
+<aside>
+
+### [GET]  /transcription/status
 
 - 현재 사용자의 녹음 파일 업로드 및 텍스트 변환 진행상황 조회
 - 상태는 다음 7가지 중 하나
@@ -360,8 +399,8 @@
     2. “uploaded”: 파일이 백엔드 서버에 완전히 업로드됨
     3. “transcribing”: 서버 내부에서 음성을 텍스트로 변환 중
     4. “done”: 텍스트 변환까지 완료됨. 계약서 생성 프로세스 준비됨
-    5. “upload_failed”: 파일 업로드 실패
-    6. “transcription_failed”: 음성 변환 실패
+    5. “upload_failed”: 파일 업로드 실패 (→ /transcription/initiate로 처음부터 재시도)
+    6. “transcription_failed”: 음성 변환 실패 (→ /transcription/retry 또는 /transcription/cancel)
     7. “cancelled”: 사용자가 취소 요청하여 중단됨
 - **요청**
     - Request Header
@@ -393,13 +432,42 @@
 
 <aside>
 
-### [POST]  /contracts/audio/cancel
+### [GET]  /transcription/retry
+
+- 음성 파일 업로드 후 텍스트 변환에 실패한 경우, 업로드된 해당 파일을 대상으로 변환 재시도
+- 상태(/transcription/status)가 “transcription_failed”인 경우만 가능
+- **요청**
+    - Request Header
+    
+    ```json
+    Authorization: Bearer <access_token>
+    ```
+    
+- **응답**
+    - 성공: HTTP 202 Accepted
+    - 응답 데이터 예시
+    - 실패
+    
+    | **상황** | **HTTP Status** | **detail 메시지** |
+    | --- | --- | --- |
+    | 토큰 누락 | 401 Unauthorized | “Missing token” |
+    | 토큰 형식 오류 또는 검증 실패 | 401 Unauthorized | “Invalid token” |
+    | 토큰 만료됨 | 401 Unauthorized | “Expired token” |
+    | 재시도 가능한 상태 아님 | 409 Conflict | “Cannot retry at this stage” |
+    | 업로드 요청 없음 또는 만료됨 | 404 Not Found | “No audio data for this user” |
+    | 서버 내부 오류 | 500 Internal Server Error | "Unexpected server error" |
+</aside>
+
+<aside>
+
+### [POST]  /transcription/cancel
 
 - 현재 사용자의 녹음 파일 업로드 또는 텍스트 변환을 중단 및 초기화
-- 상태(/audio/status)가 다음 3가지인 경우만 가능
+- 상태(/transcription/status)가 다음 4가지인 경우만 가능
     - “uploading”
     - “uploaded”
     - “transcribing”
+    - “transcription_failed”
 - **요청**
     - Request Header
     
@@ -416,10 +484,14 @@
     | 토큰 누락 | 401 Unauthorized | “Missing token” |
     | 토큰 형식 오류 또는 검증 실패 | 401 Unauthorized | “Invalid token” |
     | 토큰 만료됨 | 401 Unauthorized | “Expired token” |
-    | 취소 가능한 상태가 아님 | 409 Conflict | “Cannot cancel at this stage” |
+    | 취소 가능한 상태 아님 | 409 Conflict | “Cannot cancel at this stage” |
     | 업로드 요청 없음 또는 이미 만료됨 | 404 Not Found | “No audio data for this user” |
     | 서버 내부 오류 | 500 Internal Server Error | "Unexpected server error" |
 </aside>
+
+---
+
+## 3. 계약서 생성
 
 <aside>
 
@@ -458,7 +530,7 @@
 - 상태는 다음 4가지 중 하나
     1. “generating”
     2. “done”
-    3. “failed”
+    3. “failed” (→ /contracts/generate로 재시도 또는 /contracts/generate/cancel)
     4. “cancelled”
 - 생성 완료 시 contract_id 반환
 - **요청**
@@ -501,7 +573,7 @@
 ### [POST]  /contracts/generate/cancel
 
 - 계약서 생성 프로세스 중단
-- 상태(/generate/status)가 “generating”인 경우만 가능
+- 상태(/generate/status)가 “generating”, “failed”인 경우에만 가능
 - **요청**
     - Request Header
     
@@ -525,7 +597,7 @@
 
 ---
 
-## 3.  계약서 관리
+## 4.  계약서 관리
 
 <aside>
 

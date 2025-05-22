@@ -22,6 +22,7 @@ class Transcription(SQLModel, table=True):
     user_id: UUID = Field(foreign_key="auth_users.id", nullable=False, index=True)
 
     status: TranscriptionStatus = Field(nullable=False, index=True)
+    upload_url: Optional[str] = Field(default=None)
     audio_file: Optional[str] = Field(nullable=True)
     script_file: Optional[str] = Field(nullable=True)
 
