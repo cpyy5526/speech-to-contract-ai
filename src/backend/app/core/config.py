@@ -104,7 +104,7 @@ class Settings:
             ext.strip().lower() for ext in exts.split(",") if ext.strip()
         }
         self.MAX_UPLOAD_SIZE_BYTES: int = int(
-            os.getenv("MAX_UPLOAD_SIZE_BYTES", 40 * 1024 * 1024)  # 기본 40MiB
+            os.getenv("MAX_UPLOAD_SIZE_BYTES", 25 * 1024 * 1024)  # 기본 25MiB
         )
 
 

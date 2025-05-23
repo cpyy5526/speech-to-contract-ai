@@ -1,64 +1,74 @@
-from fastapi import APIRouter, Depends, HTTPException, status, File, UploadFile
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.schemas.transcription import UploadStatusResponse
-from app.services import transcriptions as transcription_service
+from uuid import UUID, uuid4
+from fastapi import APIRouter, Depends, HTTPException, status, Response
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.core.dependencies import get_session, get_current_user
-from app.models.user import User
+from app.schemas.transcription import (
+    UploadInitRequest,
+    UploadInitResponse,
+    UploadStatusResponse,
+)
+from app.services import transcriptions as svc
 
-router = APIRouter(prefix="/contracts/audio", tags=["Transcriptions"])
+router = APIRouter(prefix="/transcription", tags=["Transcription"])
 
-@router.post("/", status_code=status.HTTP_202_ACCEPTED)
-async def upload_audio(
-    file: UploadFile = File(...),
+
+@router.post(
+    "/initiate",
+    response_model=UploadInitResponse,
+    status_code=status.HTTP_202_ACCEPTED,
+)
+async def initiate_upload(
+    data: UploadInitRequest,
     session: AsyncSession = Depends(get_session),
-    user: User = Depends(get_current_user)
+    current_user=Depends(get_current_user),
 ):
-    """
-    사용자의 녹음 파일 업로드
-    """
-    try:
-        return await transcription_service.upload_audio(file, session, user.id)
-    except transcription_service.MissingFile:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Missing or invalid audio file")
-    except transcription_service.UnsupportedAudioFormat:
-        raise HTTPException(status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, detail="Unsupported audio format")
-    except transcription_service.FileTooLarge:
-        raise HTTPException(status.HTTP_413_PAYLOAD_TOO_LARGE, detail="Audio file is too large")
-    except Exception:
-        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Unexpected server error")
+    """음성 업로드 세션을 초기화하고 업로드 URL을 반환합니다."""
+    return await svc.register_upload(data.filename, current_user.id, session)
 
 
 @router.get("/status", response_model=UploadStatusResponse)
-async def get_audio_status(
+async def check_status(
     session: AsyncSession = Depends(get_session),
-    user: User = Depends(get_current_user)
+    current_user=Depends(get_current_user),
 ):
-    """
-    사용자의 음성 파일 업로드 및 텍스트 변환 진행상황 조회
-    """
-    try:
-        return await transcription_service.get_audio_status(session, user.id)
-    except transcription_service.NoAudioData:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="No audio data for this user")
-    except Exception:
-        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Unexpected server error")
+    return await svc.get_audio_status(current_user.id, session)
 
 
-@router.post("/cancel", status_code=status.HTTP_204_NO_CONTENT)
-async def cancel_audio(
+@router.get(
+    "/retry",
+    status_code=status.HTTP_202_ACCEPTED,
+)
+async def retry_transcription(
     session: AsyncSession = Depends(get_session),
-    user: User = Depends(get_current_user)
+    current_user=Depends(get_current_user),
 ):
-    """
-    음성 파일 업로드 또는 텍스트 변환 중단
-    """
-    try:
-        await transcription_service.cancel_audio(session, user.id)
-    except transcription_service.InvalidStatusForCancel:
-        raise HTTPException(status.HTTP_409_CONFLICT, detail="Cannot cancel at this stage")
-    except transcription_service.NoAudioData:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="No audio data for this user")
-    except Exception:
-        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Unexpected server error")
+    await svc.retry_transcription(current_user.id, session)
+    return {"detail": "Retry started"}
+
+
+@router.post(
+    "/cancel",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def cancel_transcription(
+    session: AsyncSession = Depends(get_session),
+    current_user=Depends(get_current_user),
+):
+    await svc.cancel_transcription(current_user.id, session)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post(
+    "/uploaded-notify/{transcription_id}",
+    status_code=status.HTTP_202_ACCEPTED,
+    include_in_schema=False,  # 내부 호출용
+)
+async def uploaded_notify(
+    transcription_id: UUID,
+    session: AsyncSession = Depends(get_session),
+):
+    """nginx 업로드 완료 Callback"""
+    await svc.trigger_transcription(transcription_id, session)
+    return {"detail": "Accepted"}
+    
