@@ -1,8 +1,8 @@
 import React from "react";
-import "./Home.css";
-import micIcon from "./images/mic_icon.png";
-import docIcon from "./images/doc_icon.png";
-import { auth, signOut } from "./firebase";
+import "../styles/Home.css";
+import micIcon from "../images/mic_icon.png";
+import docIcon from "../images/doc_icon.png";
+import { auth, signOut } from "../firebase";
 import { useNavigate } from "react-router-dom";
 import { useRef } from "react";
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import "./Recording.css";
+import "../styles/Recording.css";
 import { useNavigate } from "react-router-dom";
 
 function Recording() {
