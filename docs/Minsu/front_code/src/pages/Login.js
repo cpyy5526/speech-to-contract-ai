@@ -1,14 +1,14 @@
 // src/Login.js
 import React from "react";
-import "./App.css";
-import "./Login.css";
+import "../App.css";
+import "../styles/Login.css";
 
 
 import { useNavigate } from "react-router-dom";
 import { signInWithPopup } from "firebase/auth";
-import { auth, provider } from "./firebase";
-import google_icon from './images/google_icon.png';
-import user_icon from './images/user_icon.png'
+import { auth, provider } from "../firebase";
+import google_icon from '../images/google_icon.png';
+import user_icon from '../images/user_icon.png'
 
 function Login() {
   const navigate = useNavigate();
