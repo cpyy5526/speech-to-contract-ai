@@ -98,3 +98,26 @@ export async function cancelContractGeneration() {
     throw error;
   }
 }
+
+// 전체 계약서 목록 조회
+export async function getContractList() {
+  const response = await api.get("/contracts");
+  return response.data; // 배열 형태 반환됨
+}
+
+// 특정 계약서 상세 조회
+export async function getContractContent(contractId) {
+  const response = await api.get(`/contracts/${contractId}`);
+  return response.data; // 응답 JSON 전체 반환
+}
+
+
+import api from "./apiClient";
+
+// 계약서 내용 수정 및 저장
+export async function updateContractContent(contractId, contents) {
+  const response = await api.put(`/contracts/${contractId}`, {
+    contents: contents, // 전체 JSON 구조
+  });
+  return response.status; // 204 expected
+}
