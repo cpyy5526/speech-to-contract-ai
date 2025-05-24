@@ -1,0 +1,138 @@
+.download-container {
+    display: flex;
+    height: 100vh;
+    background-color: #FFFFFF;
+    
+  }
+  
+   왼쪽 네비게이션 
+  .sidebar {
+    width: 260px;
+    background-color: #f3f4f5;
+    padding: 30px 20px;
+    border-right: 1px solid #ddd;
+    flex-shrink: 0;
+  }
+  
+  오른쪽 미리보기 영역 
+  .preview-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center; 
+    justify-content: start;
+    padding: 40px;
+    overflow-y: auto;
+  }
+  
+  이미지 계약서 영역 
+  .contract-image-wrap {
+    background-color: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    max-width: 800px;       
+    width: 100%;            
+    text-align: center;
+  }
+  
+  .contract-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: 6px;
+  }
+  
+   하단 다운로드 버튼 
+  .download-button-wrap {
+    margin-top: 20px;
+  }
+  
+  .download-btn {
+    padding: 10px 30px;
+    background-color: #d9d9d9;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    box-shadow: 1px 2px 0px #ccc;
+  }
+  
+/* 전체 계약서 */
+.contract-rendered {
+  width: 794px; /* A4 */
+  min-height: 1120px;
+  margin: 0 auto;
+  background: #fff;
+  padding: 60px 50px;
+  font-family: "Malgun Gothic", "맑은 고딕", serif;
+  font-size: 14px;
+  line-height: 2;
+  color: #000;
+  border: 1px solid #000;
+  box-sizing: border-box;
+}
+
+/* 제목 */
+.contract-main-title {
+  text-align: center;
+  font-size: 28px;
+  font-weight: bold;
+  margin-bottom: 40px;
+  letter-spacing: 2px;
+  border-bottom: 2px solid #000;
+  padding-bottom: 10px;
+}
+
+/* 섹션 제목 */
+.section-title {
+  font-weight: bold;
+  margin: 30px 0 10px;
+  font-size: 15px;
+  border-left: 4px solid #000;
+  padding-left: 10px;
+}
+
+/* 표 스타일 (공문서용) */
+.contract-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 24px;
+  font-size: 14px;
+}
+
+.contract-table td {
+  border: 1px solid #000;
+  padding: 6px 10px;
+  vertical-align: top;
+}
+
+.contract-table .gray {
+  background-color: #f3f3f3;
+  font-weight: bold;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* 조항 스타일 */
+.contract-clause {
+  margin: 12px 0;
+  font-size: 14px;
+  text-indent: 1.5em;
+  line-height: 1.8;
+}
+
+/* 특약사항 박스 */
+.special-terms-box {
+  border: 1px solid #000;
+  height: 80px;
+  padding: 10px;
+  margin-top: 10px;
+  white-space: pre-wrap;
+}
+
+/* 날짜 중앙 정렬 */
+.contract-date {
+  text-align: center;
+  margin: 40px 0 20px;
+  font-size: 14px;
+}
