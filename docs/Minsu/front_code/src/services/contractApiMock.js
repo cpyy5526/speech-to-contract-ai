@@ -172,3 +172,25 @@ export async function updateContractContent(contractId, contents) {
   });
 }
 
+
+
+// GPT 제안 텍스트 조회 (Mock)
+export async function getSuggestions(contractId) {
+  console.log("📦 [Mock] 제안 텍스트 요청:", contractId);
+
+  return new Promise((resolve, reject) => {
+// 성공 케이스
+        resolve([
+          {
+            field_path: "gifted_property.location",
+            suggestion_text: "2025년 최저임금은 시간당 10,030원입니다",
+          },
+          {
+            field_path: "gifted_property.details.building.usage",
+            suggestion_text: "점심시간은 12:00 ~ 13:00 입니다",
+          },
+        ]);
+  });
+}
+
+
