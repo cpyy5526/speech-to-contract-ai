@@ -151,3 +151,114 @@ export async function requestPasswordReset(email) {
     throw error;
   }
 }
+
+
+// 비밀번호 재설정 요청
+export async function confirmPasswordReset(token, newPassword) {
+  try {
+    const response = await api.post("/auth/password/reset", {
+      token,
+      new_password: newPassword,
+    });
+
+    return response.status; // 204 expected
+  } catch (error) {
+    const { status, detail } = error.response?.data || {};
+
+    if (status === 400) {
+      if (detail === "Missing token") {
+        alert("❗ 토큰이 누락되었습니다.");
+      } else if (detail === "Missing new password") {
+        alert("❗ 새 비밀번호를 입력해주세요.");
+      } else if (detail === "Password does not meet security requirements") {
+        alert("❗ 비밀번호 보안 기준을 만족하지 않습니다.");
+      } else {
+        alert("❗ 잘못된 요청: " + detail);
+      }
+    } else if (status === 401) {
+      alert("❌ 유효하지 않거나 만료된 토큰입니다.");
+    } else if (status === 500) {
+      alert("⚠️ 서버 오류가 발생했습니다.");
+    } else {
+      alert("❓ 알 수 없는 오류: " + (detail || "응답 없음"));
+    }
+
+    throw error;
+  }
+}
+
+
+
+// 비밀번호 변경 (로그인한 사용자)
+export async function changePassword(oldPassword, newPassword) {
+  try {
+    const response = await api.post("/auth/password/change", {
+      old_password: oldPassword,
+      new_password: newPassword,
+    });
+
+    return response.status; // 204 expected
+  } catch (error) {
+    const { status, detail } = error.response?.data || {};
+
+    if (status === 400) {
+      if (detail === "Missing password fields") {
+        alert("❗ 비밀번호 입력값이 누락되었습니다.");
+      } else if (detail === "Password does not meet security requirements") {
+        alert("❗ 새 비밀번호가 보안 기준에 부합하지 않습니다.");
+      } else {
+        alert("❗ 요청 오류: " + detail);
+      }
+    } else if (status === 401) {
+      if (detail === "Missing token") {
+        alert("❗ 인증 토큰이 없습니다. 다시 로그인해주세요.");
+      } else if (detail === "Invalid token") {
+        alert("❗ 유효하지 않은 토큰입니다.");
+      } else if (detail === "Expired token") {
+        alert("❗ 토큰이 만료되었습니다. 다시 로그인해주세요.");
+      } else if (detail === "Invalid current password") {
+        alert("❌ 현재 비밀번호가 일치하지 않습니다.");
+      } else {
+        alert("❌ 인증 오류: " + detail);
+      }
+    } else if (status === 500) {
+      alert("⚠️ 서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+    } else {
+      alert("❓ 알 수 없는 오류: " + (detail || "응답 없음"));
+    }
+
+    throw error;
+  }
+}
+
+
+// 로그인된 사용자 계정 삭제
+export async function deleteAccount() {
+  try {
+    const response = await api.delete("/auth/delete-account");
+    return response.status; // 204 expected
+  } catch (error) {
+    const { status, detail } = error.response?.data || {};
+
+    if (status === 401) {
+      if (detail === "Missing token") {
+        alert("❗ 인증 정보가 없습니다. 다시 로그인해주세요.");
+      } else if (detail === "Invalid token") {
+        alert("❗ 유효하지 않은 토큰입니다.");
+      } else if (detail === "Expired token") {
+        alert("❗ 세션이 만료되었습니다. 다시 로그인해주세요.");
+      }
+    } else if (status === 500) {
+      if (detail === "User not found") {
+        alert("❗ 사용자를 찾을 수 없습니다.");
+      } else {
+        alert("⚠️ 서버 오류가 발생했습니다.");
+      }
+    } else {
+      alert("❓ 알 수 없는 오류: " + (detail || "응답 없음"));
+    }
+
+    throw error;
+  }
+}
+
