@@ -1,13 +1,63 @@
 import React, { forwardRef, useImperativeHandle } from "react";
 import "./GiftContract.css";
 
-const GiftContract = forwardRef(({ contract }, ref) => {
+const GiftContract = forwardRef(({ contract, suggestions = [] }, ref) => {
   useImperativeHandle(ref, () => ({
     extract: extractEditedContents
   }));
 
+  const suggestionMap = {};
+  suggestions.forEach(({ field_path, suggestion_text }) => {
+    const className = field_pathToClass(field_path);
+    if (className) suggestionMap[className] = suggestion_text;
+  });
+
+  function field_pathToClass(fieldPath) {
+    return {
+      "gifted_property.location": "gift-location",
+      "gifted_property.details.building.structure": "gift-structure",
+      "gifted_property.details.building.usage": "gift-usage",
+      "gifted_property.details.building.area": "gift-area",
+      "gifted_property.details.building.current_value": "gift-value",
+      "gifted_property.details.land.category": "land-category",
+      "gifted_property.details.land.area": "land-area",
+      "gifted_property.details.land.current_value": "land-value",
+      "gifted_property.details.others": "gift-others",
+      "delivery_details.delivery_date": "delivery-date",
+      "delivery_details.delivery_method": "delivery-method",
+      "rights_and_obligations.existing_rights": "existing-rights",
+      "rights_and_obligations.obligations": "obligations",
+      "termination_conditions.reasons": "termination-reasons",
+      "termination_conditions.procedure": "termination-procedure",
+      "special_terms": "special-terms-box",
+      "contract_date": "contract-date",
+      "donor.name": "donor-name",
+      "donor.address": "donor-address",
+      "donor.contact": "donor-contact",
+      "donee.name": "donee-name",
+      "donee.address": "donee-address",
+      "donee.contact": "donee-contact"
+    }[fieldPath];
+  }
+
+  
+
+
+
   const extractEditedContents = () => {
-    const getText = (selector) => document.querySelector(selector)?.innerText || "";
+    const getText = (className) => {
+      // className이 .으로 시작하면 제거
+      const clean = className.replace(/^\./, "");
+
+      const el = document.querySelector(`.${clean}`);
+      if (!el) return "";
+
+      // suggestion 텍스트인 경우 저장에서 제외
+      if (el.dataset.suggestion === "true") return "";
+
+      return el.innerText || "";
+    };
+
 
     return {
       contract_type: getText(".contract-main-title"),
@@ -56,11 +106,44 @@ const GiftContract = forwardRef(({ contract }, ref) => {
     };
   };
 
-  const renderField = (className, content) => (
-    <span className={className} contentEditable suppressContentEditableWarning>
-      {content || "________"}
-    </span>
-  );
+  const renderField = (className, content) => {
+    const suggestion = suggestionMap[className];
+    const displayText = content || suggestion || "________";
+    const style = content ? {} : suggestion ? { color: "#888" } : { color: "#ccc" };
+
+    const handleInput = (e) => {
+      const el = e.currentTarget;
+
+      // 첫 입력 시 suggestion 텍스트가 남아 있으면 삭제
+      if (el.dataset.suggestion === "true") {
+        el.innerText = ""; // suggestion 제거
+        el.dataset.suggestion = "false"; // 일반 텍스트로 전환
+        el.style.color = "#000";
+
+        // 커서를 끝으로 이동
+        const range = document.createRange();
+        const sel = window.getSelection();
+        range.selectNodeContents(el);
+        range.collapse(false); // 커서를 마지막으로
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }
+    };
+
+
+    return (
+      <span
+        className={className}
+        contentEditable
+        suppressContentEditableWarning
+        style={style}
+        data-suggestion={content ? "false" : suggestion ? "true" : "false"}
+        onInput={handleInput}
+      >
+        {displayText}
+      </span>
+    );
+  };
 
   return (
     <div className="gift-contract">

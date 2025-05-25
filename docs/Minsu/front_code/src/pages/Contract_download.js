@@ -7,14 +7,15 @@ import { useLocation } from "react-router-dom";
 import { getContractContent } from "../services/contractApiMock"; // ✅ 실제 contract 조회 API
 import { getContractList } from "../services/contractApiMock";
 import { updateContractContent } from "../services/contractApiMock";
+import { getSuggestions } from "../services/contractApiMock";
 import GiftContract from "../Contract_types/GiftContract";
-
 
 
 
 function Contract_download() {
   const [contract, setContract] = useState(null);
   const [contractList, setContractList] = useState([]);
+  const [suggestions, setSuggestions] = useState([]);
   const contractRef = useRef();
   const location = useLocation();
   const params = new URLSearchParams(location.search);
@@ -39,6 +40,9 @@ function Contract_download() {
       try {
         const result = await getContractContent(contractId);
         setContract(result);
+
+        const suggestionResult = await getSuggestions(contractId);
+        setSuggestions(suggestionResult);
       } catch (err) {
         console.error("계약서 불러오기 실패:", err.response?.data?.detail || err.message);
       }
@@ -91,7 +95,7 @@ function Contract_download() {
           {!contract ? (
             <p>계약서를 불러오는 중입니다...</p>
           ) : contract.contract_type === "증여 계약" ? (
-            <GiftContract ref={contractRef} contract={contract} />
+            <GiftContract ref={contractRef} contract={contract} suggestions={suggestions}/>
           ) : (
             <p>지원되지 않는 계약서 유형입니다: {contract.contract_type}</p>
           )}
