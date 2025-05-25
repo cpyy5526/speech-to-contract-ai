@@ -112,12 +112,51 @@ export async function getContractContent(contractId) {
 }
 
 
-import api from "./apiClient";
-
 // 계약서 내용 수정 및 저장
 export async function updateContractContent(contractId, contents) {
   const response = await api.put(`/contracts/${contractId}`, {
     contents: contents, // 전체 JSON 구조
   });
   return response.status; // 204 expected
+}
+
+
+
+// GPT 제안 텍스트 조회
+export async function getSuggestions(contractId) {
+  try {
+    const response = await api.get(`/contracts/${contractId}/suggestions`);
+    return response.data; // 예: [{ field_path: "...", suggestion_text: "..." }, ...]
+  } catch (error) {
+    const { status, data } = error.response || {};
+
+    switch (status) {
+      case 401:
+        if (data.detail === "Missing token") {
+          alert("🔒 로그인 정보가 없습니다. 다시 로그인해주세요.");
+        } else if (data.detail === "Invalid token") {
+          alert("🔒 로그인 정보가 유효하지 않습니다.");
+        } else if (data.detail === "Expired token") {
+          alert("🔒 로그인 세션이 만료되었습니다.");
+        }
+        break;
+
+      case 404:
+        alert("❗ 해당 계약서를 찾을 수 없습니다.");
+        break;
+
+      case 500:
+        if (data.detail === "Database query failed") {
+          alert("⚠️ 데이터베이스 오류가 발생했습니다.");
+        } else {
+          alert("⚠️ 서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+        }
+        break;
+
+      default:
+        alert(`❌ 알 수 없는 오류: ${status}`);
+    }
+
+    throw error;
+  }
 }
