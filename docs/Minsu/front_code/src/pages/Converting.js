@@ -1,98 +1,40 @@
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import "../styles/Converting.css";
 import { useNavigate } from "react-router-dom";
-import { generateContract, getContractStatus, cancelContractGeneration } from "../services/contractApiMock";
+import { initiateTranscription } from "../services/convertApiMock"; 
+
 
 function Converting() {
-  const [status, setStatus] = useState("");
+  const [uploadUrl, setUploadUrl] = useState(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const intervalRef = useRef(null); // ✅ polling 중단용 ref
 
-  const startPolling = () => {
-    intervalRef.current = setInterval(async () => {
-      try {
-        const result = await getContractStatus();
-        setStatus(result.status);
-
-        if (result.status === "done" && result.contract_id) {
-          clearInterval(intervalRef.current);
-          setLoading(false);
-          navigate(`/download?contract_id=${result.contract_id}`);
-        }
-
-        if (result.status === "failed") {
-          clearInterval(intervalRef.current);
-          retryGenerate(); // ✅ 안전한 반복 호출
-        }
-
-        if (result.status === "cancelled") {
-          clearInterval(intervalRef.current);
-          setLoading(false);
-          console.warn("⛔ 생성이 취소됨");
-        }
-      } catch (err) {
-        clearInterval(intervalRef.current);
-        setLoading(false);
-        console.error("❌ 상태 확인 중 오류:", err.response?.data?.detail || err.message);
-      }
-    }, 3000);
-  };
-
-  const retryGenerate = async () => {
-    console.warn("🔁 계약서 생성을 다시 시도합니다...");
-    try {
-      await generateContract();
-      setStatus("generating");
-      startPolling();
-    } catch (err) {
-      console.error("❌ 재시도 실패:", err.response?.data?.detail || err.message);
-      setStatus("error");
-      setLoading(false);
-    }
-  };
-
-
-
-  const handleClick = async () => {
-    setStatus("");
+  const handleUpload = async () => {
     setLoading(true);
-
     try {
-      await generateContract();
-      setStatus("generating");
-      startPolling(); // 🔁 polling 시작
+      const filename = "recording.wav"; // 실제 파일에서 추출하면 더 좋음
+      const result = await initiateTranscription(filename);
+      console.log("✅ 업로드 URL:", result.upload_url);
+      setUploadUrl(result.upload_url);
+
+      // 실제 파일 업로드 단계는 여기서 추가 예정
+      // 업로드 완료되면 다음 단계로 이동
+      navigate("/generate"); // Contract_generate.js로 이동
     } catch (err) {
-      console.error("❌ 계약서 생성 요청 실패:", err.response?.data?.detail || err.message);
-      setStatus("error");
-      setLoading(false);
+      console.error("❌ 업로드 예약 실패:", err.response?.data?.detail || err.message);
+      alert("업로드 예약에 실패했습니다.");
     }
+    setLoading(false);
   };
-
-
-  const handleCancel = async () => {
-    try {
-      await cancelContractGeneration();
-      console.log("📬 생성 중단 요청을 보냈습니다. 상태 확인 중...");
-      // ✅ polling 유지: 다음 getContractStatus() 응답이 "cancelled"일 때 종료
-    } catch (err) {
-      console.error("❌ 취소 실패:", err.response?.data?.detail || err.message);
-    }
-  };
-
 
   return (
     <div className="converting-container">
-      <p>음성을 글자로 변환 중입니다...</p>
-      <button
-        onClick={(status === "generating" || status === "failed") ? handleCancel : handleClick}
-        disabled={loading && !(status === "generating" || status === "failed")}
-      >
-        {(status === "generating" || status === "failed") ? "생성 취소" : "계약서 생성"}
+      <p>음성 파일을 업로드할 준비가 되었습니다.</p>
+      <button onClick={handleUpload} disabled={loading}>
+        {loading ? "업로드 중..." : "업로드 시작"}
       </button>
-      {status && <p>상태: {status}</p>}
+      {uploadUrl && <p>업로드 URL: {uploadUrl}</p>}
     </div>
-    
   );
 }
 
