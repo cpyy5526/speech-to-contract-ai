@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import "../styles/Recording.css";
 import { useNavigate } from "react-router-dom";
+import { initiateTranscription } from "../services/convertApiMock"; // 배포 시 convertApi로
+
 
 function Recording() {
   const [isRecording, setIsRecording] = useState(false);
@@ -51,10 +53,25 @@ function Recording() {
     setIsStopped(true);
   };
 
-  const handleFinish = () => {
-    console.log("녹음 완료된 파일:", audioBlob);
-    navigate("/converting");
+  const handleFinish = async () => {
+    if (!audioBlob) return;
+
+    try {
+      const filename = `recording_${Date.now()}.webm`;
+      const result = await initiateTranscription(filename);
+      const uploadUrl = result.upload_url;
+
+      console.log("✅ 업로드 예약 완료:", uploadUrl);
+
+      // Converting 페이지로 uploadUrl 전달
+      navigate("/converting", { state: { uploadUrl, audioBlob } }); // audioBlob도 함께 넘길 수 있음
+    } catch (err) {
+      console.error("❌ 업로드 예약 실패:", err);
+      alert("업로드 예약 중 오류가 발생했습니다.");
+    }
   };
+
+
 
   return (
     <div className="recording-container">
@@ -86,7 +103,7 @@ function Recording() {
             {isStopped && (
               <>
                 <button className="stop-btn" onClick={startRecording}>🔁 재시작</button>
-                <button className="finish-btn" onClick={handleFinish}>✅ 마무리</button>
+                <button className="finish-btn" onClick={handleFinish}>✅ 텍스트로 변환하기</button>
               </>
             )}
           </>

@@ -1,18 +1,18 @@
 import React, { useEffect, useRef, useState } from "react";
 import "../styles/Contract_download.css";
-import contractImage from "../images/contract_icon.png";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { useLocation } from "react-router-dom";
-import { getContractContent } from "../services/contractApiMock"; // ✅ 실제 contract 조회 API
-import { getContractList } from "../services/contractApiMock";
-import { updateContractContent } from "../services/contractApiMock";
-import { getSuggestions } from "../services/contractApiMock";
-import { restoreContract } from "../services/contractApiMock"; // 배포 시 contractApi로 변경
-import { deleteContract } from "../services/contractApiMock"; // 실제 배포 시 contractApi로 변경
-
-import GiftContract from "../Contract_types/GiftContract";
 import { useNavigate } from "react-router-dom";
+import GiftContract from "../Contract_types/GiftContract";
+import {
+  getContractContent,
+  getContractList,
+  updateContractContent,
+  getSuggestions,
+  restoreContract,
+  deleteContract
+} from "../services/contractApiMock";
 
 
 
@@ -20,11 +20,15 @@ function Contract_download() {
   const [contract, setContract] = useState(null);
   const [contractList, setContractList] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
+
   const contractRef = useRef();
   const location = useLocation();
+
   const params = new URLSearchParams(location.search);
   const contractId = params.get("contract_id");
+
   const navigate = useNavigate();
+
   
 
   useEffect(() => {
@@ -58,7 +62,7 @@ function Contract_download() {
 
   const handleSave = async () => {
     try {
-      const edited = contractRef.current.extract(); // ✅ 정확하고 안전
+      const edited = contractRef.current.extract();
       await updateContractContent(contractId, edited);
     } catch (err) {
       console.error("❌ 저장 실패:", err);
@@ -85,7 +89,7 @@ function Contract_download() {
     try {
       await restoreContract(contractId);
       alert("복구 완료");
-      fetchContract(); // ← 이거 다시 호출
+      fetchContract();
     } catch (err) {
       console.error("❌ 복구 실패:", err.response?.data?.detail || err.message);
     }
@@ -97,13 +101,9 @@ function Contract_download() {
     try {
       await deleteContract(contractId);
       alert("✅ 계약서가 삭제되었습니다.");
-
-      // 리스트에서 삭제된 항목 제거
       setContractList((prevList) => prevList.filter(item => item.id !== contractId));
-
-      // 현재 열려 있던 계약서도 닫기
       setContract(null);
-      navigate("/download"); // URL 초기화 (선택 안 된 상태로)
+      navigate("/download");
     } catch (err) {
       console.error("❌ 삭제 실패:", err.response?.data?.detail || err.message);
     }
@@ -120,7 +120,7 @@ function Contract_download() {
             <li
               key={item.id}
               className={item.id === contractId ? "active" : ""}
-              onClick={() => navigate(`/download?contract_id=${item.id}`)} // ✅ 클릭 시 이동
+              onClick={() => navigate(`/download?contract_id=${item.id}`)}
             >
               <span>{item.created_at.slice(0, 10)}</span> {item.contract_type}
             </li>
@@ -144,10 +144,10 @@ function Contract_download() {
 
 
         <div className="download-button-wrap">
-          <button onClick={handleSave}>계약서 저장</button>
+          <button className="download-btn" onClick={handleSave}>계약서 저장</button>
           <button className="download-btn" onClick={handleDownload}>계약서 다운로드</button>
-          <button onClick={handleRestore}>되돌리기</button>
-          <button onClick={handleDelete} style={{ color: "red" }}>삭제</button> {/* ✅ 삭제 버튼 */}
+          <button className="download-btn" onClick={handleRestore}>되돌리기</button>
+          <button className="download-btn" onClick={handleDelete} style={{ color: "red" }}>삭제</button>
         </div>
 
 
