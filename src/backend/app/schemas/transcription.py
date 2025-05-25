@@ -1,5 +1,18 @@
 from pydantic import BaseModel
 
+# Request Models
+
+class UploadInitRequest(BaseModel):
+    filename: str
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "filename": "recording.wav"
+            }
+        }
+
+
 # Response Models
 
 class UploadStatusResponse(BaseModel):
