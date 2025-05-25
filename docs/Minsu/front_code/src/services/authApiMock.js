@@ -1,4 +1,5 @@
 // src/services/authMock.js
+import api from "./apiClient";
 
 // 일반 로그인 (Mock)
 export async function login(username, password) {
@@ -121,6 +122,133 @@ export async function requestPasswordReset(email) {
       } else {
         console.log("✅ [Mock] 이메일 전송 완료 (204)");
         resolve(204); // 실제 서버와 동일하게 204 응답 시뮬레이션
+      }
+    }, 1000);
+  });
+}
+
+
+// 비밀번호 재설정 요청 (Mock)
+export async function confirmPasswordReset(token, newPassword) {
+  console.log("🔐 [Mock] 비밀번호 재설정 요청:", token, newPassword);
+
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      if (!token) {
+        reject({
+          response: {
+            data: { status: 400, detail: "Missing token" },
+          },
+        });
+      } else if (!newPassword) {
+        reject({
+          response: {
+            data: { status: 400, detail: "Missing new password" },
+          },
+        });
+      } else if (token === "expired") {
+        reject({
+          response: {
+            data: { status: 401, detail: "Invalid or expired token" },
+          },
+        });
+      } else if (newPassword.length < 8) {
+        reject({
+          response: {
+            data: {
+              status: 400,
+              detail: "Password does not meet security requirements",
+            },
+          },
+        });
+      } else {
+        console.log("✅ [Mock] 비밀번호 재설정 성공 (204)");
+        resolve(204); // 실제 서버도 204 No Content 반환
+      }
+    }, 1000);
+  });
+}
+
+
+
+// 비밀번호 변경 (로그인한 사용자) (Mock)
+// src/services/authMock.js
+
+export async function changePassword(oldPassword, newPassword) {
+  console.log("🔐 [Mock] 비밀번호 변경 요청:", oldPassword, newPassword);
+
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      // 1. 토큰 없거나 만료된 경우 시뮬레이션은 생략 (apiClient에서 처리되므로)
+
+      // 2. 필드 누락
+      if (!oldPassword || !newPassword) {
+        reject({
+          response: {
+            data: {
+              status: 400,
+              detail: "Missing password fields",
+            },
+          },
+        });
+        return;
+      }
+
+      // 3. 비밀번호 보안 기준 불만족 (예: 2자 미만)
+      if (newPassword.length < 2) {
+        reject({
+          response: {
+            data: {
+              status: 400,
+              detail: "Password does not meet security requirements",
+            },
+          },
+        });
+        return;
+      }
+
+      // 4. 현재 비밀번호 불일치
+      if (oldPassword !== "1234") {
+        reject({
+          response: {
+            data: {
+              status: 401,
+              detail: "Invalid current password",
+            },
+          },
+        });
+        return;
+      }
+
+      // 5. 성공 시
+      console.log("✅ [Mock] 비밀번호 변경 성공 (204)");
+      resolve(204);
+    }, 1000);
+  });
+}
+
+
+
+// 로그인된 사용자 계정 삭제
+export async function deleteAccount() {
+  console.log("🗑️ [Mock] 계정 삭제 요청");
+
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      const simulateError = false; // ← true로 바꾸면 실패 테스트 가능
+
+      if (simulateError) {
+        reject({
+          response: {
+            data: {
+              status: 500,
+              detail: "User not found", // 또는 "Unexpected server error"
+            },
+          },
+        });
+      } else {
+        console.log("✅ [Mock] 계정 삭제 성공 (204)");
+        resolve(204);
       }
     }, 1000);
   });
