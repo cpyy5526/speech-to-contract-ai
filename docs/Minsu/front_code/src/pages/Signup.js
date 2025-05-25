@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import user_icon from '../images/user_icon.png'
 import "../styles/Signup.css";
+import { signup } from "../services/authApiMock"; // 또는 authApi
+
 
 
 function Signup() {
@@ -18,68 +20,17 @@ function Signup() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     try {
-      const response = await fetch("http://localhost:8000/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: form.email,
-          username: form.username,
-          password: form.password,
-        }),
-      });
-
-      // 상태 코드에 따라 분기 처리
-    if (response.status === 204) {
-      navigate("/login");
-
-    } 
-    
-    else if (response.status === 409) {
-      const result = await response.json();
-
-      if (result.detail === "Email already registered") {
-        alert(" Email already registered.");
+      const status = await signup(form); // ✅ axios 기반 함수 호출
+      if (status === 204) {
+        alert("회원가입 성공! 로그인 페이지로 이동합니다.");
+        navigate("/login");
       }
-       else if (result.detail === "Username already taken") {
-        alert(" Username already taken.");
-      } 
-      else {
-        alert(" Conflict: " + result.detail);
-      }
+    } catch (err) {
+      console.error("회원가입 실패:", err);
+      // 에러 처리는 authApi 또는 authMock에서 처리됨
     }
-
-     else if (response.status === 400) {
-      const result = await response.json();
-      if (result.detail === "Missing or invalid fields") {
-        alert(" Missing or invalid fields");
-      } 
-      else if (result.detail === "Password does not meet security requirements") {
-        alert(" Password does not meet security requirements");
-      } 
-      else {
-        alert(" Bad request: " + result.detail);
-      }
-    } 
-    
-    else if (response.status === 500) {
-      alert(" Unexpected server error");
-    } 
-
-    else {
-      const result = await response.json();
-      alert(" 알 수 없는 오류: " + result.detail);
-    }
-  } 
-
-  catch (error) {
-    console.error("회원가입 요청 실패:", error);
-    alert(" Failed to connect to the server. Please check your network.");
-  }
-};
+  };
 
   return (
     <div className="signup-wrapper">
