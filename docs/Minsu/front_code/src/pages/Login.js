@@ -9,6 +9,8 @@ import { auth, provider } from "../firebase";
 import google_icon from '../images/google_icon.png';
 import user_icon from '../images/user_icon.png'
 
+import { login, loginWithGoogle } from "../services/authApiMock";
+
 function Login() {
   const navigate = useNavigate();
   const [form, setForm] = useState({
@@ -20,127 +22,31 @@ function Login() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleLogin = async () => {
+ const handleLogin = async () => {
     try {
-      const response = await fetch("http://localhost:8000/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(form)
-      });
-
-      if (response.status === 200) {
-        const data = await response.json();
-        localStorage.setItem("access_token", data.access_token);
-        localStorage.setItem("refresh_token", data.refresh_token);
-        alert(" 로그인 성공!");
-        navigate("/home");
-
-      } 
-      else if (response.status === 401) {
-        alert(" Invalid username or password");
-      } 
-      
-      else if (response.status === 400) {
-        alert(" Missing username or password.");
-      }
-      
-      else if (response.status === 500) {
-        alert(" Unexpected server error.");
-      }
-      
-      else {
-        const result = await response.json();
-        alert(" Unknown error: " + result.detail);
-      }
-
-    }
-     catch (err) {
-      console.error("Login request failed:", err);
-      alert(" Failed to connect to the server. Please check your network.");
+      const data = await login(form.username, form.password); // ✅ axios 방식 사용
+      localStorage.setItem("access_token", data.access_token);
+      localStorage.setItem("refresh_token", data.refresh_token);
+      navigate("/home");
+    } catch (err) {
+      console.error("로그인 실패:", err);
+      // 에러 처리는 authApi에서 처리됨
     }
   };
 
   const handleGoogleLogin = async () => {
-     try {
+    try {
       const result = await signInWithPopup(auth, provider);
       const idToken = await auth.currentUser.getIdToken();
 
-      const response = await fetch("http://localhost:8000/auth/verify-social", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          provider: "google",
-          social_token: idToken
-        })
-      });
-
-      if (response.status === 200) {
-        const data = await response.json();
-        localStorage.setItem("access_token", data.access_token);
-        localStorage.setItem("refresh_token", data.refresh_token);
-        alert("Login successful!");
-        navigate("/home");
-      }
-
-      else {
-        const result = await response.json();
-
-      if (response.status === 400) 
-      {
-        if (result.detail === "Unsupported provider") {
-          alert("Unsupported provider.");
-        } 
-        
-        else if (result.detail === "Missing social token") {
-          alert("Missing social token.");
-        }
-        
-        else if (result.detail === "Missing provider") {
-          alert("Missing provider.");
-        } 
-        
-        else {
-          alert("Bad request: " + result.detail);
-        }
-
-      }
-       else if (response.status === 401) 
-        {
-          if (result.detail === "Invalid social token") {
-            alert("Invalid social token.");
-          } 
-          
-          else 
-          {
-            alert("Unauthorized: " + result.detail);
-          }
-        } 
-          
-        else if (response.status === 502) 
-          {
-            alert("Social server error.");
-          } 
-
-          else if (response.status === 500) 
-          {
-            alert("Unexpected server error.");
-          }
-
-          else 
-          {
-            alert("Unknown error: " + result.detail);
-          }
+      const data = await loginWithGoogle(idToken); // ✅ axios 방식 사용
+      localStorage.setItem("access_token", data.access_token);
+      localStorage.setItem("refresh_token", data.refresh_token);
+      alert("Google 로그인 성공!");
+      navigate("/home");
+    } catch (err) {
+      console.error("Google 로그인 실패:", err);
     }
-     }
-    catch (err) {
-      console.error("Google login failed:", err);
-      alert("Google login error.");
-    }
-    
   };
 
   return (
@@ -178,6 +84,9 @@ function Login() {
           </div>
         </div>
 
+        <p className="forgot-password" onClick={() => navigate("/reset")}>
+          비밀번호를 잊으셨나요?
+        </p>
         
 
         <button className="btn login-btn" onClick={handleLogin}>
