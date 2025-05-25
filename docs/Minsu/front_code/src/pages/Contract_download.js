@@ -72,6 +72,11 @@ function Contract_download() {
 
   const handleDownload = async () => {
     const element = contractRef.current;
+    if (!element) {
+      alert("계약서가 아직 렌더링되지 않았습니다.");
+      return;
+    }
+
     const canvas = await html2canvas(element, { scale: 2 });
     const imgData = canvas.toDataURL("image/png");
 
@@ -82,6 +87,7 @@ function Contract_download() {
     pdf.addImage(imgData, "PNG", 0, 0, width, height);
     pdf.save("contract.pdf");
   };
+
 
   const handleRestore = async () => {
     if (!window.confirm("⚠️ 초기 생성 상태로 되돌리시겠습니까? 변경된 내용은 모두 사라집니다.")) return;
@@ -130,18 +136,16 @@ function Contract_download() {
 
 
       <main className="preview-area">
-        <div className="contract-rendered" ref={contractRef}>
+        <div className="contract-rendered" ref={contractRef}> {/* 여기로 이동 */}
           {!contract ? (
             <p>계약서를 불러오는 중입니다...</p>
           ) : contract.contract_type === "증여 계약" ? (
-            <GiftContract ref={contractRef} contract={contract} suggestions={suggestions}/>
+            <GiftContract contract={contract} suggestions={suggestions} />
           ) : (
             <p>지원되지 않는 계약서 유형입니다: {contract.contract_type}</p>
           )}
         </div>
         
-        
-
 
         <div className="download-button-wrap">
           <button className="download-btn" onClick={handleSave}>계약서 저장</button>

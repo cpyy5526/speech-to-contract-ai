@@ -110,8 +110,9 @@ function Recording() {
 
       console.log("✅ 업로드 예약 완료:", uploadUrl);
 
-      // Converting 페이지로 uploadUrl 전달
-      navigate("/converting", { state: { uploadUrl, audioBlob } }); // audioBlob도 함께 넘길 수 있음
+
+      // Converting 페이지로 uploadUrl과 audioBlob 전달
+      navigate("/converting", { state: { uploadUrl, audioBlob, filename } });
     } catch (err) {
       console.error("❌ 업로드 예약 실패:", err);
       alert("업로드 예약 중 오류가 발생했습니다.");

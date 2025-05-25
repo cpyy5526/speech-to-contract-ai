@@ -19,3 +19,102 @@ export async function initiateTranscription(filename) {
     }, 1000); // 1초 지연
   });
 }
+
+
+
+/**
+ * 음성 파일 업로드 요청 (Mock)
+ * @param {string} uploadUrl
+ * @param {Blob} audioBlob
+ * @returns {Promise<void>}
+ */
+export async function uploadAudioFile(uploadUrl, audioBlob) {
+  console.log("📦 [Mock] 업로드 요청:", uploadUrl);
+  console.log("🎧 [Mock] 파일 크기:", audioBlob?.size, "bytes");
+
+  return new Promise((resolve, reject) => {
+    console.log("✅ [Mock] 업로드 요청 성공 (204)");
+    resolve(); // 실제 204 No Content를 기대
+  });
+}
+
+
+/**
+ * 텍스트 변환 상태 조회 (Mock)
+ * @returns {Promise<{ status: string }>}
+ */
+export async function getTranscriptionStatus() {
+  const possibleStatuses = [
+    "uploading",
+    "uploaded",
+    "transcribing",
+    "done",
+    "upload_failed",
+    "transcription_failed",
+    "cancelled",
+  ];
+  const randomStatus = possibleStatuses[Math.floor(Math.random() * possibleStatuses.length)];
+
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      console.log("📦 [Mock] 상태 반환:", randomStatus);
+      resolve({ status: randomStatus });
+    }, 1000);
+  });
+}
+
+
+/**
+ * 텍스트 변환 재시도 요청 (Mock)
+ * @returns {Promise<void>}
+ */
+export async function retryTranscription() {
+  console.log("🔁 [Mock] 변환 재시도 요청");
+
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      const fail = Math.random() < 0.2;
+
+      if (fail) {
+        console.warn("❌ [Mock] 재시도 실패 (409)");
+        reject({
+          response: {
+            status: 409,
+            data: { detail: "Cannot retry at this stage" },
+          },
+        });
+      } else {
+        console.log("✅ [Mock] 재시도 성공 (202)");
+        resolve(); // 실제는 202 Accepted
+      }
+    }, 1000);
+  });
+}
+
+
+
+/**
+ * 업로드 또는 변환 중단 요청 (Mock)
+ */
+export async function cancelTranscription() {
+  console.log("🛑 [Mock] 중단 요청 전송");
+
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      const failChance = Math.random();
+
+      if (failChance < 0.2) {
+        console.warn("❌ [Mock] 중단 실패 (409)");
+        reject({
+          response: {
+            status: 409,
+            data: { detail: "Cannot cancel at this stage" },
+          },
+        });
+      } else {
+        console.log("✅ [Mock] 중단 완료 (204)");
+        resolve(); // 실제는 204 No Content
+      }
+    }, 1000);
+  });
+}

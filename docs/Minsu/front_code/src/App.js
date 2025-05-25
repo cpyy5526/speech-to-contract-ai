@@ -5,6 +5,7 @@ import Signup from "./pages/Signup";
 import Home from "./pages/Home";
 import Recording from "./pages/Recording";
 import Converting from "./pages/Converting";
+import Generating from "./pages/Contract_generate"
 import Download from "./pages/Contract_download";
 import Reset from "./pages/Reset_password";
 import { getCurrentUser } from "./services/authApiMock"; 
@@ -49,6 +50,7 @@ function AppWithAuthCheck() {
       <Route path="/home" element={<Home user={user} />} />
       <Route path="/recording" element={<Recording user={user} />} />
       <Route path="/converting" element={<Converting user={user} />} />
+      <Route path="/generating" element={<Generating user={user} />} />
       <Route path="/download" element={<Download user={user} />} />
     </Routes>
   );

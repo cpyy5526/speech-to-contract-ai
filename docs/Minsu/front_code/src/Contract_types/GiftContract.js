@@ -234,3 +234,4 @@ const GiftContract = forwardRef(({ contract, suggestions = [] }, ref) => {
 });
 
 export default GiftContract;
+
