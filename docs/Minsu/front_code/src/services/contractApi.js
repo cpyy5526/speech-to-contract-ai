@@ -160,3 +160,90 @@ export async function getSuggestions(contractId) {
     throw error;
   }
 }
+
+
+// 계약서 초기 버전으로 되돌리기
+export async function restoreContract(contractId) {
+  try {
+    const response = await api.post(`/contracts/${contractId}/restore`);
+    if (response.status === 204) {
+      console.log("✅ 계약서 초기 상태로 복구 성공 (204 No Content)");
+    }
+  } catch (error) {
+    const { status, data } = error.response || {};
+
+    switch (status) {
+      case 401:
+        if (data.detail === "Missing token") {
+          alert("🔒 로그인 정보가 없습니다. 다시 로그인해주세요.");
+        } else if (data.detail === "Invalid token") {
+          alert("🔒 로그인 정보가 유효하지 않습니다.");
+        } else if (data.detail === "Expired token") {
+          alert("🔒 로그인 세션이 만료되었습니다.");
+        }
+        break;
+
+      case 404:
+        alert("❗ 해당 계약서를 찾을 수 없습니다.");
+        break;
+
+      case 500:
+        if (data.detail === "Initial contents missing") {
+          alert("⚠️ 초기 생성본이 존재하지 않아 복구할 수 없습니다.");
+        } else if (data.detail === "Database update failed") {
+          alert("⚠️ 저장 중 오류가 발생했습니다.");
+        } else {
+          alert("⚠️ 서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+        }
+        break;
+
+      default:
+        alert(`❌ 알 수 없는 오류: ${status}`);
+    }
+
+    throw error;
+  }
+}
+
+
+
+// 계약서 삭제
+export async function deleteContract(contractId) {
+  try {
+    const response = await api.delete(`/contracts/${contractId}`);
+    if (response.status === 204) {
+      console.log("✅ 계약서 삭제 성공 (204 No Content)");
+    }
+  } catch (error) {
+    const { status, data } = error.response || {};
+
+    switch (status) {
+      case 401:
+        if (data.detail === "Missing token") {
+          alert("🔒 로그인 정보가 없습니다. 다시 로그인해주세요.");
+        } else if (data.detail === "Invalid token") {
+          alert("🔒 로그인 정보가 유효하지 않습니다.");
+        } else if (data.detail === "Expired token") {
+          alert("🔒 로그인 세션이 만료되었습니다.");
+        }
+        break;
+
+      case 404:
+        alert("❗ 해당 계약서를 찾을 수 없습니다.");
+        break;
+
+      case 500:
+        if (data.detail === "Database update failed") {
+          alert("⚠️ 계약서 삭제에 실패했습니다.");
+        } else {
+          alert("⚠️ 서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+        }
+        break;
+
+      default:
+        alert(`❌ 알 수 없는 오류: ${status}`);
+    }
+
+    throw error;
+  }
+}
