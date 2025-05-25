@@ -194,3 +194,21 @@ export async function getSuggestions(contractId) {
 }
 
 
+export async function restoreContract(contractId) {
+  console.log("📦 [Mock] 초기 계약서로 복구 요청:", contractId);
+
+  return new Promise((resolve, reject) => {
+    console.log("✅ [Mock] 복구 완료 (204)");
+    resolve(); // 204 No Content
+  });
+}
+
+
+export async function deleteContract(contractId) {
+  console.log("🗑️ [Mock] 계약서 삭제 요청:", contractId);
+
+  return new Promise((resolve, reject) => {
+    console.log("✅ [Mock] 계약서 삭제 성공 (204)");
+    resolve(); // 204 No Content
+  });
+}
