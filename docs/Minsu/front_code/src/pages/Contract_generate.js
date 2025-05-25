@@ -3,7 +3,7 @@ import "../styles/Converting.css";
 import { useNavigate } from "react-router-dom";
 import { generateContract, getContractStatus, cancelContractGeneration } from "../services/contractApiMock";
 
-function ContractGenerate() {
+function Converting() {
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -94,4 +94,4 @@ function ContractGenerate() {
   );
 }
 
-export default ContractGenerate;
+export default Converting;
