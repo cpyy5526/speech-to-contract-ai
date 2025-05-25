@@ -6,7 +6,7 @@ import Home from "./pages/Home";
 import Recording from "./pages/Recording";
 import Converting from "./pages/Converting";
 import Download from "./pages/Contract_download";
-import { fetchWithAuth } from "./utils/FetchWithAuth";
+import { getCurrentUser } from "./services/authApiMock"; 
 
 //  로그인 확인 컴포넌트
 function AppWithAuthCheck() {
@@ -15,52 +15,24 @@ function AppWithAuthCheck() {
   const navigate = useNavigate();
   const location = useLocation();
 
+
   useEffect(() => {
     const checkLogin = async () => {
-      // 로그인 페이지에서는 검사 생략
       if (location.pathname === "/login" || location.pathname === "/signup") {
         setLoading(false);
         return;
       }
 
-        try {
-        const res = await fetchWithAuth("http://localhost:8000/user/me");
-
-      if (res.status === 200) {
-        const data = await res.json();
-        setUser(data);
-      } 
-      else {
-        const error = await res.json();
-        
-        if (res.status === 401 && error.detail === "Missing token") {
-          alert("로그인 정보가 없습니다. 다시 로그인해주세요.");
-        } 
-        
-        else if (res.status === 401 && error.detail === "Invalid token") {
-          alert("유효하지 않은 토큰입니다. 다시 로그인해주세요.");
-        } 
-        
-        else if (res.status === 500) {
-          alert("서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
-        } 
-        
-        else {
-          alert("알 수 없는 오류: " + error.detail);
-        }
-        localStorage.clear();
-        navigate("/login");
+      try {
+        const userData = await getCurrentUser(); // ✅ Axios 사용
+        setUser(userData);
+      } catch (err) {
+        console.error("로그인 체크 실패:", err);
+        // 이미 authApi에서 처리함
+      } finally {
+        setLoading(false);
       }
-
-    } 
-    
-      catch (err) {
-      console.error("서버 연결 실패:", err);
-      alert("서버에 연결할 수 없습니다. 인터넷 상태를 확인해주세요.");
-      localStorage.clear();
-      navigate("/login");
-      }
-  };
+    };
 
     checkLogin();
   }, [navigate, location.pathname]);

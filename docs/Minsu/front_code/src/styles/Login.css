@@ -88,3 +88,16 @@
     font-size: 20px;
   }
   
+
+  .forgot-password {
+  font-size: 12px;
+  color: #666;
+  text-align: right;
+  margin-top: 4px;
+  margin-bottom: 12px;
+  cursor: pointer;
+}
+
+.forgot-password:hover {
+  text-decoration: underline;
+}
