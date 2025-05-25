@@ -6,6 +6,7 @@ import Home from "./pages/Home";
 import Recording from "./pages/Recording";
 import Converting from "./pages/Converting";
 import Download from "./pages/Contract_download";
+import Reset from "./pages/Reset_password";
 import { getCurrentUser } from "./services/authApiMock"; 
 
 //  로그인 확인 컴포넌트
@@ -44,6 +45,7 @@ function AppWithAuthCheck() {
       <Route path="/" element={<Login />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
+      <Route path="/reset" element={<Reset />} />
       <Route path="/home" element={<Home user={user} />} />
       <Route path="/recording" element={<Recording user={user} />} />
       <Route path="/converting" element={<Converting user={user} />} />

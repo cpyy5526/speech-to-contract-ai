@@ -9,9 +9,16 @@ import user_icon from '../images/user_icon.png';
 
 
 import { login, loginWithGoogle } from "../services/authApiMock";
+import { requestPasswordReset } from "../services/authApiMock";
+
 
 function Login() {
   const navigate = useNavigate();
+  const [showResetPanel, setShowResetPanel] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+
+
+
   const [form, setForm] = useState({
     username: "",
     password: ""
@@ -48,6 +55,30 @@ function Login() {
     }
   };
 
+  
+  const handleReset = async () => {
+    try {
+      const status = await requestPasswordReset(resetEmail);
+      if (status === 204) {
+        alert("📬 비밀번호 재설정 링크가 이메일로 전송되었습니다.");
+      }
+    } catch (err) {
+      console.error("비밀번호 재설정 실패:", err);
+      // 에러는 내부에서 alert 처리됨
+    }
+  };
+  
+  const handleResetRequest = async () => {
+    try {
+      await requestPasswordReset(resetEmail);
+      alert("📬 이메일로 재설정 링크가 전송되었습니다.");
+      setShowResetPanel(false);
+    } catch (err) {
+      console.error("비밀번호 재설정 실패:", err);
+    }
+  };
+
+
   return (
     <div className="login-container">
       <div className="login-box">
@@ -83,10 +114,9 @@ function Login() {
           </div>
         </div>
 
-        <p className="forgot-password" onClick={() => navigate("/reset")}>
+        <p className="forgot-password" onClick={() => setShowResetPanel(true)}>
           비밀번호를 잊으셨나요?
         </p>
-        
 
         <button className="btn login-btn" onClick={handleLogin}>
           로그인
@@ -100,6 +130,24 @@ function Login() {
         <hr />
         <button className="btn signup-btn" onClick={() => navigate("/signup")}>회원가입</button>
       </div>
+
+       {showResetPanel && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h3>비밀번호 재설정</h3>
+            <input
+              type="email"
+              placeholder="가입된 이메일을 입력하세요"
+              value={resetEmail}
+              onChange={(e) => setResetEmail(e.target.value)}
+            />
+            <div className="modal-buttons">
+              <button onClick={handleResetRequest}>링크 전송</button>
+              <button onClick={() => setShowResetPanel(false)}>닫기</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

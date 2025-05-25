@@ -1,20 +1,55 @@
-import React from "react";
+import React, { useState, useRef, useEffect } from "react";
 import "../styles/Home.css";
 import micIcon from "../images/mic_icon.png";
 import docIcon from "../images/doc_icon.png";
 import { auth, signOut } from "../firebase";
 import { useNavigate } from "react-router-dom";
-import { useRef } from "react";
+import { changePassword } from "../services/authApiMock"; // 또는 authApi로 교체 가능
+import { deleteAccount } from "../services/authApiMock"; // 또는 authApi
+
 
 function Home({ user }) {
   const navigate = useNavigate();
+  const fileInputRef = useRef();
+  const menuRef = useRef();
+
+  const [showChangeModal, setShowChangeModal] = useState(false);
+  const [oldPassword, setOldPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const handleLogout = () => {
     localStorage.clear();
     window.location.href = "/login";
   };
 
-  const fileInputRef = useRef();
+  const handleDeleteAccount = async () => {
+    if (!window.confirm("⚠️ 정말 계정을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.")) return;
+
+    try {
+      const status = await deleteAccount();
+      if (status === 204) {
+        alert("✅ 계정이 성공적으로 삭제되었습니다.");
+        localStorage.clear();
+        navigate("/login");
+      }
+    } catch (err) {
+      console.error("계정 삭제 실패:", err);
+    }
+  };
+
 
   const handleUploadClick = () => {
     fileInputRef.current.click();
@@ -28,14 +63,49 @@ function Home({ user }) {
     }
   };
 
+  const handlePasswordChange = async () => {
+    try {
+      const status = await changePassword(oldPassword, newPassword);
+      if (status === 204) {
+        alert("비밀번호가 성공적으로 변경되었습니다. 다시 로그인해주세요.");
+        localStorage.clear();
+        navigate("/login");
+      }
+    } catch (err) {
+      console.error("비밀번호 변경 실패:", err);
+    }
+  };
+
   return (
     <div className="home-container">
       <div className="user-info">
         {user && (
-          <>
-            <span>{user.username}님</span>
-            <button onClick={handleLogout}>로그아웃</button>
-          </>
+          <div className="user-menu-wrapper" ref={menuRef} style={{ position: "relative" }}>
+            <span className="user-name" onClick={() => setMenuOpen(!menuOpen)} style={{ cursor: "pointer" }}>
+              {user.username}님
+            </span>
+            {menuOpen && (
+              <div className="user-menu" style={{
+                position: "absolute",
+                top: "100%",
+                right: 0,
+                background: "white",
+                border: "1px solid #ccc",
+                boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
+                padding: "10px",
+                borderRadius: "6px",
+                zIndex: 1000,
+                width: "100px",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+              }}>
+                <button style={{ width: "100%", textAlign: "center" }} onClick={() => setShowChangeModal(true)}>비밀번호 변경</button>
+                <button style={{ width: "100%", textAlign: "center" }} onClick={handleLogout}>로그아웃</button>
+                <button style={{ width: "100%", textAlign: "center" }} onClick={handleDeleteAccount}>계정 삭제</button>
+              </div>
+            )}
+          </div>
         )}
       </div>
 
@@ -74,6 +144,28 @@ function Home({ user }) {
           <button>계약서 예시</button>
         </div>
       </main>
+
+      {showChangeModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h3>비밀번호 변경</h3>
+            <input
+              type="password"
+              placeholder="현재 비밀번호"
+              value={oldPassword}
+              onChange={(e) => setOldPassword(e.target.value)}
+            />
+            <input
+              type="password"
+              placeholder="새 비밀번호"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+            />
+            <button onClick={handlePasswordChange}>변경</button>
+            <button onClick={() => setShowChangeModal(false)}>닫기</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
