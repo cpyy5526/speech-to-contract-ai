@@ -6,40 +6,34 @@ import { auth, signOut } from "./firebase";
 import { useNavigate } from "react-router-dom";
 import { useRef } from "react";
 
-function Home() {
-    const user = auth.currentUser;
-    const navigate = useNavigate();
+function Home({ user }) {
+  const navigate = useNavigate();
 
-    const handleLogout = () => {
-      signOut(auth)
-        .then(() => {
-          window.location.href = "/"; // 로그아웃 후 로그인 페이지로 이동
-        })
-        .catch((err) => console.error("로그아웃 실패:", err));
-    };
+  const handleLogout = () => {
+    localStorage.clear();
+    window.location.href = "/login";
+  };
 
-    const fileInputRef = useRef();
-    const handleUploadClick = () => {
-      fileInputRef.current.click(); // input[type="file"] 
-    };
-    
-    const handleFileChange = (e) => {
-      const file = e.target.files[0];
-      if (file) {
-        console.log("선택된 파일:", file);
-        alert("파일 업로드 완료: " + file.name);
-        
-      }
-    };
+  const fileInputRef = useRef();
+
+  const handleUploadClick = () => {
+    fileInputRef.current.click();
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      console.log("선택된 파일:", file);
+      alert("파일 업로드 완료: " + file.name);
+    }
+  };
 
   return (
     <div className="home-container">
-          {/* 오른쪽 상단 사용자 정보 */}
       <div className="user-info">
         {user && (
           <>
-            <img src={user.photoURL} alt="User" className="user-photo" />
-            <span>{user.displayName}님</span>
+            <span>{user.username}님</span>
             <button onClick={handleLogout}>로그아웃</button>
           </>
         )}
@@ -63,7 +57,7 @@ function Home() {
         <div className="record-box">
           <p className="record-text">대화 내용의 녹음을 시작하거나 대화 내용 녹음 파일을 업로드해주세요</p>
           <div className="record-icons">
-            <img src={micIcon} onClick={()=>navigate("/recording")} alt="Mic" />
+            <img src={micIcon} onClick={() => navigate("/recording")} alt="Mic" />
             <img src={docIcon} onClick={handleUploadClick} alt="Doc" />
             <input
               type="file"
