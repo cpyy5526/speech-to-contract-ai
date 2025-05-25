@@ -24,6 +24,8 @@ async def initiate_upload(
     current_user=Depends(get_current_user),
 ):
     """음성 업로드 세션을 초기화하고 업로드 URL을 반환합니다."""
+    if not data.filename.strip():
+        raise HTTPException(status_code=400, detail="Missing file name")
     return await svc.register_upload(data.filename, current_user.id, session)
 
 

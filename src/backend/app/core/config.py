@@ -89,6 +89,7 @@ class Settings:
         # ------------------------------------------------------------------ #
         # 파일 업로드 경로
         # ------------------------------------------------------------------ #
+        self.UPLOAD_BASE_URL: str = os.getenv("UPLOAD_BASE_URL", "http://localhost:8000")
         self.AUDIO_UPLOAD_DIR: str = os.getenv("AUDIO_UPLOAD_DIR", "uploads/audio")
         self.TEXT_UPLOAD_DIR: str = os.getenv("TEXT_UPLOAD_DIR", "uploads/text")
 

@@ -1,8 +1,9 @@
 import os
-from uuid import uuid4, UUID
+from uuid import UUID
 
 from fastapi import HTTPException, status
 from sqlmodel import select
+from sqlalchemy.exc import SQLAlchemyError
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.core.config import settings
@@ -10,63 +11,56 @@ from app.models.transcription import Transcription, TranscriptionStatus
 from app.schemas.transcription import UploadInitResponse, UploadStatusResponse
 from app.tasks.transcriptions import process_uploaded_audio
 
-ALLOWED_EXTENSIONS = set(settings.ALLOWED_EXTENSIONS)
-
-
-def _validate_filename(filename: str) -> str:
-    _, ext = os.path.splitext(filename)
-    if not ext or ext.lower() not in ALLOWED_EXTENSIONS:
-        raise HTTPException(
-            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
-            detail="Unsupported audio format",
-        )
-    return ext.lower()
-
 
 async def register_upload(
     filename: str, user_id: UUID, session: AsyncSession
 ) -> UploadInitResponse:
     """업로드 세션을 등록하고 클라이언트에 업로드 URL을 제공합니다."""
-    ext = _validate_filename(filename)
-    transcription_id = uuid4()
-    audio_filename = f"{transcription_id}{ext}"
+    ext = _validate_ext(filename)
 
     transcription = Transcription(
-        id=transcription_id,
         user_id=user_id,
-        audio_file=audio_filename,
         status=TranscriptionStatus.uploading,
     )
-    session.add(transcription)
-    await session.commit()
 
-    upload_url = f"{settings.UPLOAD_BASE_URL}/upload/audio/{transcription_id}"
+    try:
+        session.add(transcription)
+        await session.commit()
+        await session.refresh(transcription)
+        transcription.audio_file = f"{transcription.id}{ext}"
+        await session.commit()
+
+    except SQLAlchemyError:
+        await session.rollback()
+        raise HTTPException(status_code=500, detail="Unexpected server error")
+    
+    upload_url = f"{settings.UPLOAD_BASE_URL}/upload/audio/{transcription.id}"
     return UploadInitResponse(upload_url=upload_url)
 
 
 async def trigger_transcription(transcription_id: UUID, session: AsyncSession) -> None:
     """업로드 완료 후 변환 태스크를 실행합니다."""
     transcription = await session.get(Transcription, transcription_id)
+    
+    # API 설계상 클라이언트 요청만으로는 논리적으로 발생할 수 없지만 방어적으로 처리
     if not transcription:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
 
-    transcription.status = TranscriptionStatus.uploaded
-    await session.commit()
+    # 서버 내부 실행 환경이나 DB의 예기치 못한 문제. 로그만 남김 (클라이언트에서는 계속 uploading으로 표시됨)
+    try:
+        transcription.status = TranscriptionStatus.uploaded
+        await session.commit()
+    except SQLAlchemyError as exc:
+        await session.rollback()
+        # logger.exception("DB commit 실패: transcription_id=%s", transcription_id)
+        raise HTTPException(status_code=500, detail="Unexpected server error")
 
     # Celery 태스크 큐에 등록
     process_uploaded_audio.delay(str(transcription_id))
 
 
 async def get_audio_status(user_id: UUID, session: AsyncSession) -> UploadStatusResponse:
-    result = await session.exec(
-        select(Transcription)
-        .where(Transcription.user_id == user_id)
-        .order_by(Transcription.created_at.desc())
-        .limit(1)
-    )
-    transcription = result.first()
-    if not transcription:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No audio data for this user")
+    transcription = await _get_latest(user_id, session)
     return UploadStatusResponse(status=transcription.status.value)
 
 
@@ -92,14 +86,33 @@ async def retry_transcription(user_id: UUID, session: AsyncSession) -> None:
     process_uploaded_audio.delay(str(transcription.id))
 
 
+def _validate_ext(filename: str) -> str:
+    _, ext = os.path.splitext(filename)
+    if not ext or ext.lower() not in settings.ALLOWED_AUDIO_EXTENSIONS:
+        raise HTTPException(
+            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            detail="Unsupported audio format",
+        )
+    return ext.lower()
+
+
 async def _get_latest(user_id: UUID, session: AsyncSession) -> Transcription:
-    result = await session.exec(
-        select(Transcription)
-        .where(Transcription.user_id == user_id)
-        .order_by(Transcription.created_at.desc())
-        .limit(1)
-    )
-    transcription = result.first()
-    if not transcription:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No audio data for this user")
+    try:
+        result = await session.exec(
+            select(Transcription)
+            .where(Transcription.user_id == user_id)
+            .order_by(Transcription.created_at.desc())
+            .limit(1)
+        )
+        transcription = result.first()
+        if not transcription:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No audio data for this user"
+            )
+    except SQLAlchemyError:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unexpected server error"
+        )
     return transcription
