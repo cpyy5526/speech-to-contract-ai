@@ -215,5 +215,5 @@ $RECYCLE.BIN/
 # End of https://www.toptal.com/developers/gitignore/api/windows,python,venv
 *.txt
 *.json
-/home/yuun/speech-to-contract-ai/PromptModules_yuun/user_data
-/home/yuun/speech-to-contract-ai/PromptModules_yuun/test_contract_pipeline.py
+PromptModules_yuun/user_data
+PromptModules_yuun/test_contract_pipeline.py
