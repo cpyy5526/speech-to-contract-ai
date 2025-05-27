@@ -1,33 +1,5 @@
-.converting-container {
-    background-color: #eee;
-    min-height: 100vh;
-    padding: 20px;
-    font-family: sans-serif;
-  }
-  
-  .top-text {
-    font-size: 13px;
-    color: #777;
-    margin-bottom: 15px;
-  }
-  .exchange_icon{
-    width: 100px;
-    height: 100px;
-  }
-  .center-content {
-    background-color: white;
-    border-radius: 10px;
-    padding: 80px;
-    text-align: center;
-  }
-  
-  .arrows {
-    font-size: 40px;
-    margin-bottom: 20px;
-  }
-
-  .converting-container {
-  background-color: #eee;
+.contract-generate-container {
+  background-color: #f0f0f0;
   min-height: 100vh;
   display: flex;
   justify-content: center;
@@ -35,7 +7,7 @@
   font-family: sans-serif;
 }
 
-.center-content {
+.contract-content {
   background-color: white;
   border-radius: 12px;
   padding: 60px 80px;
@@ -43,7 +15,7 @@
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
 }
 
-.spinner {
+.contract-spinner {
   margin: 0 auto 20px auto;
   width: 60px;
   height: 60px;
@@ -58,10 +30,10 @@
   100% { transform: rotate(360deg); }
 }
 
-.converting-container button {
+.contract-generate-container button {
   margin-top: 20px;
   padding: 10px 20px;
-  background-color: #ff4d4f;
+  background-color: #007bff;
   color: white;
   border: none;
   border-radius: 8px;

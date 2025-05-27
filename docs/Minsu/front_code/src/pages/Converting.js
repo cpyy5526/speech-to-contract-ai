@@ -140,7 +140,14 @@ function Converting() {
 
 
   return (
-    <div className="converting-container">
+  <div className="converting-container">
+    <div className="center-content">
+      {/* 회전 로딩 아이콘 */}
+      {["uploading", "uploaded", "transcribing"].includes(status) && (
+        <div className="spinner" />
+      )}
+
+      {/* 상태별 텍스트 메시지 */}
       {status === "uploading" && <p>📤 음성 파일 업로드 중입니다...</p>}
       {status === "uploaded" && <p>📦 업로드 완료! 텍스트로 변환 대기 중...</p>}
       {status === "transcribing" && <p>🧠 텍스트로 변환 중입니다...</p>}
@@ -159,7 +166,9 @@ function Converting() {
         <button onClick={handleCancel}>🛑 중단</button>
       )}
     </div>
+  </div>
   );
+
 }
 
 export default Converting;

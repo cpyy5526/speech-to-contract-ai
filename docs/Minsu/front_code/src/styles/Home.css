@@ -149,3 +149,80 @@
   border-radius: 10px;
   width: 300px;
 }
+
+.modal-title {
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.modal-subtitle {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.modal-input {
+  width: 100%;
+  margin-bottom: 15px;
+  padding: 10px 12px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-sizing: border-box;
+}
+
+.modal-input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.modal-buttons .btn {
+  flex: 1;
+  padding: 10px;
+  font-weight: bold;
+  border-radius: 6px;
+  cursor: pointer;
+  border: none;
+}
+
+.modal-buttons .btn.primary {
+  background-color: #007bff;
+  color: white;
+}
+
+.modal-buttons .btn.primary:hover {
+  background-color: #0056b3;
+}
+
+.modal-buttons .btn.cancel {
+  background-color: #f2f2f2;
+}
+
+.modal-buttons .btn.cancel:hover {
+  background-color: #e0e0e0;
+}
+
+.go-home-btn {
+  width: 100%;
+  padding: 10px 16px;
+  margin-bottom: 20px;
+  background-color: #ffffff;
+  border: 1px solid #007bff;
+  color: #007bff;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
