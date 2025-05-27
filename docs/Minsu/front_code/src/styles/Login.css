@@ -73,7 +73,53 @@
     width: 20px;
     height: 20px;
   }
-  
+  .login-title {
+  text-align: center;
+  margin-bottom: 25px;
+  font-size: 20px;
+  font-weight: bold;
+  color: #333;
+}
+
+.divider {
+  text-align: center;
+  font-size: 12px;
+  color: #aaa;
+  margin: 18px 0 10px 0;
+}
+
+.input-icon {
+  background: #fafafa;
+  transition: border 0.3s;
+}
+
+.input-icon:focus-within {
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
+}
+
+.google-btn:hover,
+.signup-btn:hover,
+.login-btn:hover {
+  background-color: #e2e2e2;
+}
+
+.modal-content p {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 10px;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: space-between;
+}
+
+.modal-buttons .btn {
+  flex: 1;
+  margin: 5px;
+}
+
   .signup-btn {
     background-color: #f0f0f0;
     margin-top: 7px;
