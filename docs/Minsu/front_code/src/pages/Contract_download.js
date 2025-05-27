@@ -120,6 +120,12 @@ function Contract_download() {
   return (
     <div className="download-container">
       <aside className="sidebar">
+        <button
+          onClick={() => navigate("/home")}
+          className="go-home-btn"
+        >
+          ⬅ 메인페이지
+        </button>
         <h3 className="sidebar-title">계약서 작성 목록</h3>
         <ul className="contract-list">
           {contractList.map((item) => (
@@ -136,23 +142,22 @@ function Contract_download() {
 
 
       <main className="preview-area">
-        <div className="contract-rendered" ref={contractRef}> {/* 여기로 이동 */}
-          {!contract ? (
-            <p>계약서를 불러오는 중입니다...</p>
-          ) : contract.contract_type === "증여 계약" ? (
-            <GiftContract contract={contract} suggestions={suggestions} />
-          ) : (
-            <p>지원되지 않는 계약서 유형입니다: {contract.contract_type}</p>
-          )}
-        </div>
-        
+          <div className="contract-rendered" ref={contractRef}>
+              {!contract ? (
+                <p>계약서를 불러오는 중입니다...</p>
+              ) : contract.contract_type === "증여 계약" ? (
+                <GiftContract contract={contract} suggestions={suggestions} />
+              ) : (
+                <p>지원되지 않는 계약서 유형입니다: {contract.contract_type}</p>
+              )}
+            </div>
 
-        <div className="download-button-wrap">
-          <button className="download-btn" onClick={handleSave}>계약서 저장</button>
-          <button className="download-btn" onClick={handleDownload}>계약서 다운로드</button>
-          <button className="download-btn" onClick={handleRestore}>되돌리기</button>
-          <button className="download-btn" onClick={handleDelete} style={{ color: "red" }}>삭제</button>
-        </div>
+            <div className="download-button-wrap">
+              <button className="download-btn" onClick={handleSave}>💾 저장</button>
+              <button className="download-btn" onClick={handleDownload}>⬇️ 다운로드</button>
+              <button className="download-btn" onClick={handleRestore}>↩️ 되돌리기</button>
+              <button className="download-btn danger" onClick={handleDelete}>🗑️ 삭제</button>
+          </div>
 
 
       </main>

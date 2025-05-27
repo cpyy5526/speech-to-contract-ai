@@ -6,17 +6,20 @@ import { auth, signOut } from "../firebase";
 import { useNavigate } from "react-router-dom";
 import { changePassword } from "../services/authApiMock"; // 또는 authApi로 교체 가능
 import { deleteAccount } from "../services/authApiMock"; // 또는 authApi
-
+import { getContractList } from "../services/contractApiMock";
+import { initiateTranscription } from "../services/convertApiMock";
 
 function Home({ user }) {
   const navigate = useNavigate();
   const fileInputRef = useRef();
   const menuRef = useRef();
+  const [contractList, setContractList] = useState([]);
 
   const [showChangeModal, setShowChangeModal] = useState(false);
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
+  
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -29,6 +32,19 @@ function Home({ user }) {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  useEffect(() => {
+  const fetchContractList = async () => {
+    try {
+      const result = await getContractList();
+      setContractList(result);
+    } catch (err) {
+      console.error("계약서 목록 불러오기 실패:", err.response?.data?.detail || err.message);
+    }
+  };
+
+  fetchContractList();
+}, []);
 
   const handleLogout = () => {
     localStorage.clear();
@@ -55,11 +71,22 @@ function Home({ user }) {
     fileInputRef.current.click();
   };
 
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const file = e.target.files[0];
-    if (file) {
-      console.log("선택된 파일:", file);
-      alert("파일 업로드 완료: " + file.name);
+    if (!file) return;
+
+    try {
+      const uploadUrl = await initiateTranscription(file.name);  
+      navigate("/converting", {
+        state: {
+          uploadUrl,
+          audioBlob: file,
+          filename: file.name,
+        },
+      });
+    } catch (err) {
+      console.error("업로드 URL 생성 실패:", err);
+      alert("파일 업로드 준비 중 오류가 발생했습니다.");
     }
   };
 
@@ -112,12 +139,18 @@ function Home({ user }) {
       <aside className="sidebar">
         <h3 className="sidebar-title">계약서 작성 목록</h3>
         <ul className="contract-list">
-          <li><span>2025-04-01</span> 문화계약서</li>
-          <li><span>2025-03-27</span> 금융차용증서</li>
-          <li><span>2025-03-25</span> 해외계약서</li>
-          <li><span>2025-03-11</span> 부동산 임대차계약서</li>
+          {contractList.map((item) => (
+            <li
+              key={item.id}
+              onClick={() => navigate(`/download?contract_id=${item.id}`)}
+              style={{ cursor: "pointer" }}
+            >
+              <span>{item.created_at.slice(0, 10)}</span> {item.contract_type}
+            </li>
+          ))}
         </ul>
       </aside>
+
 
       <main className="main-area">
         <header className="main-header">
@@ -139,33 +172,38 @@ function Home({ user }) {
           </div>
         </div>
 
-        <div className="home-buttons">
-          <button>사용방법</button>
-          <button>계약서 예시</button>
-        </div>
+        
       </main>
 
       {showChangeModal && (
         <div className="modal-overlay">
           <div className="modal-content">
-            <h3>비밀번호 변경</h3>
+            <h3 className="modal-title">🔐 비밀번호 변경</h3>
+            <p className="modal-subtitle">현재 비밀번호와 새 비밀번호를 입력하세요</p>
+            
             <input
               type="password"
               placeholder="현재 비밀번호"
               value={oldPassword}
               onChange={(e) => setOldPassword(e.target.value)}
+              className="modal-input"
             />
             <input
               type="password"
               placeholder="새 비밀번호"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
+              className="modal-input"
             />
-            <button onClick={handlePasswordChange}>변경</button>
-            <button onClick={() => setShowChangeModal(false)}>닫기</button>
+            
+            <div className="modal-buttons">
+              <button className="btn primary" onClick={handlePasswordChange}>변경</button>
+              <button className="btn cancel" onClick={() => setShowChangeModal(false)}>닫기</button>
+            </div>
           </div>
         </div>
-      )}
+       )}
+
     </div>
   );
 }
