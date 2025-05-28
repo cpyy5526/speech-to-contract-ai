@@ -92,6 +92,7 @@ export async function signup({ email, username, password }) {
             },
           },
         });
+        alert("❗ 이미 등록된 이메일입니다.");
       } else {
         console.log("✅ [Mock] 회원가입 성공");
         resolve(204); // 실제 서버는 204 반환
@@ -119,6 +120,7 @@ export async function requestPasswordReset(email) {
             data: { status: 400, detail: "Invalid email format" },
           },
         });
+        alert("❗ 잘못된 이메일 형식입니다.");
       } else {
         console.log("✅ [Mock] 이메일 전송 완료 (204)");
         resolve(204); // 실제 서버와 동일하게 204 응답 시뮬레이션
@@ -161,6 +163,7 @@ export async function confirmPasswordReset(token, newPassword) {
             },
           },
         });
+        alert("❗ 비밀번호 보안 기준을 만족하지 않습니다.");
       } else {
         console.log("✅ [Mock] 비밀번호 재설정 성공 (204)");
         resolve(204); // 실제 서버도 204 No Content 반환
@@ -217,6 +220,7 @@ export async function changePassword(oldPassword, newPassword) {
             },
           },
         });
+        alert("❌ 현재 비밀번호가 일치하지 않습니다.");
         return;
       }
 
@@ -235,7 +239,7 @@ export async function deleteAccount() {
 
   return new Promise((resolve, reject) => {
     setTimeout(() => {
-      const simulateError = false; // ← true로 바꾸면 실패 테스트 가능
+      const simulateError = true; // ← true로 바꾸면 실패 테스트 가능
 
       if (simulateError) {
         reject({
