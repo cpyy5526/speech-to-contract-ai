@@ -1,9 +1,6 @@
 # 계약서 유형 타입 추출 모듈
 
-import openai
-import os
-from typing import Callable
-from dotenv import load_dotenv, find_dotenv
+from typing import Callable, List, Dict, Awaitable
 
 # 사전 정의된 계약 유형 리스트
 CONTRACT_TYPES = [
@@ -11,10 +8,10 @@ CONTRACT_TYPES = [
 ]
 
 #계약 유형 추출
-def get_contract_type(
+async def get_contract_type(
     conversation_text: str,
-    gpt_caller: Callable[[list[dict]], str]
-    )->str:
+    gpt_caller: Callable[[List[Dict[str, str]]], Awaitable[str]]
+    ) -> str:
     
     type_prompt=f"""
         당신은 대화 내용을 문석하여 계약 유형을 정확히 판단하는 법률 전문가 AI입니다. 
@@ -61,9 +58,8 @@ def get_contract_type(
             },
         ]
     
-    response=gpt_caller(messages)
-
-    result_type= response.choices[0].message.content.strip().split()[-1]
+    result = await gpt_caller(messages)
+    result_type= result.split()[-1]
     
     # 보정: 결과가 예상 유형이 아닐 경우 '기타' 처리
     if result_type not in CONTRACT_TYPES:
