@@ -55,7 +55,9 @@ function Converting() {
       } catch (retryErr) {
         const retryDetail = retryErr.response?.data?.detail || retryErr.message || retryErr;
         console.error("❌ 업로드 재시도 실패:", retryDetail);
-        setStatus("upload_failed"); // 진짜 실패 시만 상태 표시
+        setStatus("upload_failed");
+
+        navigate("/recording");
       }
     }
   };
@@ -98,7 +100,13 @@ function Converting() {
           setStatus(serverStatus);
 
           if (serverStatus === "done") {
+            alert("✅ 변환이 완료되었습니다.");
             navigate("/generating");
+          }
+
+          if (serverStatus === "cancelled") {
+            alert("⛔ 변환이 취소되었습니다.");
+            navigate("/home");
           }
 
           return;
@@ -132,6 +140,7 @@ function Converting() {
     try {
       await cancelTranscription();
       console.log("📭 중단 요청 전송됨 (상태는 서버에서 변경됨)");
+      startPolling();
     } catch (err) {
       console.error("❌ 중단 요청 실패:", err);
       alert("중단 요청에 실패했습니다.");

@@ -33,6 +33,7 @@ function Login() {
       const data = await login(form.username, form.password); // ✅ axios 방식 사용
       localStorage.setItem("access_token", data.access_token);
       localStorage.setItem("refresh_token", data.refresh_token);
+      console.log(data.access_token, data.refresh_token)
       navigate("/home");
     } catch (err) {
       console.error("로그인 실패:", err);
@@ -48,6 +49,7 @@ function Login() {
       const data = await loginWithGoogle(idToken); // ✅ axios 방식 사용
       localStorage.setItem("access_token", data.access_token);
       localStorage.setItem("refresh_token", data.refresh_token);
+      console.log(data.access_token, data.refresh_token)
       alert("Google 로그인 성공!");
       navigate("/home");
     } catch (err) {
@@ -55,18 +57,6 @@ function Login() {
     }
   };
 
-  
-  const handleReset = async () => {
-    try {
-      const status = await requestPasswordReset(resetEmail);
-      if (status === 204) {
-        alert("📬 비밀번호 재설정 링크가 이메일로 전송되었습니다.");
-      }
-    } catch (err) {
-      console.error("비밀번호 재설정 실패:", err);
-      // 에러는 내부에서 alert 처리됨
-    }
-  };
   
   const handleResetRequest = async () => {
     try {

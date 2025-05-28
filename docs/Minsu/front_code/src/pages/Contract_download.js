@@ -22,6 +22,7 @@ function Contract_download() {
   const [suggestions, setSuggestions] = useState([]);
 
   const contractRef = useRef();
+  const giftContractRef = useRef();
   const location = useLocation();
 
   const params = new URLSearchParams(location.search);
@@ -36,6 +37,7 @@ function Contract_download() {
       try {
         const result = await getContractList();
         setContractList(result);
+ 
       } catch (err) {
         console.error("계약서 목록 불러오기 실패:", err.response?.data?.detail || err.message);
       }
@@ -62,7 +64,7 @@ function Contract_download() {
 
   const handleSave = async () => {
     try {
-      const edited = contractRef.current.extract();
+    const edited = giftContractRef.current.extract();
       await updateContractContent(contractId, edited);
     } catch (err) {
       console.error("❌ 저장 실패:", err);
@@ -77,16 +79,24 @@ function Contract_download() {
       return;
     }
 
-    const canvas = await html2canvas(element, { scale: 2 });
-    const imgData = canvas.toDataURL("image/png");
+    await new Promise((r) => setTimeout(r, 100)); // 안정성 확보용
 
-    const pdf = new jsPDF("p", "mm", "a4");
-    const width = pdf.internal.pageSize.getWidth();
-    const height = (canvas.height * width) / canvas.width;
+    try {
+      const canvas = await html2canvas(element, { scale: 2 });
+      const imgData = canvas.toDataURL("image/png");
 
-    pdf.addImage(imgData, "PNG", 0, 0, width, height);
-    pdf.save("contract.pdf");
+      const pdf = new jsPDF("p", "mm", "a4");
+      const width = pdf.internal.pageSize.getWidth();
+      const height = (canvas.height * width) / canvas.width;
+
+      pdf.addImage(imgData, "PNG", 0, 0, width, height);
+      pdf.save("contract.pdf");
+    } catch (err) {
+      console.error("다운로드 오류:", err);
+    }
   };
+
+
 
 
   const handleRestore = async () => {
@@ -142,15 +152,20 @@ function Contract_download() {
 
 
       <main className="preview-area">
-          <div className="contract-rendered" ref={contractRef}>
-              {!contract ? (
-                <p>계약서를 불러오는 중입니다...</p>
-              ) : contract.contract_type === "증여 계약" ? (
-                <GiftContract contract={contract} suggestions={suggestions} />
-              ) : (
-                <p>지원되지 않는 계약서 유형입니다: {contract.contract_type}</p>
-              )}
-            </div>
+        <div className="contract-rendered" ref={contractRef}>
+          {!contract ? (
+            <p>계약서를 불러오는 중입니다...</p>
+          ) : contract.contract_type === "증여 계약" ? (
+            <GiftContract
+              ref={giftContractRef}
+              contract={contract}
+              suggestions={suggestions}
+            />
+          ) : (
+            <p>지원되지 않는 계약서 유형입니다: {contract.contract_type}</p>
+          )}
+        </div>
+        
 
             <div className="download-button-wrap">
               <button className="download-btn" onClick={handleSave}>💾 저장</button>
