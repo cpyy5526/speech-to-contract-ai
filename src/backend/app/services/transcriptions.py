@@ -66,13 +66,18 @@ async def get_audio_status(user_id: UUID, session: AsyncSession) -> UploadStatus
 
 async def cancel_transcription(user_id: UUID, session: AsyncSession) -> None:
     transcription = await _get_latest(user_id, session)
+
     if transcription.status not in {
         TranscriptionStatus.uploading,
         TranscriptionStatus.uploaded,
         TranscriptionStatus.transcribing,
         TranscriptionStatus.transcription_failed,
     }:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Cannot cancel at this stage")
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Cannot cancel at this stage"
+        )
+
     transcription.status = TranscriptionStatus.cancelled
     await session.commit()
 

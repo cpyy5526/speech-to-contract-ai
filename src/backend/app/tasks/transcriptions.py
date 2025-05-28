@@ -33,6 +33,10 @@ def process_uploaded_audio(transcription_id: str) -> None:
                 await session.commit()
                 raise exc
             else:
+                updated_transcription = await session.get(Transcription, tid)
+                if updated_transcription.status == TranscriptionStatus.cancelled:
+                    return
+                
                 transcription.script_file = script_filename
                 transcription.status = TranscriptionStatus.done
                 await session.commit()
