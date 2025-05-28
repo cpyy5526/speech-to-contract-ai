@@ -28,7 +28,7 @@ export async function generateContract() {
 
   return new Promise((resolve) => {
     setTimeout(() => {
-      console.log("✅ [Mock] 계약서 생성 성공 (202)");
+      console.log("✅ [Mock] 계약서 생성 요청 성공 (202)");
       resolve({ message: "Contract generation started" }); // 필요 시 데이터 반환
     }, 1000);
   });
