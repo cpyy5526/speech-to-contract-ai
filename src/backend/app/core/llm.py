@@ -1,14 +1,8 @@
-"""app/core/llm.py - OpenAI GPT 호출 유틸리티
-------------------------------------------------
-서비스 레이어에서 의존성 주입 방식으로 사용되는 GPT 호출 모듈입니다.
-"""
-
 from __future__ import annotations
 
 import logging
 from typing import List, Dict, Any
 
-import openai
 from openai import AsyncOpenAI, AsyncError  # type: ignore
 
 from app.core.config import settings
@@ -62,7 +56,7 @@ async def call_gpt_api(messages: List[Dict[str, str]]) -> str:
         raise GPTCallError("Failed to call GPT API") from exc
 
     try:
-        return response.choices[0].message.content  # type: ignore[attr-defined]
+        return response.choices[0].message.content.strip()  # type: ignore[attr-defined]
     except (AttributeError, IndexError, KeyError) as exc:
         logger.exception("GPT 응답 파싱 실패: %s", exc)
         raise GPTCallError("Invalid response structure from GPT API") from exc

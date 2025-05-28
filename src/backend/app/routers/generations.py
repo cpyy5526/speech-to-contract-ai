@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from app.schemas.generations import GenerationStatusResponse
+from app.schemas.generation import GenerationStatusResponse
 from app.services import generations as generation_service
 from app.core.dependencies import get_session
 
