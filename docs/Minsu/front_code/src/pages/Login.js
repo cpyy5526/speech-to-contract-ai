@@ -37,10 +37,10 @@ function Login() {
       console.log(data.access_token, data.refresh_token)
       navigate("/home");
     } catch (err) {
-      console.error("로그인 실패:", err);
       // 에러 처리는 authApi에서 처리됨
     }
   };
+  
 
   const handleGoogleLogin = async () => {
     try {
@@ -51,10 +51,9 @@ function Login() {
       localStorage.setItem("access_token", data.access_token);
       localStorage.setItem("refresh_token", data.refresh_token);
       console.log(data.access_token, data.refresh_token)
-      alert("Google 로그인 성공!");
       navigate("/home");
     } catch (err) {
-      console.error("Google 로그인 실패:", err);
+      // 에러 처리는 authApi에서 처리됨
     }
   };
 
@@ -65,7 +64,7 @@ function Login() {
       alert("📬 이메일로 재설정 링크가 전송되었습니다.");
       setShowResetPanel(false);
     } catch (err) {
-      console.error("비밀번호 재설정 실패:", err);
+      // 에러 처리는 authApi에서 처리됨
     }
   };
 

@@ -37,7 +37,7 @@ function ResetPassword() {
         navigate("/login");
       }
     } catch (err) {
-      console.error("비밀번호 재설정 실패:", err);
+      // 에러 처리는 authApi에서 처리됨
     }
   };
 

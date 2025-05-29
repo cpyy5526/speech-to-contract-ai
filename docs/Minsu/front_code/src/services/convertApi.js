@@ -11,31 +11,28 @@ export async function initiateTranscription(filename) {
     const response = await api.post("/transcription/initiate", { filename });
 
     if (response.status === 202) {
-      console.log("✅ 업로드 예약 성공 (202 Accepted)");
       return response.data.upload_url;
     }
   } catch (error) {
-    const { status, detail } = error.response?.data || {};
+    const status = error.response?.status;
+    const detail = error.response?.data?.detail || "응답 없음";
 
-    switch (status) {
-      case 400:
+    if (status === 400) {
+      if (detail === "Missing file name") {
         alert("❗ 파일명이 누락되었습니다.");
-        break;
-
-      case 401:
-        alert("🔒 인증이 필요합니다. 다시 로그인해주세요.");
-        break;
-
-      case 415:
+      } else {
+        alert(`❗ 요청 오류: ${detail}`);
+      }
+    } else if (status === 415) {
+      if (detail === "Unsupported audio format") {
         alert("❗ 지원되지 않는 오디오 파일 형식입니다.");
-        break;
-
-      case 500:
-        alert("⚠️ 서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
-        break;
-
-      default:
-        alert(`❌ 오류 발생: ${status}`);
+      } else {
+        alert(`❗ 형식 오류: ${detail}`);
+      }
+    } else if (status === 500) {
+      alert("⚠️ 서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+    } else {
+      alert(`❌ 오류 발생: ${status}`);
     }
 
     throw error;
@@ -59,14 +56,33 @@ export async function uploadAudioFile(uploadUrl, audioBlob) {
       body: audioBlob,
     });
 
-    if (response.status === 204) {
-      console.log("✅ 파일 업로드 성공 (204 No Content)");
+    const status = response.status;
+    if (status === 204) return
+
+    const detail = await extractDetailFromResponse(response);
+    if (status === 400) {
+      if (detail === "Invalid or expired upload_url") {
+        alert("❗ 파일명이 누락되었습니다.");
+      } else {
+        alert(`❗ 요청 오류: ${detail}`);
+      }
+    } else if (status === 413) {
+      if (detail === "Audio file is too large") {
+        alert("❗ 파일 용량이 너무 큽니다.");
+      }
+    } else if (status === 415) {
+      if (detail === "Unsupported audio format") {
+        alert("❗ 허용되지 않는 파일 형식입니다.");
+      } else {
+        alert(`❗ 형식 오류: ${detail}`);
+      }
+    } else if (status === 500) {
+      alert("⚠️ 서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
     } else {
-      console.warn("⚠️ 예상 외 응답:", response.status);
-      throw new Error(`Upload failed: status ${response.status}`);
+      alert(`❌ 오류 발생: ${status}`);
     }
+    throw new Error(`Upload failed: status ${status}`);
   } catch (error) {
-    console.error("❌ 파일 업로드 중 오류:", error);
     throw error;
   }
 }
@@ -82,18 +98,16 @@ export async function getTranscriptionStatus() {
   } catch (error) {
     const { status, detail } = error.response?.data || {};
 
-    switch (status) {
-      case 401:
-        alert("🔒 인증이 필요합니다. 다시 로그인해주세요.");
-        break;
-      case 404:
-        alert("❗ 업로드된 음성 파일을 찾을 수 없습니다.");
-        break;
-      case 500:
-        alert("⚠️ 서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
-        break;
-      default:
-        alert(`❌ 상태 확인 실패: ${status}`);
+    if (status === 404) {
+      if (detail === "No audio data for this user") {
+        alert("❗ 업로드 요청이 없거나 만료되었습니다.");
+      } else {
+        alert(`❗ 요청 오류: ${detail}`);
+      }
+    } else if (status === 500) {
+      alert("⚠️ 서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+    } else {
+      alert(`❌ 오류 발생: ${status}`);
     }
 
     throw error;
@@ -110,26 +124,26 @@ export async function retryTranscription() {
     const response = await api.get("/transcription/retry");
 
     if (response.status === 202) {
-      console.log("🔁 텍스트 변환 재시작 요청 성공");
     }
   } catch (error) {
     const { status, detail } = error.response?.data || {};
 
-    switch (status) {
-      case 401:
-        alert("🔒 인증이 필요합니다. 다시 로그인해주세요.");
-        break;
-      case 404:
-        alert("❗ 업로드된 음성 파일을 찾을 수 없습니다.");
-        break;
-      case 409:
-        alert("⏳ 현재 상태에서는 재시도할 수 없습니다.");
-        break;
-      case 500:
-        alert("⚠️ 서버 오류가 발생했습니다.");
-        break;
-      default:
-        alert(`❌ 오류: ${status}`);
+    if (status === 404) {
+      if (detail === "No audio data for this user") {
+        alert("❗ 업로드 요청이 없거나 만료되었습니다.");
+      } else {
+        alert(`❗ 요청 오류: ${detail}`);
+      }
+    }if (status === 409) {
+      if (detail === "Cannot retry at this stage") {
+        alert("❗ 재시도 가능한 상태가 아닙니다.");
+      } else {
+        alert(`❗ 요청 오류: ${detail}`);
+      }
+    } else if (status === 500) {
+      alert("⚠️ 서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+    } else {
+      alert(`❌ 오류 발생: ${status}`);
     }
 
     throw error;
@@ -147,7 +161,6 @@ export async function cancelTranscription() {
     const response = await api.post("/transcription/cancel");
 
     if (response.status === 204) {
-      console.log("🛑 변환 중단 성공");
       return;
     }
 
@@ -156,31 +169,22 @@ export async function cancelTranscription() {
   } catch (error) {
     const { status, detail } = error.response?.data || {};
 
-    switch (status) {
-      case 401:
-        if (detail === "Missing token") {
-          alert("🔒 인증 토큰이 없습니다. 다시 로그인해주세요.");
-        } else if (detail === "Invalid token") {
-          alert("🔒 유효하지 않은 토큰입니다.");
-        } else if (detail === "Expired token") {
-          alert("🔒 로그인 세션이 만료되었습니다.");
-        }
-        break;
-
-      case 409:
-        alert("⚠️ 현재 상태에서는 중단할 수 없습니다.");
-        break;
-
-      case 404:
-        alert("❗ 업로드 요청이 없거나 이미 만료되었습니다.");
-        break;
-
-      case 500:
-        alert("⚠️ 서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
-        break;
-
-      default:
-        alert(`❌ 알 수 없는 오류 발생: ${status}`);
+    if (status === 404) {
+      if (detail === "No audio data for this user") {
+        alert("❗ 업로드 요청이 없거나 만료되었습니다.");
+      } else {
+        alert(`❗ 요청 오류: ${detail}`);
+      }
+    }if (status === 409) {
+      if (detail === "Cannot retry at this stage") {
+        alert("❗ 취소 가능한 상태가 아닙니다.");
+      } else {
+        alert(`❗ 요청 오류: ${detail}`);
+      }
+    } else if (status === 500) {
+      alert("⚠️ 서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+    } else {
+      alert(`❌ 오류 발생: ${status}`);
     }
 
     throw error;
