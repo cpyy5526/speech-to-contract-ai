@@ -33,6 +33,8 @@ function ContractGenerate() {
         if (result.status === "cancelled") {
           clearInterval(intervalRef.current);
           setLoading(false);
+          alert("⛔ 변환이 취소되었습니다.");
+          navigate("/home");
         }
       } catch (err) {
         clearInterval(intervalRef.current);
@@ -71,7 +73,7 @@ function ContractGenerate() {
     try {
       await cancelContractGeneration();
     } catch (err) {
-      console.error("❌ 취소 실패:", err.message);
+      // 에러 처리는 contractApi에서 처리됨
     }
   };
 
