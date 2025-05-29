@@ -27,8 +27,7 @@ function Signup() {
         navigate("/login");
       }
     } catch (err) {
-      console.error("회원가입 실패:", err);
-      // 에러 처리는 authApi 또는 authMock에서 처리됨
+      // 에러 처리는 authApi
     }
   };
 

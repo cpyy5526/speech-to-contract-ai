@@ -8,15 +8,7 @@ export async function getCurrentUser() {
     return response.data; // 예: { username: "...", email: "..." }
   } catch (error) {
     const { status, detail } = error.response?.data || {};
-    if (status === 401) {
-      if (detail === "Missing token") {
-        alert("로그인 정보가 없습니다. 다시 로그인해주세요.");
-      } else if (detail === "Invalid token") {
-        alert("유효하지 않은 토큰입니다. 다시 로그인해주세요.");
-      } else if (detail === "Expired token") {
-        alert("로그인 세션이 만료되었습니다.");
-      }
-    } else if (status === 500) {
+    if (status === 500) {
       alert("서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
     } else {
       alert(`알 수 없는 오류: ${detail || "응답 없음"}`);
@@ -43,14 +35,25 @@ export async function login(username, password) {
 
     switch (status) {
       case 400:
-        alert("❗ 아이디 또는 비밀번호가 누락되었습니다.");
+        if (detail === "Missing username or password") {
+          alert("❗ 아이디 또는 비밀번호가 누락되었습니다.");
+        } else {
+          alert("❗ 요청이 잘못되었습니다.");
+        }
         break;
+
       case 401:
-        alert("❌ 아이디 또는 비밀번호가 잘못되었습니다.");
+        if (detail === "Invalid username or password") {
+          alert("❌ 아이디 또는 비밀번호가 잘못되었습니다.");
+        } else {
+          alert("❌ 인증 오류가 발생했습니다.");
+        }
         break;
+
       case 500:
         alert("⚠️ 서버 오류가 발생했습니다.");
         break;
+
       default:
         alert("❓ 알 수 없는 오류: " + (detail || "응답 없음"));
     }
@@ -72,13 +75,37 @@ export async function loginWithGoogle(idToken) {
     const { status, detail } = error.response?.data || {};
 
     if (status === 400) {
-      alert("❗ 요청 오류: " + detail);
+      if (detail === "Unsupported provider") {
+        alert("❗ 지원하지 않는 소셜 로그인입니다.");
+      } else if (detail === "Missing social token") {
+        alert("❗ 소셜 토큰이 누락되었습니다.");
+      } else if (detail === "Missing provider") {
+        alert("❗ provider 정보가 누락되었습니다.");
+      } else {
+        alert("❗ 요청 오류: " + detail);
+      }
+      
     } else if (status === 401) {
-      alert("❌ 인증 실패: " + detail);
+       if (detail === "Invalid social token") {
+        alert("❌ 소셜 서버 인증에 실패했습니다. 다시 시도해주세요.");
+      } else {
+        alert("❌ 인증 오류: " + detail);
+      }
+
     } else if (status === 502) {
-      alert("⚠️ 소셜 서버 오류");
+      if (detail === "Social server error") {
+        alert("⚠️ 소셜 서버로부터 응답이 없습니다. 잠시 후 다시 시도해주세요.");
+      } else {
+        alert("⚠️ 게이트웨이 오류: " + detail);
+      }
+
     } else if (status === 500) {
-      alert("⚠️ 서버 오류");
+      if (detail === "Unexpected server error") {
+        alert("⚠️ 서버 내부 오류가 발생했습니다.");
+      } else {
+        alert("⚠️ 서버 오류: " + detail);
+      }
+
     } else {
       alert("❓ 알 수 없는 오류: " + (detail || "응답 없음"));
     }
@@ -103,7 +130,13 @@ export async function signup({ email, username, password }) {
 
     switch (status) {
       case 400:
-        alert("❗ 필드 누락 또는 유효하지 않은 입력입니다.");
+        if (detail === "Missing or invalid fields") {
+          alert("❗ 입력하지 않은 항목이 있거나 형식이 올바르지 않습니다. 다시 확인해주세요.");
+        } else if (detail === "Password does not meet security requirements") {
+          alert("❗ 비밀번호는 8~16자의 영문, 숫자, 특수문자를 포함해야 합니다.");
+        } else {
+          alert("❗ 오류: " + detail);
+        }
         break;
       case 409:
         if (detail === "Email already registered") {
@@ -111,7 +144,7 @@ export async function signup({ email, username, password }) {
         } else if (detail === "Username already taken") {
           alert("❗ 이미 사용 중인 아이디입니다.");
         } else {
-          alert("❗ 충돌: " + detail);
+          alert("❗ 오류: " + detail);
         }
         break;
       case 500:
@@ -176,7 +209,7 @@ export async function confirmPasswordReset(token, newPassword) {
         alert("❗ 잘못된 요청: " + detail);
       }
     } else if (status === 401) {
-      alert("❌ 유효하지 않거나 만료된 토큰입니다.");
+      alert("❌ 사용자 인증에 오류가 발생했습니다.");
     } else if (status === 500) {
       alert("⚠️ 서버 오류가 발생했습니다.");
     } else {
@@ -210,18 +243,10 @@ export async function changePassword(oldPassword, newPassword) {
         alert("❗ 요청 오류: " + detail);
       }
     } else if (status === 401) {
-      if (detail === "Missing token") {
-        alert("❗ 인증 토큰이 없습니다. 다시 로그인해주세요.");
-      } else if (detail === "Invalid token") {
-        alert("❗ 유효하지 않은 토큰입니다.");
-      } else if (detail === "Expired token") {
-        alert("❗ 토큰이 만료되었습니다. 다시 로그인해주세요.");
-      } else if (detail === "Invalid current password") {
-        alert("❌ 현재 비밀번호가 일치하지 않습니다.");
-      } else {
-        alert("❌ 인증 오류: " + detail);
+      if (detail === "Invalid current password") {
+        alert("❗ 현재 비밀번호가 잘못되었습니다.");
       }
-    } else if (status === 500) {
+    }else if (status === 500) {
       alert("⚠️ 서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
     } else {
       alert("❓ 알 수 없는 오류: " + (detail || "응답 없음"));

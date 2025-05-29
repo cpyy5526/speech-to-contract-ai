@@ -38,26 +38,17 @@ function Converting() {
   const uploadFile = async (urlToUse) => {
     try {
       await uploadAudioFile(urlToUse, audioBlob);
-      console.log("📤 파일 업로드 요청 전송 완료");
       startPolling();
     } catch (err) {
-      const detail = err.response?.data?.detail || err.message || err;
-      console.error("❌ 업로드 요청 실패:", detail);
-
       try {
-        console.log("🔁 업로드 예약 다시 시도 중...");
         const newUrl = await initiateTranscription(filename);
-        console.log("📦 새 업로드 URL:", newUrl);
 
         await uploadAudioFile(newUrl, audioBlob);
-        console.log("📤 재업로드 요청 전송 완료");
         startPolling();
       } catch (retryErr) {
-        const retryDetail = retryErr.response?.data?.detail || retryErr.message || retryErr;
-        console.error("❌ 업로드 재시도 실패:", retryDetail);
         setStatus("upload_failed");
 
-        navigate("/recording");
+        navigate("/home");
       }
     }
   };
@@ -70,7 +61,6 @@ function Converting() {
     intervalRef.current = setInterval(async () => {
       try {
         const { status: serverStatus } = await getTranscriptionStatus();
-        console.log("📡 상태 확인:", serverStatus);
 
         // ✅ 자동 업로드 재시도 처리
         if (serverStatus === "upload_failed") {
@@ -81,13 +71,12 @@ function Converting() {
             console.log("🔁 상태 polling 중: upload_failed → 재시도");
             const newUrl = await initiateTranscription(filename);
             await uploadAudioFile(newUrl, audioBlob);
-            console.log("📦 재업로드 요청 전송 완료");
             setStatus("uploaded");
             startPolling(); // 다시 polling 시작
           } catch (retryErr) {
-            const detail = retryErr.response?.data?.detail || retryErr.message || retryErr;
-            console.error("❌ 자동 재시도 실패:", detail);
             setStatus("upload_failed"); // 재시도까지 실패
+
+            navigate("/home");
           }
 
           return; // ⚠️ 아래 코드 실행 안 되도록 조기 리턴
@@ -115,7 +104,6 @@ function Converting() {
         // ✅ 진행 중 상태
         setStatus(serverStatus); // uploading, uploaded, transcribing 등
       } catch (err) {
-        console.error("❌ 상태 확인 실패:", err);
         clearInterval(intervalRef.current);
         intervalRef.current = null;
         setStatus("error");
@@ -127,23 +115,19 @@ function Converting() {
   const handleRetry = async () => {
     try {
       await retryTranscription();
-      console.log("🔁 재시도 요청 성공");
       setStatus("uploaded");
       startPolling(); // 다시 polling 시작
     } catch (err) {
-      console.error("❌ 재시도 실패:", err);
-      alert("재시도에 실패했습니다.");
+       // 에러 처리는 convertApi에서 처리됨
     }
   };
 
   const handleCancel = async () => {
     try {
       await cancelTranscription();
-      console.log("📭 중단 요청 전송됨 (상태는 서버에서 변경됨)");
       startPolling();
     } catch (err) {
-      console.error("❌ 중단 요청 실패:", err);
-      alert("중단 요청에 실패했습니다.");
+      // 에러 처리는 convertApi에서 처리됨
     }
   };
 
