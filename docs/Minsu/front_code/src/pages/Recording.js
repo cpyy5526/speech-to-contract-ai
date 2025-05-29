@@ -105,17 +105,19 @@ function Recording() {
 
     try {
       const filename = `recording_${Date.now()}.webm`;
+
+      if (!filename || typeof filename !== "string" || filename.trim() === "") {
+        alert("파일명이 유효하지 않습니다.");
+        return;
+      }
+
       const result = await initiateTranscription(filename);
       const uploadUrl = result.upload_url;
-
-      console.log("✅ 업로드 예약 완료:", uploadUrl);
-
 
       // Converting 페이지로 uploadUrl과 audioBlob 전달
       navigate("/converting", { state: { uploadUrl, audioBlob, filename } });
     } catch (err) {
-      console.error("❌ 업로드 예약 실패:", err);
-      alert("업로드 예약 중 오류가 발생했습니다.");
+       // 에러 처리는 authApi에서 처리됨
     }
   };
 
