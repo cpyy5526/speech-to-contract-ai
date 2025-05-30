@@ -7,10 +7,12 @@ import Recording from "./pages/Recording";
 import Converting from "./pages/Converting";
 import Generating from "./pages/Contract_generate"
 import Download from "./pages/Contract_download";
+import { getCurrentUser } from "./services/authApiMock";  // ✅ axios 방식 반영
 import Reset from "./pages/Reset_password";
-import { getCurrentUser } from "./services/authApiMock"; 
+
 
 //  로그인 확인 컴포넌트
+
 function AppWithAuthCheck() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -49,6 +51,7 @@ function AppWithAuthCheck() {
       <Route path="/reset" element={<Reset />} />
       <Route path="/home" element={<Home user={user} />} />
       <Route path="/recording" element={<Recording user={user} />} />
+      <Route path="/reset" element={<Reset />} />
       <Route path="/converting" element={<Converting user={user} />} />
       <Route path="/generating" element={<Generating user={user} />} />
       <Route path="/download" element={<Download user={user} />} />

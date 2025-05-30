@@ -101,6 +101,7 @@ export async function getTranscriptionStatus() {
     if (status === 404) {
       if (detail === "No audio data for this user") {
         alert("❗ 업로드 요청이 없거나 만료되었습니다.");
+        window.location.href = "/";
       } else {
         alert(`❗ 요청 오류: ${detail}`);
       }
@@ -131,10 +132,11 @@ export async function retryTranscription() {
     if (status === 404) {
       if (detail === "No audio data for this user") {
         alert("❗ 업로드 요청이 없거나 만료되었습니다.");
+        window.location.href = "/";
       } else {
         alert(`❗ 요청 오류: ${detail}`);
       }
-    }if (status === 409) {
+    }else if (status === 409) {
       if (detail === "Cannot retry at this stage") {
         alert("❗ 재시도 가능한 상태가 아닙니다.");
       } else {
@@ -172,10 +174,12 @@ export async function cancelTranscription() {
     if (status === 404) {
       if (detail === "No audio data for this user") {
         alert("❗ 업로드 요청이 없거나 만료되었습니다.");
+        window.location.href = "/";
+        
       } else {
         alert(`❗ 요청 오류: ${detail}`);
       }
-    }if (status === 409) {
+    }else if (status === 409) {
       if (detail === "Cannot retry at this stage") {
         alert("❗ 취소 가능한 상태가 아닙니다.");
       } else {
