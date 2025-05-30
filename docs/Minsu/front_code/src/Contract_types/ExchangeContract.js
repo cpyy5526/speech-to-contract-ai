@@ -6,11 +6,6 @@ const ExchangeContract = forwardRef(({ contract, suggestions = [] }, ref) => {
     extract: extractEditedContents,
   }));
 
-  const suggestionMap = {};
-  suggestions.forEach(({ field_path, suggestion_text }) => {
-    const className = pathToClass(field_path);
-    if (className) suggestionMap[className] = suggestion_text;
-  });
 
   const pathToClass = (path) => ({
     "contract_type": "contract-main-title",
@@ -49,6 +44,12 @@ const ExchangeContract = forwardRef(({ contract, suggestions = [] }, ref) => {
     "special_terms": "special-terms-box",
     "signature_and_seal": "sign-seal",
   }[path]);
+
+  const suggestionMap = {};
+  suggestions.forEach(({ field_path, suggestion_text }) => {
+    const className = pathToClass(field_path);
+    if (className) suggestionMap[className] = suggestion_text;
+  });
 
   const renderField = (className, content) => {
     const suggestion = suggestionMap[className];
