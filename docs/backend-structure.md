@@ -22,8 +22,9 @@ backend/
 │   │   ├── user.py                 # auth_users 테이블
 │   │   ├── token.py                # auth_user_tokens 테이블
 │   │   ├── contract.py             # contracts_contents 테이블
+│   │   ├── suggestion.py           # contracts_gpt_suggestions 테이블
 │   │   ├── transcription.py        # contracts_transcriptions 테이블
-│   │   └── suggestion.py           # contracts_gpt_suggestions 테이블
+│   │   └── generation.py           # contracts_generation 테이블
 │   │
 │   ├── prompts/                  # 계약서 생성 프롬프트 정의 및 GPT 응답 후처리
 │   │   ├── preprocessor.py         # 입력 데이터 전처리

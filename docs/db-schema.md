@@ -52,14 +52,24 @@ speech_to_contract_platform
 | --- | --- | --- |
 | id | UUID (PK) | Primary Key |
 | user_id | UUID (FK) | 생성한 사용자(auth_users.id, **ON DELETE CASCADE**) |
+| generation_id | UUID (FK) | 생성 추적용 FK (contracts_generations.id, **ON DELETE SET NULL**) |
 | contract_type | TEXT | 계약 유형 (예: “고용”, “매매” 등) |
 | contents | JSONB | 계약서 전체 데이터 (JSON) |
 | initial_contents | JSONB | 최초 생성된 버전 계약서 (복구용, 읽기 전용) |
 | created_at | TIMESTAMP | 생성 시각 |
 | updated_at | TIMESTAMP | 수정 시각 |
-| generation_status | ENUM | “generating”, “done”, “failed”, “cancelled” |
 
-### transcriptions        
+### gpt_suggestions
+
+| **Column** | **Type** | **Description** |
+| --- | --- | --- |
+| id | UUID (PK) | Primary Key |
+| contract_id | UUID (FK) | 연결된 계약 ID (contracts_contents.id, **ON DELETE CASCADE**) |
+| field_path | TEXT | 제안된 항목의 경로 (예: "wage_details.wage_amount") |
+| suggestion_text | TEXT | GPT가 생성한 제안 문구 |
+| created_at | TIMESTAMP | 제안 생성 시각 |
+
+### transcriptions 
 
 | **Column** | **Type** | **Description** |
 | --- | --- | --- |
@@ -72,12 +82,13 @@ speech_to_contract_platform
 | created_at | TIMESTAMP | 업로드 시각 |
 | updated_at | TIMESTAMP | 상태 변경 시각 |
 
-### gpt_suggestions
+### generations
 
 | **Column** | **Type** | **Description** |
 | --- | --- | --- |
 | id | UUID (PK) | Primary Key |
-| contract_id | UUID (FK) | 연결된 계약 ID (contracts_contents.id, **ON DELETE CASCADE**) |
-| field_path | TEXT | 제안된 항목의 경로 (예: "wage_details.wage_amount") |
-| suggestion_text | TEXT | GPT가 생성한 제안 문구 |
-| created_at | TIMESTAMP | 제안 생성 시각 |
+| user_id | UUID (FK) | 요청한 사용자(auth_users.id, **ON DELETE CASCADE**) |
+| transcription_id | UUID (FK, nullable) | 참조한 음성 변환 데이터(contracts_transcriptions.id, **ON DELETE SET NULL**) |
+| status | ENUM | “generating”, “done”, “failed”, “cancelled” |
+| created_at | TIMESTAMP | 요청 시각 |
+| updated_at | TIMESTAMP | 상태 변경 시각 |
