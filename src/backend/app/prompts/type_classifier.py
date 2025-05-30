@@ -1,6 +1,8 @@
 # 계약서 유형 타입 추출 모듈
 
+import os, aiofiles
 from typing import Callable, List, Dict, Awaitable
+from app.core.config import settings
 
 # 사전 정의된 계약 유형 리스트
 CONTRACT_TYPES = [
@@ -9,12 +11,16 @@ CONTRACT_TYPES = [
 
 #계약 유형 추출
 async def get_contract_type(
-    conversation_text: str,
+    script_filename: str,
     gpt_caller: Callable[[List[Dict[str, str]]], Awaitable[str]]
     ) -> str:
     
+    file_path = os.path.join(settings.TEXT_UPLOAD_DIR, script_filename)
+    async with aiofiles.open(file_path, 'r', encoding='utf-8') as f:
+        conversation_text = await f.read()
+
     type_prompt=f"""
-        당신은 대화 내용을 문석하여 계약 유형을 정확히 판단하는 법률 전문가 AI입니다. 
+        당신은 대화 내용을 분석하여 계약 유형을 정확히 판단하는 법률 전문가 AI입니다. 
 
         ## 1단계: 대화 내용을 분석하여 핵심 사실을 정리하세요.
         - 누가 무엇을 제공합니까?

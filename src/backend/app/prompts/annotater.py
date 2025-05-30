@@ -23,18 +23,18 @@ async def annotate_contract_text(
                 selected_keys.append(full_key)
     extract_keys("", schema)
 
-    # keyword_descriptions 생성
-    def flatten_descriptions(prefix, d):
+    # keyword_descriptions 생성, 반환값 정제
+    def flatten(prefix, d):
         flat = {}
         for k, v in d.items():
             full_key = f"{prefix}.{k}" if prefix else k
             if isinstance(v, dict):
-                flat.update(flatten_descriptions(full_key, v))
+                flat.update(flatten(full_key, v))
             else:
                 flat[full_key] = v
         return flat
 
-    keyword_descriptions = flatten_descriptions("", schema)
+    keyword_descriptions = flatten("", schema)
     keyword_review_info = "\n".join(
         f"- `{key}`: {desc}" for key, desc in keyword_descriptions.items() if key in selected_keys
     )
@@ -98,6 +98,7 @@ async def annotate_contract_text(
     result = await gpt_caller(messages)
     
     try:
-        return json.loads(result)
+        suggestions = json.loads(result)
+        return flatten("", suggestions)
     except json.JSONDecodeError as e:
         raise ValueError(f"❌ GPT 응답에서 JSON 파싱 실패:\n{result}\n\n에러: {e}")
