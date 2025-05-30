@@ -15,7 +15,8 @@ export async function generateContract() {
 
     if (status === 404) {
       if (detail === "No audio data for this user") {
-        alert("❗ 음성 업로드 요청이 만료되었습니다.");
+        alert("❗ 음성 업로드 요청이 만료되었습니다. 다시 시도해주세요");
+        window.location.href = "/";
       } else {
         alert("❗ 요청 오류: " + detail);
       }
@@ -53,7 +54,8 @@ export async function getContractStatus() {
 
     if (status === 404) {
       if (detail === "No contract generation in progress") {
-        alert("❗ 요청된 계약 생성이 없습니다.");
+        alert("❗ 요청된 계약 생성이 없습니다. 다시 시도해주세요");
+        window.location.href = "/";
       } else {
         alert("❗ 요청 오류: " + detail);
       }
@@ -82,7 +84,8 @@ export async function cancelContractGeneration() {
 
     if (status === 404) {
       if (detail === "No contract generation in progress") {
-        alert("❗ 요청된 계약 생성이 없습니다.");
+        alert("❗ 요청된 계약 생성이 없습니다. 다시 시도해 주세요");
+        window.location.href = "/";
       } else {
         alert("❗ 요청 오류: " + detail);
       }
@@ -144,7 +147,8 @@ export async function getContractContent(contractId) {
 
     if (status === 404) {
       if (detail === "Contract not found") {
-        alert("❗ 조회할 계약서가 존재하지 않습니다.");
+        alert("❗ 조회할 계약서가 존재하지 않습니다. 다시 시도해 주세요"); 
+        window.location.href = "/";
       } else {
         alert("❗ 요청 오류: " + detail);
       }
@@ -179,14 +183,15 @@ export async function updateContractContent(contractId, contents) {
 
     if (status === 400) {
       if (detail === "Missing or invalid contract fields") {
-        alert("❗ 계약서 형식이 잘못되었습니다.");
+        alert("❗ 수정 할 계약서 형식이 잘못되었습니다.");
       } else {
         alert("❗ 요청 오류: " + detail);
       }
 
     }else if (status === 404) {
       if (detail === "Contract not found") {
-        alert("❗ 저장할 계약서가 존재하지 않습니다.");
+        alert("❗ 저장할 계약서가 존재하지 않습니다. 다시 시도해 주세요");
+        window.location.href = "/";
       } else {
         alert("❗ 요청 오류: " + detail);
       }
@@ -220,7 +225,8 @@ export async function getSuggestions(contractId) {
 
     if (status === 404) {
       if (detail === "Contract not found") {
-        alert("❗ 조회할 계약서가 존재하지 않습니다.");
+        alert("❗ 조회할 계약서가 존재하지 않습니다. 다시 시도해 주세요 ");
+        window.location.href = "/";
       } else {
         alert("❗ 요청 오류: " + detail);
       }
@@ -255,7 +261,8 @@ export async function restoreContract(contractId) {
 
     if (status === 404) {
       if (detail === "Contract not found") {
-        alert("❗ 복구하려는 계약서가 존재하지 않습니다.");
+        alert("❗ 복구하려는 계약서가 존재하지 않습니다. 다시 시도해 주세요 ");
+        window.location.href = "/";
       } else {
         alert("❗ 요청 오류: " + detail);
       }
@@ -293,7 +300,8 @@ export async function deleteContract(contractId) {
 
     if (status === 404) {
       if (detail === "Contract not found") {
-        alert("❗ 삭제할 계약서가 존재하지 않습니다.");
+        alert("❗ 삭제할 계약서가 존재하지 않습니다. 다시 시도해 주세요 ");
+        window.location.href = "/";
       } else {
         alert("❗ 요청 오류: " + detail);
       }
