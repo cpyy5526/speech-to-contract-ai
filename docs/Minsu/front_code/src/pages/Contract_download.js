@@ -13,14 +13,14 @@ import {
   deleteContract
 } from "../services/contractApiMock";
 
-import GiftContract from "../Contract_types/GiftContract";
-import ConstructionContract from "../Contract_types/ConstructionContract";
-import EmploymentContract from "../Contract_types/EmploymentContract";
-import ExchangeContract from "../Contract_types/ExchangeContract";
-import LeaseContract from "../Contract_types/LeaseContract";
-import LoanContract from "../Contract_types/LoanContract";
-import SaleContract from "../Contract_types/SaleContract";
-import UsageLoanContract from "../Contract_types/UsageLoanContract";
+import GiftContract from "../Contract_types/GiftContract/GiftContract";
+import ConstructionContract from "../Contract_types/ConstructionContract/ConstructionContract";
+import EmploymentContract from "../Contract_types/EmploymentContract/EmploymentContract";
+import ExchangeContract from "../Contract_types/ExchangeContract/ExchangeContract";
+import LeaseContract from "../Contract_types/LeaseContract/LeaseContract";
+import LoanContract from "../Contract_types/LoanContract/LoanContract";
+import SaleContract from "../Contract_types/SaleContract/SaleContract";
+import UsageLoanContract from "../Contract_types/UsageLoanContract/UsageLoanContract";
 
 
 
@@ -30,7 +30,7 @@ function Contract_download() {
   const [suggestions, setSuggestions] = useState([]);
 
   const contractRef = useRef();
-  const giftContractRef = useRef();
+  const contractComponentRef  = useRef();
   const location = useLocation();
 
   const params = new URLSearchParams(location.search);
@@ -72,7 +72,7 @@ function Contract_download() {
 
   const handleSave = async () => {
     try {
-    const edited = giftContractRef.current.extract();
+    const edited = contractComponentRef .current.extract();
       await updateContractContent(contractId, edited);
     } catch (err) {
       console.error("❌ 저장 실패:", err);
@@ -80,66 +80,27 @@ function Contract_download() {
   };
 
 
+
   const handleDownload = async () => {
-  const el = contractRef.current;
-  if (!el) return alert("계약서가 렌더링되지 않았습니다.");
+    const pages = document.querySelectorAll(".page");
+    const pdf = new jsPDF("p", "mm", "a4");
 
-  // 1) 원본에 영향을 주지 않는 클론 생성
-  const clone = el.cloneNode(true);
-  clone.classList.add("fullscreen");                // ← 여기가 핵심!
-  Object.assign(clone.style, {
-    position:  "absolute",
-    top:       "-9999px",
-    left:      "-9999px",
-    width:     `${el.scrollWidth}px`,
-    background:"white",
-  });
-  document.body.appendChild(clone);
+    for (let i = 0; i < pages.length; i++) {
+      const canvas = await html2canvas(pages[i], {
+        scale: 2, // 🔍 고해상도 렌더링
+      });
+      const imgData = canvas.toDataURL("image/png");
 
-  // 2) 충분히 렌더링 안정화 대기
-  await new Promise(r => setTimeout(r, 100));
+      const imgWidth = 210;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-  // 3) html2canvas 로 full-height 캡처
-  const canvas = await html2canvas(clone, {
-    scale:       2,
-    useCORS:     true,
-    allowTaint:  true,
-    width:       clone.scrollWidth,
-    height:      clone.scrollHeight,
-    scrollX:     0,
-    scrollY:     0
-  });
+      if (i > 0) pdf.addPage();
+      pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
+    }
 
-  // 4) 클론 제거
-  document.body.removeChild(clone);
+    pdf.save("임대차계약서.pdf");
+  };
 
-  // 5) jsPDF 로 A4 multiple-page 처리
-  const pdf  = new jsPDF("p", "mm", "a4");
-  const pdfW = pdf.internal.pageSize.getWidth();
-  const pdfH = pdf.internal.pageSize.getHeight();
-  // 픽셀→mm 비율
-  const pxPerMm = canvas.width / pdfW;
-  let imgHmm = canvas.height / pxPerMm;  // 전체 이미지 높이를 mm 단위로
-  let yPos   = 0;
-
-  const imgData = canvas.toDataURL("image/png");
-  // 페이지 단위로 잘라 넣기
-  while (yPos < imgHmm) {
-    const hThisPage = Math.min(imgHmm - yPos, pdfH);
-    pdf.addImage(
-      imgData,
-      "PNG",
-      0,          // x(mm)
-      -yPos,      // y(mm) 음수 오프셋으로 위에서부터 잘라서 그리기
-      pdfW,
-      imgHmm
-    );
-    yPos += pdfH;
-    if (yPos < imgHmm) pdf.addPage();
-  }
-
-  pdf.save("contract.pdf");
-};
 
 
 
@@ -199,25 +160,25 @@ function Contract_download() {
 
 
       <main className="preview-area">
-        <div className="contract-rendered" ref={contractRef}>
+        <div  ref={contractRef}>
           {!contract ? (
             <p>계약서를 불러오는 중입니다...</p>
               ) : contract.contract_type === "증여 계약" ? (
-                <GiftContract ref={giftContractRef} contract={contract} suggestions={suggestions} />
+                <GiftContract ref={contractComponentRef } contract={contract} suggestions={suggestions} />
               ) : contract.contract_type === "공사 계약" ? (
-                <ConstructionContract ref={giftContractRef} contract={contract} suggestions={suggestions} />
+                <ConstructionContract ref={contractComponentRef } contract={contract} suggestions={suggestions} />
               ) : contract.contract_type === "고용 계약" ? (
-                <EmploymentContract ref={giftContractRef} contract={contract} suggestions={suggestions} />
+                <EmploymentContract ref={contractComponentRef } contract={contract} suggestions={suggestions} />
               ) : contract.contract_type === "교환 계약" ? (
-                <ExchangeContract ref={giftContractRef} contract={contract} suggestions={suggestions} />
+                <ExchangeContract ref={contractComponentRef } contract={contract} suggestions={suggestions} />
               ) : contract.contract_type === "임대차 계약" ? (
-                <LeaseContract ref={giftContractRef} contract={contract} suggestions={suggestions} />
+                <LeaseContract ref={contractComponentRef } contract={contract} suggestions={suggestions} />
               ) : contract.contract_type === "금전 대여 계약" ? (
-                <LoanContract ref={giftContractRef} contract={contract} suggestions={suggestions} />
+                <LoanContract ref={contractComponentRef } contract={contract} suggestions={suggestions} />
               ) : contract.contract_type === "매매 계약" ? (
-                <SaleContract ref={giftContractRef} contract={contract} suggestions={suggestions} />
+                <SaleContract ref={contractComponentRef } contract={contract} suggestions={suggestions} />
               ) : contract.contract_type === "사용대차 계약" ? (
-                <UsageLoanContract ref={giftContractRef} contract={contract} suggestions={suggestions} />
+                <UsageLoanContract ref={contractComponentRef } contract={contract} suggestions={suggestions} />
               ) : (
                 <p>지원되지 않는 계약서 유형입니다: {contract.contract_type}</p>
               )}
