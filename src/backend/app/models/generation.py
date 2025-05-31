@@ -10,6 +10,7 @@ class GenerationStatus(str, Enum):
     done = "done"
     failed = "failed"
     cancelled = "cancelled"
+    archived = "archived"    # 내부에서만 사용되는 상태
 
 
 class Generation(SQLModel, table=True):

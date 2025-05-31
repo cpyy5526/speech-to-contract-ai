@@ -56,8 +56,13 @@ async def trigger_transcription(transcription_id: UUID, session: AsyncSession) -
         # logger.exception("DB commit 실패: transcription_id=%s", transcription_id)
         raise HTTPException(status_code=500, detail="Unexpected server error")
 
-    # Celery 태스크 큐에 등록
-    process_uploaded_audio.delay(str(transcription_id))
+    # Celery task queue에 텍스트 변환 파이프라인 등록
+    try: process_uploaded_audio.delay(str(transcription_id))
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unexpected server error",
+        )
 
 
 async def get_audio_status(user_id: UUID, session: AsyncSession) -> UploadStatusResponse:
@@ -103,7 +108,12 @@ async def retry_transcription(user_id: UUID, session: AsyncSession) -> None:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Cannot retry at this stage")
     transcription.status = TranscriptionStatus.uploaded  # 상태를 uploaded로 되돌리고 재시작
     await session.commit()
-    process_uploaded_audio.delay(str(transcription.id))
+    try: process_uploaded_audio.delay(str(transcription.id))
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unexpected server error",
+        )
 
 
 def _validate_ext(filename: str) -> str:
@@ -125,14 +135,16 @@ async def _get_latest(user_id: UUID, session: AsyncSession) -> Transcription:
             .limit(1)
         )
         transcription = result.first()
-        if not transcription:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="No audio data for this user"
-            )
     except SQLAlchemyError:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Unexpected server error"
         )
+    
+    if not transcription:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No audio data for this user"
+        )
+    
     return transcription

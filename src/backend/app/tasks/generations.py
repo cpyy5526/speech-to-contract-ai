@@ -53,6 +53,7 @@ def process_generation_pipeline(generation_id: str) -> None:
                 # 계약서 테이블에 새 레코드 추가
                 contract = Contract(
                     user_id=generation.user_id,
+                    generation_id=generation.id,
                     contract_type=contract_type,
                     contents=contract_fields,
                     initial_contents=contract_fields,

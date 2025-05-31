@@ -519,6 +519,7 @@
     | 토큰 만료됨 | 401 Unauthorized | “Expired token” |
     | 음성 업로드 또는 텍스트 변환 미완료/실패 | 409 Conflict | “Transcription not ready” |
     | 음성 업로드 요청 없음 또는 만료됨 | 404 Not Found | “No audio data for this user” |
+    | 동일한 생성 작업이 이미 진행 중 | 409 Conflict | “Generation already in progress” |
     | 서버 내부 오류 | 500 Internal Server Error | "Unexpected server error" |
 </aside>
 
