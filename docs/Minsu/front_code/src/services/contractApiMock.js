@@ -325,33 +325,38 @@ export async function getContractContent(contractId) {
             },
             lessor: {
               name: "홍부장",
-              business_number: "110-22-33333",
+              resident_number: "110-22-33333", // 또는 business_number → 통일
               address: "서울시 마포구 독막로 100",
               contact: "02-123-4567"
             },
             lessee: {
               name: "김대리",
-              id_number: "921010-2345678",
+              resident_number: "921010-2345678",
               address: "서울시 마포구 독막로 102",
               contact: "010-9876-5432"
             },
-            lease_amount: {
+            lease_terms: {
               deposit: "10,000,000원",
-              rent: "월 1,000,000원",
-              payment_cycle: "매월 말일"
+              monthly_rent: "월 1,000,000원",
+              payment_date: "매월 말일",
+              contract_period: {
+                start_date: "2025-07-01",
+                end_date: "2026-06-30"
+              }
             },
-            lease_period: {
-              start_date: "2025-07-01",
-              end_date:   "2026-06-30"
-            },
+            management_fee: "별도 50,000원",
+            use_purpose: "사무실 용도",
+            delivery_date: "2025-06-30",
+            termination: "계약기간 중 해지는 쌍방 서면 합의 필요",
+            special_terms: "임대차 종료 3개월 전 서면 통보",
             real_estate_agent: {
-              office_name:         "부동산중개사무소 장",
-              office_address:      "서울시 마포구 독막로 99",
+              office_name: "부동산중개사무소 장",
+              office_address: "서울시 마포구 독막로 99",
+              representative_name: "정대표", // ← 추가됨
               registration_number: "제2025-123호",
-              broker_name:         "박중개"
+              broker_name: "박중개"
             },
-            special_terms:     "임대차 종료 3개월 전 서면 통보",
-            signature_and_seal:"전자서명 완료"
+            signature_and_seal: "전자서명 완료"
           });
         }
 
@@ -359,32 +364,34 @@ export async function getContractContent(contractId) {
         resolve({
           contract_type: "금전 대여 계약",
           contract_date: "2025-06-25",
-          lender: {
+          loan_amount: {
+            amount_korean: "이천만 원",
+            amount_number: "20,000,000"
+          },
+          creditor: {
             name: "한국은행",
-            business_number: "000-11-22222",
+            id_number: "000-11-22222",
             address: "서울시 중구 세종대로 39",
             contact: "02-345-6789"
           },
-          borrower: {
+          debtor: {
             name: "이지원",
-            resident_number: "930303-3456789",
+            id_number: "930303-3456789",
             address: "서울시 강남구 도산대로 200",
             contact: "010-5555-6666"
           },
-          loan_details: {
-            amount: "20,000,000원",
-            interest_rate: "연 4.5%",
-            loan_term: "36개월",
-            disbursement_date: "2025-07-01",
-            repayment_start: "2025-08-01"
+          interest: {
+            rate: "연 4.5%",
+            payment_method: "매월 후불",
+            payment_date: "매월 30일"
           },
-          repayment_schedule: [
-            { month: 1, amount: "600,000원" },
-            /* … */,
-            { month: 36, amount: "600,000원" }
-          ],
-          collateral: "없음",
-          special_terms: "중도상환수수료 1% 발생",
+          repayment: {
+            repayment_date: "2028-06-30",
+            repayment_method: "원리금 균등분할상환",
+            repayment_location: "국민은행 강남지점",
+            account_info: "국민은행 123456-78-901234 (예금주: 한국은행)"
+          },
+          special_terms: "중도상환 시 수수료 1% 발생. 담보는 없음.",
           signature_and_seal: "전자서명 완료"
         });
       }
@@ -444,30 +451,27 @@ export async function getContractContent(contractId) {
         {
           // 사용대차 계약
           resolve({
-            contract_type: "사용대차 계약",
-            contract_date: "2025-06-30",
-            provider: {
-              name:      "오렌지렌탈㈜",
-              business_number: "220-33-44444",
-              address:   "서울시 동대문구 왕산로 10",
-              contact:   "02-777-8888"
-            },
-            user: {
-              name:      "박민수",
-              resident_number: "920202-3456789",
-              address:   "서울시 성동구 왕십리로 50",
-              contact:   "010-1234-5678"
-            },
-            usage_object: {
-              description: "고압 세척기 모델 X1000",
-              serial_number: "SN-2025-00123"
-            },
-            usage_period: {
-              start_date: "2025-07-01",
-              end_date:   "2025-07-15"
-            },
-            special_terms:     "사용 기간 만료 후 2일 이내 반납, 연체 시 일 1만원 연체료 발생",
-            signature_and_seal: "전자서명 완료"
+             contract_type: "사용대차 계약",
+              contract_date: "2025-06-30",
+              lender: {
+                name: "오렌지렌탈㈜",
+                address: "서울시 동대문구 왕산로 10"
+              },
+              borrower: {
+                name: "박민수",
+                address: "서울시 성동구 왕십리로 50"
+              },
+              subject_property: {
+                name: "고압 세척기 모델 X1000"
+              },
+              loan_period: {
+                start_date: "2025-07-01",
+                end_date: "2025-07-15"
+              },
+              purpose_of_use: "건물 외벽 청소",
+              compensation_for_damage: "사용자 과실 시 시가 기준으로 변상",
+              restoration_obligation: "원상복구 후 반환",
+              signature_and_seal: "전자서명 완료"
           });
         }
 
@@ -489,9 +493,10 @@ export async function getContractContent(contractId) {
               contact: "010-2345-6789"
             },
             gifted_property: {
-              type: "",
+              type: "부동산",
               location: "서울시 서초구 반포대로 200",
               details: {
+                description: "서울시 서초구 소재의 주거용 건물과 대지로 구성된 부동산 일체",
                 building: {
                   structure: "철근콘크리트",
                   usage: "주거용",
@@ -516,7 +521,7 @@ export async function getContractContent(contractId) {
             },
             termination_conditions: {
               reasons: "수증자의 배신행위 시",
-              procedure: ""
+              procedure: "계약 해제는 증여자의 서면 통지로 발효되며, 수증자는 7일 이내 재산을 반환한다"
             },
             special_terms: "양도 후 2년간 전매 금지",
             signature_and_seal: "서명 완료"
