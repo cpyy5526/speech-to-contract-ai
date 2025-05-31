@@ -80,6 +80,25 @@ const UsageLoanPage1 = forwardRef(({ contract, suggestions }, ref) => {
       <p className="contract-clause">
         계약 종료 시 목적물은 {renderField("restoration-obligation", contract.restoration_obligation, suggestions)} 상태로 원상회복하여야 한다.
       </p>
+
+      <p className="section-title">6. 서명란</p>
+      <p className="signature-block">
+        본 계약의 내용을 확인하고 이에 동의하여 아래와 같이 서명합니다.
+      </p>
+
+      <table className="contract-table" style={{ marginTop: "20px" }}>
+        <tbody>
+          <tr>
+            <td className="gray">대주</td>
+            <td>{renderField("lender-sign", contract.lender?.name, suggestions)} (인)</td>
+          </tr>
+          <tr>
+            <td className="gray">차주</td>
+            <td>{renderField("borrower-sign", contract.borrower?.name, suggestions)} (인)</td>
+          </tr>
+        </tbody>
+      </table>
+
     </>
   );
 });

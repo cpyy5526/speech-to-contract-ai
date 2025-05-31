@@ -1,5 +1,6 @@
 import React, { forwardRef, useImperativeHandle, useRef } from "react";
 import LeasePage1 from "./LeasePage1";
+import LeasePage2 from "./LeasePage2";
 import "../Contract.css";
 import { getPathToClass } from "../utils/pathToClass";
 import { buildSuggestionMap } from "../utils";
@@ -23,6 +24,10 @@ const LeaseContract = forwardRef(({ contract, suggestions }, ref) => {
     <div className="pdf-container">
       <div className="page">
         <LeasePage1 ref={page1Ref} contract={contract} suggestions={suggestionMap} />
+      </div>
+
+      <div className="page">
+        <LeasePage2 ref={page1Ref} contract={contract} suggestions={suggestionMap} />
       </div>
     </div>
   );
