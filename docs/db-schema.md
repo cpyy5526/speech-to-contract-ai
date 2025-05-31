@@ -52,7 +52,7 @@ speech_to_contract_platform
 | --- | --- | --- |
 | id | UUID (PK) | Primary Key |
 | user_id | UUID (FK) | 생성한 사용자(auth_users.id, **ON DELETE CASCADE**) |
-| generation_id | UUID (FK) | 생성 추적용 FK (contracts_generations.id, **ON DELETE SET NULL**) |
+| generation_id | UUID (FK, nullable) | 생성 추적용 FK (contracts_generations.id, **ON DELETE SET NULL**) |
 | contract_type | TEXT | 계약 유형 (예: “고용”, “매매” 등) |
 | contents | JSONB | 계약서 전체 데이터 (JSON) |
 | initial_contents | JSONB | 최초 생성된 버전 계약서 (복구용, 읽기 전용) |
