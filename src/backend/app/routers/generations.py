@@ -1,48 +1,55 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Response
+from sqlmodel.ext.asyncio.session import AsyncSession
+
+from app.core.dependencies import get_session, get_current_user
 from app.schemas.generation import GenerationStatusResponse
 from app.services import generations as generation_service
-from app.core.dependencies import get_session
 
 router = APIRouter(prefix="/contracts/generate", tags=["Generations"])
 
 @router.post("/", status_code=status.HTTP_202_ACCEPTED)
-async def generate_contract(session: AsyncSession = Depends(get_session)):
-    """
-    변환된 텍스트를 바탕으로 계약서 생성 시작
-    """
+async def generate_contract(
+    session: AsyncSession = Depends(get_session),
+    current_user=Depends(get_current_user),
+):
     try:
-        return await generation_service.generate_contract(session)
-    except generation_service.TranscriptionNotReady:
-        raise HTTPException(status.HTTP_409_CONFLICT, detail="Transcription not ready")
-    except generation_service.NoAudioData:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="No audio data for this user")
+        await generation_service.create_generation(current_user.id, session)
+        return
+    except HTTPException as e:
+        raise e
     except Exception:
-        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Unexpected server error")
-
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unexpected server error",
+        )
 
 @router.get("/status", response_model=GenerationStatusResponse)
-async def get_generation_status(session: AsyncSession = Depends(get_session)):
-    """
-    현재 사용자의 계약서 생성 진행상황 조회
-    """
+async def get_generation_status(
+    session: AsyncSession = Depends(get_session),
+    current_user=Depends(get_current_user),
+):
     try:
-        return await generation_service.get_generation_status(session)
-    except generation_service.NoGenerationInProgress:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="No contract generation in progress")
+        return await generation_service.get_generation_status(current_user.id, session)
+    except HTTPException as e:
+        raise e
     except Exception:
-        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Unexpected server error")
-
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unexpected server error",
+        )
 
 @router.post("/cancel", status_code=status.HTTP_204_NO_CONTENT)
-async def cancel_generation(session: AsyncSession = Depends(get_session)):
-    """
-    계약서 생성 프로세스 중단
-    """
+async def cancel_generation(
+    session: AsyncSession = Depends(get_session),
+    current_user=Depends(get_current_user),
+):
     try:
-        await generation_service.cancel_generation(session)
-    except generation_service.NoGenerationInProgress:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="No contract generation in progress")
-    except generation_service.CannotCancelGeneration:
-        raise HTTPException(status.HTTP_409_CONFLICT, detail="Cannot cancel generation at this stage")
+        await generation_service.cancel_generation(current_user.id, session)
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
+    except HTTPException as e:
+        raise e
     except Exception:
-        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Unexpected server error")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unexpected server error",
+        )
