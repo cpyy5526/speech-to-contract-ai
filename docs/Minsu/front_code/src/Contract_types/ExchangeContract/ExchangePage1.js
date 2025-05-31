@@ -178,8 +178,6 @@ const ExchangePage1 = forwardRef(({ contract, suggestions }, ref) => {
         </tbody>
       </table>
 
-      <p className="section-title">7. 특약사항</p>
-      <div className="special-terms-box">{renderField("special-terms-box", contract.special_terms, suggestions)}</div>
     </>
   );
 });

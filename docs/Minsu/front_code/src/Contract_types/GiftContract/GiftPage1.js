@@ -146,6 +146,8 @@ const GiftPage1 = forwardRef(({ contract, suggestions }, ref) => {
           </tr>
         </tbody>
       </table>
+
+      
     </>
   );
 });
