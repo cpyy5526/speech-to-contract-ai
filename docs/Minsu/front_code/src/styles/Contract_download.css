@@ -141,8 +141,7 @@
   .contract-rendered, .contract-table, .special-terms-box {
     /* Chrome, Edge */
     -webkit-print-color-adjust: exact;
-    /* Firefox */
-    color-adjust: exact;
+
     /* 표준 */
     print-color-adjust: exact;
   }

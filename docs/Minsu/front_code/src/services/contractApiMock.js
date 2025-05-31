@@ -489,7 +489,8 @@ export async function getContractContent(contractId) {
               contact: "010-2345-6789"
             },
             gifted_property: {
-              type: "부동산",
+              type: "",
+              location: "서울시 서초구 반포대로 200",
               details: {
                 building: {
                   structure: "철근콘크리트",
@@ -515,7 +516,7 @@ export async function getContractContent(contractId) {
             },
             termination_conditions: {
               reasons: "수증자의 배신행위 시",
-              procedure: "서면 통보 후 14일 경과"
+              procedure: ""
             },
             special_terms: "양도 후 2년간 전매 금지",
             signature_and_seal: "서명 완료"
@@ -550,8 +551,8 @@ export async function getSuggestions(contractId) {
 // 성공 케이스
         resolve([
           {
-            field_path: "gifted_property.location",
-            suggestion_text: "2025년 최저임금은 시간당 10,030원입니다",
+            field_path: "termination_conditions.procedure",
+            suggestion_text: "계약 종료 절차에 대한 충돌이나 불이행 문제가 생길 수 있다.",
           },
           {
             field_path: "gifted_property.details.building.usage",
