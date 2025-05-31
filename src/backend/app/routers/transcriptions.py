@@ -1,4 +1,4 @@
-from uuid import UUID, uuid4
+from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status, Response
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -26,7 +26,12 @@ async def initiate_upload(
     """음성 업로드 세션을 초기화하고 업로드 URL을 반환합니다."""
     if not data.filename.strip():
         raise HTTPException(status_code=400, detail="Missing file name")
-    return await svc.register_upload(data.filename, current_user.id, session)
+    try:
+        return await svc.register_upload(data.filename, current_user.id, session)
+    except HTTPException as e:
+        raise e
+    except Exception:
+        raise HTTPException(status_code=500, detail="Unexpected server error")
 
 
 @router.get("/status", response_model=UploadStatusResponse)
@@ -34,7 +39,12 @@ async def check_status(
     session: AsyncSession = Depends(get_session),
     current_user=Depends(get_current_user),
 ):
-    return await svc.get_audio_status(current_user.id, session)
+    try:
+        return await svc.get_audio_status(current_user.id, session)
+    except HTTPException as e:
+        raise e
+    except Exception:
+        raise HTTPException(status_code=500, detail="Unexpected server error")
 
 
 @router.get(
@@ -45,8 +55,13 @@ async def retry_transcription(
     session: AsyncSession = Depends(get_session),
     current_user=Depends(get_current_user),
 ):
-    await svc.retry_transcription(current_user.id, session)
-    return {"detail": "Retry started"}
+    try:
+        await svc.retry_transcription(current_user.id, session)
+        return
+    except HTTPException as e:
+        raise e
+    except Exception:
+        raise HTTPException(status_code=500, detail="Unexpected server error")
 
 
 @router.post(
@@ -57,8 +72,13 @@ async def cancel_transcription(
     session: AsyncSession = Depends(get_session),
     current_user=Depends(get_current_user),
 ):
-    await svc.cancel_transcription(current_user.id, session)
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
+    try:
+        await svc.cancel_transcription(current_user.id, session)
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
+    except HTTPException as e:
+        raise e
+    except Exception:
+        raise HTTPException(status_code=500, detail="Unexpected server error")
 
 
 @router.post(
@@ -71,6 +91,10 @@ async def uploaded_notify(
     session: AsyncSession = Depends(get_session),
 ):
     """nginx 업로드 완료 Callback"""
-    await svc.trigger_transcription(transcription_id, session)
-    return {"detail": "Accepted"}
-    
+    try:
+        await svc.trigger_transcription(transcription_id, session)
+        return
+    except HTTPException as e:
+        raise e
+    except Exception:
+        raise HTTPException(status_code=500, detail="Unexpected server error")
