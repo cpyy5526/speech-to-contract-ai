@@ -8,17 +8,21 @@ const GiftPage1 = forwardRef(({ contract, suggestions }, ref) => {
       contract_date: getText("contract-date"),
       donor: {
         name: getText("donor-name"),
+        id_number: getText("donor-id-number"),
         address: getText("donor-address"),
         contact: getText("donor-contact"),
       },
       donee: {
         name: getText("donee-name"),
+        id_number: getText("donee-id-number"),
         address: getText("donee-address"),
         contact: getText("donee-contact"),
       },
       gifted_property: {
+        type: getText("gift-type"),
         location: getText("gift-location"),
         details: {
+          description: getText("gift-description"),
           building: {
             structure: getText("gift-structure"),
             usage: getText("gift-usage"),
@@ -55,9 +59,6 @@ const GiftPage1 = forwardRef(({ contract, suggestions }, ref) => {
     return el?.dataset.suggestion === "true" ? "" : el?.innerText.trim() || "";
   };
 
-
-
-
   return (
     <>
       <h1 className="contract-main-title">{renderField("contract-main-title", contract.contract_type, suggestions)}</h1>
@@ -67,8 +68,16 @@ const GiftPage1 = forwardRef(({ contract, suggestions }, ref) => {
       <table className="contract-table">
         <tbody>
           <tr>
+            <td className="gray">재산 종류</td>
+            <td colSpan="3">{renderField("gift-type", contract.gifted_property?.type, suggestions)}</td>
+          </tr>
+          <tr>
             <td className="gray">소재지</td>
             <td colSpan="3">{renderField("gift-location", contract.gifted_property?.location, suggestions)}</td>
+          </tr>
+          <tr>
+            <td className="gray">재산 설명</td>
+            <td colSpan="3">{renderField("gift-description", contract.gifted_property?.details?.description, suggestions)}</td>
           </tr>
           <tr>
             <td className="gray">건물 구조</td>
@@ -104,7 +113,7 @@ const GiftPage1 = forwardRef(({ contract, suggestions }, ref) => {
         제1조 증여자는 수증자에게 위 부동산을 무상으로 증여하고, 수증자는 이를 승낙한다.
       </p>
       <p className="contract-clause">
-        제2조 부동산의 인도일은 {renderField("delivery-date", contract.delivery_details?.delivery_date, suggestions)} 로 하며, 인도 방법은 {renderField("delivery-method", contract.delivery_details?.delivery_method, suggestions)}로 한다.
+        제2조 부동산의 인도일은 {renderField("delivery-date", contract.delivery_details?.delivery_date, suggestions)}로 하며, 인도 방법은 {renderField("delivery-method", contract.delivery_details?.delivery_method, suggestions)}로 한다.
       </p>
       <p className="contract-clause">
         제3조 부동산에 관련된 권리관계는 {renderField("existing-rights", contract.rights_and_obligations?.existing_rights, suggestions)}, 의무 사항은 {renderField("obligations", contract.rights_and_obligations?.obligations, suggestions)}로 한다.
@@ -115,7 +124,7 @@ const GiftPage1 = forwardRef(({ contract, suggestions }, ref) => {
 
       <p className="section-title">3. 특약사항</p>
       <div className="special-terms-box">
-        {renderField("", contract.special_terms, suggestions)}
+        {renderField("special-terms-box", contract.special_terms, suggestions)}
       </div>
 
       <p className="section-title">4. 계약 당사자</p>
@@ -124,12 +133,14 @@ const GiftPage1 = forwardRef(({ contract, suggestions }, ref) => {
           <tr>
             <td className="gray">증여자</td>
             <td>성명: {renderField("donor-name", contract.donor?.name, suggestions)}</td>
+            <td>주민등록번호: {renderField("donor-id-number", contract.donor?.id_number, suggestions)}</td>
             <td>주소: {renderField("donor-address", contract.donor?.address, suggestions)}</td>
             <td>연락처: {renderField("donor-contact", contract.donor?.contact, suggestions)}</td>
           </tr>
           <tr>
             <td className="gray">수증자</td>
             <td>성명: {renderField("donee-name", contract.donee?.name, suggestions)}</td>
+            <td>주민등록번호: {renderField("donee-id-number", contract.donee?.id_number, suggestions)}</td>
             <td>주소: {renderField("donee-address", contract.donee?.address, suggestions)}</td>
             <td>연락처: {renderField("donee-contact", contract.donee?.contact, suggestions)}</td>
           </tr>

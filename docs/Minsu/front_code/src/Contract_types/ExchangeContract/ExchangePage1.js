@@ -60,6 +60,7 @@ const ExchangePage1 = forwardRef(({ contract, suggestions }, ref) => {
         broker_name: getText("broker-name"),
       },
       special_terms: getText("special-terms-box"),
+      signature_and_seal: getText("sign-seal")
     }),
   }));
 
