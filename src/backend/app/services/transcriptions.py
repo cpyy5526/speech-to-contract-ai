@@ -8,6 +8,7 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.core.config import settings
 from app.models.transcription import Transcription, TranscriptionStatus
+from app.models.generation import Generation
 from app.schemas.transcription import UploadInitResponse, UploadStatusResponse
 from app.tasks.transcriptions import process_uploaded_audio
 
@@ -61,6 +62,20 @@ async def trigger_transcription(transcription_id: UUID, session: AsyncSession) -
 
 async def get_audio_status(user_id: UUID, session: AsyncSession) -> UploadStatusResponse:
     transcription = await _get_latest(user_id, session)
+
+    # 만약 done 상태라면, 이미 generation에 연결됐는지 추가로 검사
+    if transcription.status == TranscriptionStatus.done:
+        result = await session.exec(
+            select(Generation).where(Generation.transcription_id == transcription.id)
+        )
+        generation = result.first()
+        if generation:
+            # 이미 계약서 생성에 사용된 transcription -> 추적 대상 아님 (요청 로직 오류 방지)
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No audio data for this user"
+            )
+    
     return UploadStatusResponse(status=transcription.status.value)
 
 
