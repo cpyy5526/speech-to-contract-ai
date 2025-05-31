@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from "react";
 import "../styles/Home.css";
 import micIcon from "../images/mic_icon.png";
 import docIcon from "../images/doc_icon.png";
-import { auth, signOut } from "../firebase";
 import { useNavigate } from "react-router-dom";
 import { changePassword } from "../services/authApiMock"; // 또는 authApi로 교체 가능
 import { deleteAccount } from "../services/authApiMock"; // 또는 authApi
