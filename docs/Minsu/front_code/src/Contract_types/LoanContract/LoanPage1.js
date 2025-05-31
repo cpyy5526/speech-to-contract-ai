@@ -117,6 +117,25 @@ const LoanPage1 = forwardRef(({ contract, suggestions }, ref) => {
 
       <p className="section-title">6. 특약사항</p>
       <div className="special-terms-box">{renderField("special-terms-box", contract.special_terms, suggestions)}</div>
+
+      <p className="section-title">7. 서명란</p>
+      <p className="signature-block">
+        본 계약의 내용을 확인하고 이에 동의하여 아래와 같이 서명합니다.
+      </p>
+
+      <table className="contract-table" style={{ marginTop: "20px" }}>
+        <tbody>
+          <tr>
+            <td className="gray">채권자</td>
+            <td>{renderField("creditor-sign", contract.creditor?.name, suggestions)} (인)</td>
+          </tr>
+          <tr>
+            <td className="gray">채무자</td>
+            <td>{renderField("debtor-sign", contract.debtor?.name, suggestions)} (인)</td>
+          </tr>
+        </tbody>
+      </table>
+
     </>
   );
 });

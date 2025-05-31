@@ -136,11 +136,14 @@ const ConstructionPage1 = forwardRef(({ contract, suggestions }, ref) => {
       <p className="section-title">7. 분쟁 해결</p>
       <p className="contract-clause">{renderField("dispute-resolution", contract.dispute_resolution, suggestions)}</p>
 
-      <p className="section-title">8. 특약사항</p>
-      <div className="special-terms-box">
-        {renderField("special-terms-box", contract.special_terms, suggestions)}
-      </div>
+    
+
+      
+        
+
     </div>
+
+      
   );
 });
 
