@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-import logging
+import uuid, aiofiles, logging
 from pathlib import Path
-
 from openai import AsyncOpenAI, OpenAIError
 
 from app.core.config import settings  # type: ignore
@@ -14,7 +13,6 @@ logger = logging.getLogger(__name__)
 # --------------------------------------------------------------------------- #
 # Exceptions
 # --------------------------------------------------------------------------- #
-
 
 class STTCallError(RuntimeError):
     """Raised when a Whisper STT API call fails."""
@@ -41,11 +39,10 @@ def _get_client() -> AsyncOpenAI:
 
 
 # --------------------------------------------------------------------------- #
-# Public API
+# Internal API
 # --------------------------------------------------------------------------- #
 
-
-async def transcribe_audio(path: str) -> str:
+async def transcribe_audio(audio_filename: str) -> str:
     """
     Convert an audio file to text using OpenAI Whisper.
 
@@ -64,9 +61,9 @@ async def transcribe_audio(path: str) -> str:
     STTCallError
         If the Whisper API call fails for any reason.
     """
-    p = Path(path)
-    if not p.is_file():
-        raise STTCallError(f"Audio file not found: {p}")
+    input_path = Path(settings.AUDIO_UPLOAD_DIR) / audio_filename
+    if not input_path.is_file():
+        raise STTCallError(f"Audio file not found: {input_path}")
 
     client = _get_client()
 
@@ -82,7 +79,16 @@ async def transcribe_audio(path: str) -> str:
 
         text_out: str = response.strip() if isinstance(response, str) else response.text  # type: ignore[attr-defined]
         logger.debug("Finished Whisper transcription (%d chars)", len(text_out))
-        return text_out
+
+        # UUID filename 생성
+        text_uuid = str(uuid.uuid4())
+        output_filename = f"{text_uuid}.txt"
+        output_path = Path(settings.TEXT_UPLOAD_DIR) / output_filename
+
+        async with aiofiles.open(output_path, "w", encoding="utf-8") as f:
+            await f.write(text_out)
+        
+        return output_filename
 
     except (OpenAIError, Exception) as exc:  # noqa: BLE001
         logger.exception("Whisper STT API call failed: %s", exc)

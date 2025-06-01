@@ -7,7 +7,7 @@ from app.core.celery_app import celery_app
 from app.db.session import async_session
 from app.core.stt import transcribe_audio
 from app.models.transcription import Transcription, TranscriptionStatus
-
+from app.prompts.preprocessor import text_preprocess
 
 @celery_app.task(name="tasks.transcriptions.process_uploaded_audio")
 def process_uploaded_audio(transcription_id: str) -> None:
@@ -27,7 +27,13 @@ def process_uploaded_audio(transcription_id: str) -> None:
             await session.commit()
 
             try:
+                # Whisper API 호출 및 변환
                 script_filename = await transcribe_audio(transcription.audio_file)
+                processed_filename = f"processed_{script_filename}"
+
+                # 텍스트 전처리 실행
+                await text_preprocess(script_filename, processed_filename)
+
             except Exception as exc:
                 transcription.status = TranscriptionStatus.transcription_failed
                 await session.commit()
@@ -37,7 +43,7 @@ def process_uploaded_audio(transcription_id: str) -> None:
                 if updated_transcription.status == TranscriptionStatus.cancelled:
                     return
                 
-                transcription.script_file = script_filename
+                transcription.script_file = processed_filename
                 transcription.status = TranscriptionStatus.done
                 await session.commit()
 
