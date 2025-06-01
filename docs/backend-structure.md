@@ -28,6 +28,7 @@ backend/
 │   │
 │   ├── prompts/                  # 계약서 생성 프롬프트 정의 및 GPT 응답 후처리
 │   │   ├── preprocessor.py         # 입력 데이터 전처리
+│   │   ├── stopwords.py            # 전처리에 사용될 한국어 불용어 목록 (자체 정의)
 │   │   ├── type_classifier.py      # 계약 유형 판단
 │   │   ├── keyword_extractor.py    # 키워드 추출 및 JSON 형태 계약서 생성
 │   │   ├── annotater.py            # 공란 처리된 필드에 대한 정보 제안 생성
