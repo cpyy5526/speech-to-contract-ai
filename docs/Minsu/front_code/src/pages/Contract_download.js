@@ -28,6 +28,8 @@ function Contract_download() {
   const [contract, setContract] = useState(null);
   const [contractList, setContractList] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
+  const [sidebarVisible, setSidebarVisible] = useState(true);
+
 
   const contractRef = useRef();
   const contractComponentRef  = useRef();
@@ -37,6 +39,9 @@ function Contract_download() {
   const contractId = params.get("contract_id");
 
   const navigate = useNavigate();
+  const toggleSidebar = () => {
+    setSidebarVisible((prev) => !prev);
+  };
 
   
 
@@ -74,6 +79,7 @@ function Contract_download() {
     try {
     const edited = contractComponentRef .current.extract();
       await updateContractContent(contractId, edited);
+      window.location.reload();
     } catch (err) {
       console.error("❌ 저장 실패:", err);
     }
@@ -98,7 +104,7 @@ function Contract_download() {
       pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
     }
 
-    pdf.save("임대차계약서.pdf");
+    pdf.save(`${contract.contract_type || "계약서"}.pdf`);
   };
 
 
@@ -137,32 +143,33 @@ function Contract_download() {
 
   return (
     <div className="download-container">
-      <aside className="sidebar">
-        <button
-          onClick={() => navigate("/home")}
-          className="go-home-btn"
-        >
-          ⬅ 메인페이지
+      {/* 📌 사이드바 표시 여부 */}
+      {sidebarVisible && (
+        <aside className="sidebar">
+          <button onClick={() => navigate("/home")} className="go-home-btn">⬅ 메인페이지</button>
+          <h3 className="sidebar-title">계약서 작성 목록</h3>
+          <ul className="contract-list">
+            {contractList.map((item) => (
+              <li
+                key={item.id}
+                className={item.id === contractId ? "active" : ""}
+                onClick={() => navigate(`/download?contract_id=${item.id}`)}
+              >
+                <span>{item.created_at.slice(0, 10)}</span> {item.contract_type}
+              </li>
+            ))}
+          </ul>
+        </aside>
+      )}
+
+      <main className={`preview-area ${sidebarVisible ? "" : "expanded"}`}>
+        {/* 햄버거 메뉴 버튼 */}
+        <button className="toggle-sidebar-btn" onClick={toggleSidebar}>
+          ☰
         </button>
-        <h3 className="sidebar-title">계약서 작성 목록</h3>
-        <ul className="contract-list">
-          {contractList.map((item) => (
-            <li
-              key={item.id}
-              className={item.id === contractId ? "active" : ""}
-              onClick={() => navigate(`/download?contract_id=${item.id}`)}
-            >
-              <span>{item.created_at.slice(0, 10)}</span> {item.contract_type}
-            </li>
-          ))}
-        </ul>
-      </aside>
-
-
-      <main className="preview-area">
         <div  ref={contractRef}>
           {!contract ? (
-            <p>계약서를 불러오는 중입니다...</p>
+            <p>계약서를 선택해주세요</p>
               ) : contract.contract_type === "증여 계약" ? (
                 <GiftContract ref={contractComponentRef } contract={contract} suggestions={suggestions} />
               ) : contract.contract_type === "공사 계약" ? (
@@ -185,14 +192,12 @@ function Contract_download() {
         </div>
         
 
-            <div className="download-button-wrap">
-              <button className="download-btn" onClick={handleSave}>💾 저장</button>
-              <button className="download-btn" onClick={handleDownload}>⬇️ 다운로드</button>
-              <button className="download-btn" onClick={handleRestore}>↩️ 되돌리기</button>
-              <button className="download-btn danger" onClick={handleDelete}>🗑️ 삭제</button>
-          </div>
-
-
+        <div className="download-button-wrap">
+          <button className="download-btn" onClick={handleSave}>💾 저장</button>
+          <button className="download-btn" onClick={handleDownload}>⬇️ 다운로드</button>
+          <button className="download-btn" onClick={handleRestore}>↩️ 되돌리기</button>
+          <button className="download-btn danger" onClick={handleDelete}>🗑️ 삭제</button>
+        </div>
       </main>
     </div>
   );

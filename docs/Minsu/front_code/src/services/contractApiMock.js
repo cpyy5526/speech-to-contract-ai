@@ -521,7 +521,7 @@ export async function getContractContent(contractId) {
             },
             termination_conditions: {
               reasons: "수증자의 배신행위 시",
-              procedure: "계약 해제는 증여자의 서면 통지로 발효되며, 수증자는 7일 이내 재산을 반환한다"
+              procedure: ""
             },
             special_terms: "양도 후 2년간 전매 금지",
             signature_and_seal: "서명 완료"
