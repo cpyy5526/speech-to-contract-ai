@@ -119,12 +119,16 @@ const GiftPage1 = forwardRef(({ contract, suggestions }, ref) => {
         제3조 부동산에 관련된 권리관계는 {renderField("existing-rights", contract.rights_and_obligations?.existing_rights, suggestions)}, 의무 사항은 {renderField("obligations", contract.rights_and_obligations?.obligations, suggestions)}로 한다.
       </p>
       <p className="contract-clause">
-        제4조 계약 해제 사유는 {renderField("termination-reasons", contract.termination_conditions?.reasons, suggestions)}, 절차는 {renderField("termination-procedure", contract.termination_conditions?.procedure, suggestions)}로 한다.
+        제4조 계약 해제 사유는 {renderField("termination-reasons", contract.termination_conditions?.reasons, suggestions)},<br />
+        <span style={{ marginLeft: "4em" }}>
+          절차는 {renderField("termination-procedure", contract.termination_conditions?.procedure, suggestions)}로 한다.
+        </span>
       </p>
+
 
       <p className="section-title">3. 특약사항</p>
       <div className="special-terms-box">
-        {renderField("special-terms-box", contract.special_terms, suggestions)}
+        {renderField("", contract.special_terms, suggestions)}
       </div>
 
       <p className="section-title">4. 계약 당사자</p>

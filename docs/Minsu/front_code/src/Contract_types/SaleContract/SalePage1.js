@@ -141,7 +141,7 @@ const SalePage1 = forwardRef(({ contract, suggestions }, ref) => {
 
       <p className="section-title">6. 특약사항</p>
       <div className="special-terms-box">
-        {renderField("special-terms-box", contract.special_terms, suggestions)}
+        {renderField("", contract.special_terms, suggestions)}
       </div>
 
       <p className="section-title">7. 서명란</p>
