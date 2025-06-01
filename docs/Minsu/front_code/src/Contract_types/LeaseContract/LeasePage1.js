@@ -124,7 +124,7 @@ const LeasePage1 = forwardRef(({ contract, suggestions }, ref) => {
       <p className="contract-clause">계약 해지 조건: {renderField("termination", contract.termination, suggestions)}</p>
 
       <p className="section-title">5. 특약사항</p>
-      <div className="special-terms-box">{renderField("special-terms-box", contract.special_terms, suggestions)}</div>
+      <div className="special-terms-box">{renderField("", contract.special_terms, suggestions)}</div>
 
       <p className="section-title">6. 중개업소 정보</p>
       <table className="contract-table">

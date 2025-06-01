@@ -111,12 +111,14 @@ const LoanPage1 = forwardRef(({ contract, suggestions }, ref) => {
       <p className="contract-clause">
         상환일은 {renderField("repay-date", contract.repayment?.repayment_date, suggestions)}, 상환 방식은{" "}
         {renderField("repay-method", contract.repayment?.repayment_method, suggestions)}, 상환 장소는{" "}
-        {renderField("repay-location", contract.repayment?.repayment_location, suggestions)}, 계좌 정보는{" "}
-        {renderField("repay-account", contract.repayment?.account_info, suggestions)}로 한다.
+        {renderField("repay-location", contract.repayment?.repayment_location, suggestions)},
+      </p>
+      <p className="contract-clause">
+        계좌 정보는{" "} {renderField("repay-account", contract.repayment?.account_info, suggestions)}로 한다.
       </p>
 
       <p className="section-title">6. 특약사항</p>
-      <div className="special-terms-box">{renderField("special-terms-box", contract.special_terms, suggestions)}</div>
+      <div className="special-terms-box">{renderField("", contract.special_terms, suggestions)}</div>
 
       <p className="section-title">7. 서명란</p>
       <p className="signature-block">
