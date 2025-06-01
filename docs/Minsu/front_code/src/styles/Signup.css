@@ -65,3 +65,16 @@
     height: 23px;
   }
   
+  .goto-login-btn {
+  margin-top: 1rem;
+  background-color: transparent;
+  color: #444;
+  border: none;
+  font-size: 0.95rem;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.goto-login-btn:hover {
+  color: #007bff;
+}
