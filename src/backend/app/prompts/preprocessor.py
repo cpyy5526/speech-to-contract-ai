@@ -1,33 +1,19 @@
-import os
+'''
+음성 전치리 관련
 import whisper
 from pyannote.audio import Pipeline
 import librosa
 import soundfile as sf
+'''
 
-from hanspell import spell_checker
-import nltk
-from nltk.corpus import stopwords
+import os, aiofiles
+# from hanspell import spell_checker
 from nltk.tokenize import word_tokenize
 
-from dotenv import load_dotenv, find_dotenv
+from app.core.config import settings
+from app.prompts.stopwords import stopwords_set
 
-# 파일 로드
-def load_file(fs, nfile, create_dir=False):
-    base_dir = os.path.dirname(os.path.abspath(__file__))  # 현재 파일의 절대 경로 기준
-    dir_path = os.path.join(base_dir, fs)
-    path = os.path.join(dir_path, nfile)
-    
-    # 디렉토리가 없으면 생성
-    if create_dir and not os.path.exists(dir_path):
-        os.makedirs(dir_path)
-        print(f"디렉토리 생성: {dir_path}")
-    
-    # 읽기 모드에서는 파일 존재 확인
-    if not create_dir and not os.path.exists(path):
-        raise FileNotFoundError(f"파일 없음: {path}")
-    
-    return path
-
+'''
 # 화자 분리 및 음성 추출 매칭
 def diarized_transcription(audio_nfile, txt_nfile):
     audio_path=load_file("user_data", audio_nfile)
@@ -146,34 +132,34 @@ def diarized_transcription(audio_nfile, txt_nfile):
             text = item['text']
             # 화자별 발화 시간 정보 포함
             f.write(f"{speaker}: {text}\n")
-            
-            
+'''
+
+'''
+서버 초기화 모듈 또는 배포 과정에서 로드
 # nltk 불용어 다운로드
 ## nltk는 한국어 불용어를 제공하지 않음
 ## 따로 불용어 리스트를 txt 파일로 지정해둠
 nltk.download('punkt')
 nltk.download('punkt_tab')
 nltk.download('stopwords')
+'''
 
 # 텍스트 전처리
-def text_preprocess(input_txt_nfile, output_txt_nfile, stopwords_nfile):
-    def load_stopwords_from_file(nfile):
-        sw_path = load_file("stopwords", nfile)
-        
-        with open(sw_path, 'r', encoding='utf-8') as f:
-            stopwords_list = [line.strip() for line in f if line.strip()]
-        return set(stopwords_list)
+async def text_preprocess(
+    script_filename: str,
+    output_filename: str
+):
+    input_path = os.path.join(settings.TEXT_UPLOAD_DIR, script_filename)
+    output_path = os.path.join(settings.TEXT_UPLOAD_DIR, output_filename)
 
-    # 불용어 목록 불러오기
-    stop_words = load_stopwords_from_file(stopwords_nfile)
-    # 입력 파일 경로 (user_data 디렉토리에서 읽기)
-    input_path = load_file("user_data", input_txt_nfile)
-    # 출력 파일 경로 (user_data 디렉토리에 저장)
-    output_path = load_file("user_data", output_txt_nfile, create_dir=True)
-    
-    with open(input_path, "r", encoding="utf-8") as f:
-        original_text = f.read()
+    async with aiofiles.open(input_path, "r", encoding="utf-8") as f:
+        original_text = await f.read()
         
+    '''
+    서버 환경에서는 py-hanspell 맞춤법 검사 비활성화:
+    네이버 API가 불안정하어 장애 가능성이 높아 현재로써는 사용 어려움'''
+    corrected = original_text
+    '''
     # 맞춤법 교정
     ### KeyError 예외 처리 및 큰 텍스트 분할 처리
     try:
@@ -200,45 +186,14 @@ def text_preprocess(input_txt_nfile, output_txt_nfile, stopwords_nfile):
     except Exception as e:
         print(f"맞춤법 검사 전체 과정 중 오류 발생: {e}")
         corrected = original_text  # 오류 발생 시 원본 텍스트 사용
+    '''
     
     # 불용어 제거
     ## words_token으로 변경 하여 토큰화
     word_tokens=word_tokenize(corrected)
-    filtered = [word for word in word_tokens if word not in stop_words]
+    filtered = [word for word in word_tokens if word not in stopwords_set]
     processed_text = " ".join(filtered)
     
     # 결과 저장
-    with open(output_path, "w", encoding="utf-8") as f:
-        f.write(processed_text)
-        
-
-def data_preprocess(): 
-    # audio_nfile = "audio_input.wav"
-    audio_nfile = "test_audio.wav"
-    diarized_txt_nfile= "diarized_output.txt"
-    processed_txt_nfile= "processed_output.txt"
-    stopwords_nfile="korean_stopwords.txt"
-    
-    try:
-        # 오디오 변환
-        print("🎵 음성 인식 및 화자 분리 시작...")
-        diarized_transcription(audio_nfile, diarized_txt_nfile)
-        print("✅ 음성 인식 완료")
-        
-        # 텍스트 전처리
-        print("📝 텍스트 전처리 시작...")
-        text_preprocess(diarized_txt_nfile, processed_txt_nfile, stopwords_nfile)
-        print("✅ 텍스트 전처리 완료")
-        
-        # 중간 파일 정리
-        if os.path.exists(load_file("user_data", diarized_txt_nfile)):
-            os.remove(load_file("user_data", diarized_txt_nfile))
-            print("🗑️ 중간 파일 정리 완료")
-        # if os.path.exists(load_file("user_data", audio_nfile)):
-        #     os.remove(load_file("user_data", audio_nfile))
-        #     print("🗑️ 중간 파일 정리 완료")
-        
-        print("🎉 모든 처리가 완료되었습니다!")
-        
-    except Exception as e:
-        print(f"❌ 처리 중 오류 발생: {e}")
+    async with aiofiles.open(output_path, "w", encoding="utf-8") as f:
+        await f.write(processed_text)
