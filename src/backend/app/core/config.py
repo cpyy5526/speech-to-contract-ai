@@ -84,8 +84,9 @@ class Settings:
         self.OPENAI_API_BASE: str = os.getenv(
             "OPENAI_API_BASE", "https://api.openai.com/v1"
         )
-        self.OPENAI_MODEL: str = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
-        self.OPENAI_TIMEOUT: int = int(os.getenv("OPENAI_TIMEOUT", 30))
+        self.OPENAI_MODEL: str = os.getenv("OPENAI_MODEL", "gpt-4")
+        self.OPENAI_TIMEOUT: int = int(os.getenv("OPENAI_TIMEOUT", 60))
+        self.OPENAI_TEMPERATURE: float = float(os.getenv("OPENAI_TEMPERATURE", 0.2))
 
         # ------------------------------------------------------------------ #
         # 파일 업로드 경로

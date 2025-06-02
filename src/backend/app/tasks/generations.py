@@ -1,5 +1,6 @@
-import asyncio
+import asyncio, logging
 from uuid import UUID
+from pathlib import Path
 
 from app.core.celery_app import celery_app
 from app.db.session import async_session
@@ -10,10 +11,12 @@ from app.models.contract import Contract
 from app.models.suggestion import GptSuggestion
 
 from app.core.llm import call_gpt_api
+from app.core.config import settings
 from app.prompts.type_classifier import get_contract_type
 from app.prompts.keyword_extractor import extract_fields
 from app.prompts.annotater import annotate_contract_text
 
+logger = logging.getLogger(__name__)
 
 @celery_app.task(name="tasks.generations.process_generation_pipeline")
 def process_generation_pipeline(generation_id: str) -> None:
@@ -81,6 +84,15 @@ def process_generation_pipeline(generation_id: str) -> None:
                 # 계약서 생성 파이프라인 성공적으로 완료
                 generation.status = GenerationStatus.done
                 await session.commit()
+
+                # 대화 텍스트 삭제
+                try:
+                    script_path = Path(settings.TEXT_UPLOAD_DIR) / transcription.script_file
+                    if script_path.is_file():
+                        script_path.unlink()
+                        logger.debug("Deleted script file after successful generation: %s", script_path)
+                except Exception as e:
+                    logger.warning("Failed to delete script file %s: %s", script_path, e)
 
             # 계약서 생성 파이프라인 실패 및 중단
             except Exception as exc:

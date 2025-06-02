@@ -19,7 +19,8 @@ class GPTCallError(Exception):
 # 전역 싱글턴 클라이언트
 _client = AsyncOpenAI(
     api_key=settings.OPENAI_API_KEY,
-    base_url=settings.OPENAI_API_BASE or "https://api.openai.com/v1",
+    base_url=settings.OPENAI_API_BASE,
+    timeout=settings.OPENAI_TIMEOUT,
 )
 
 
@@ -45,10 +46,10 @@ async def call_gpt_api(messages: List[Dict[str, str]]) -> str:
     logger.debug("GPT 요청 시작 | 모델=%s | 메시지 수=%d", settings.OPENAI_MODEL, len(messages))
 
     try:
-        response: Any = await _client.chat.completions.create(
+        response = await _client.chat.completions.create(
             model=settings.OPENAI_MODEL,
             messages=messages,
-            timeout=settings.OPENAI_TIMEOUT or 30,
+            temperature=settings.OPENAI_TEMPERATURE,
         )
         logger.debug("GPT 응답 수신 완료")
     except Exception as exc:  # pylint: disable=broad-except

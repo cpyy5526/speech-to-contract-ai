@@ -1,13 +1,15 @@
-import asyncio
+import asyncio, logging
 from uuid import UUID
-
-from sqlmodel import select
+from pathlib import Path
 
 from app.core.celery_app import celery_app
 from app.db.session import async_session
 from app.core.stt import transcribe_audio
 from app.models.transcription import Transcription, TranscriptionStatus
 from app.prompts.preprocessor import text_preprocess
+from app.core.config import settings
+
+logger = logging.getLogger(__name__)
 
 @celery_app.task(name="tasks.transcriptions.process_uploaded_audio")
 def process_uploaded_audio(transcription_id: str) -> None:
@@ -43,8 +45,18 @@ def process_uploaded_audio(transcription_id: str) -> None:
                 if updated_transcription.status == TranscriptionStatus.cancelled:
                     return
                 
+                # Transcription 테이블 레코드에 파일명 저장하고 상태 반영
                 transcription.script_file = processed_filename
                 transcription.status = TranscriptionStatus.done
                 await session.commit()
+
+                # 음성파일 삭제
+                try:
+                    audio_path= Path(settings.AUDIO_UPLOAD_DIR) / transcription.audio_file
+                    if audio_path.is_file():
+                        audio_path.unlink()
+                        logger.debug("Deleted audio file after successful transcription: %s", audio_path)
+                except Exception as e:
+                        logger.warning("Failed to delete audio file %s: %s", audio_path, e)
 
     asyncio.run(_run(UUID(transcription_id)))
