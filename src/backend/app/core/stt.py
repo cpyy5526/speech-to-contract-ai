@@ -31,8 +31,8 @@ def _get_client() -> AsyncOpenAI:
     if _client is None:
         _client = AsyncOpenAI(
             api_key=settings.OPENAI_API_KEY,  # loaded from .env
-            base_url=getattr(settings, "OPENAI_API_BASE", None) or None,
-            timeout=60,
+            base_url=settings.OPENAI_API_BASE,
+            timeout=settings.OPENAI_TIMEOUT,
         )
         logger.debug("AsyncOpenAI client initialized for Whisper STT")
     return _client
@@ -68,9 +68,9 @@ async def transcribe_audio(audio_filename: str) -> str:
     client = _get_client()
 
     try:
-        logger.debug("Starting Whisper transcription for %s", p)
+        logger.debug("Starting Whisper transcription for %s", input_path)
         # NOTE: ``file`` must be a binary file object
-        async with p.open("rb") as fh:  # pyright: ignore[reportUnknownMemberType]
+        async with input_path.open("rb") as fh:  # pyright: ignore[reportUnknownMemberType]
             response = await client.audio.transcriptions.create(
                 model="whisper-1",
                 file=fh,
