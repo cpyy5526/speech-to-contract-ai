@@ -15,6 +15,9 @@ from app.core.config import settings
 from app.prompts.type_classifier import get_contract_type
 from app.prompts.keyword_extractor import extract_fields
 from app.prompts.annotater import annotate_contract_text
+from app.prompts.keyword_schema import (
+    is_supported_contract_type, matches_schema, is_valid_field_path
+)
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +48,12 @@ def process_generation_pipeline(generation_id: str) -> None:
                     transcription.script_file,
                     call_gpt_api
                 )
+                # 정의되지 않은 계약 유형인 경우 생성 실패 처리
+                if not is_supported_contract_type(contract_type):
+                    generation.status = GenerationStatus.failed
+                    await session.commit()
+                    logger.error("Unsupported contract type generated: \'%s\'", contract_type)
+                    return
 
                 # 계약서 JSON 생성
                 contract_fields = await extract_fields(
@@ -52,6 +61,12 @@ def process_generation_pipeline(generation_id: str) -> None:
                     contract_type,
                     call_gpt_api
                 )
+                # 생성된 JSON 필드 유효성 검증
+                if not matches_schema(contract_type, contract_fields):
+                    generation.status = GenerationStatus.failed
+                    await session.commit()
+                    logger.error("Generated contract fields do not match schema for type \'%s\'", contract_type)
+                    return
 
                 # 계약서 테이블에 새 레코드 추가
                 contract = Contract(
@@ -73,6 +88,10 @@ def process_generation_pipeline(generation_id: str) -> None:
 
                 # 계약서 필드마다 제안 텍스트를 suggestion 테이블에 새 레코드로 추가
                 for field_path, suggestion_text in contract_suggestions.items():
+                    # 유효하지 않은 key에 대한 제안은 저장하지 않고 로그만 남김
+                    if not is_valid_field_path(contract_type, field_path):
+                        logger.warning("Invalid suggestion field_path: \'%s\'", field_path)
+                        continue
                     if suggestion_text.strip():  # 빈 제안은 저장하지 않음
                         suggestion = GptSuggestion(
                             contract_id=contract.id,
