@@ -1,34 +1,51 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from app.schemas.contracts import ContractCreateRequest, ContractUpdateRequest, ContractResponse
+from sqlmodel.ext.asyncio.session import AsyncSession
+
+from app.core.dependencies import get_session, get_current_user
+from app.models.user import User
+from app.schemas.contract import (
+    ContractResponse,
+    ContractDetailsResponse,
+    ContractUpdateRequest,
+    GPTSuggestionResponse,
+)
 from app.services import contracts as contracts_service
-from app.core.dependencies import get_session
 
 router = APIRouter(prefix="/contracts", tags=["Contracts"])
 
 @router.get("/", response_model=list[ContractResponse])
-async def get_contracts(session: AsyncSession = Depends(get_session)):
+async def get_contracts_list(
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+):
     """
     사용자가 생성한 계약서 목록 조회
     """
     try:
-        return await contracts_service.get_contracts(session)
-    except contracts_service.DatabaseError:
-        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Database query failed")
+        return await contracts_service.get_contracts_list(current_user.id, session)
+    except HTTPException as e:
+        raise e
     except Exception:
-        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Unexpected server error")
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unexpected server error"
+        )
 
 
-@router.get("/{contract_id}", response_model=ContractResponse)
+@router.get("/{contract_id}", response_model=ContractDetailsResponse)
 async def get_contract(contract_id: str, session: AsyncSession = Depends(get_session)):
     """
     특정 계약서의 내용 조회
     """
     try:
         return await contracts_service.get_contract(contract_id, session)
-    except contracts_service.ContractNotFound:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Contract not found")
+    except HTTPException as e:
+        raise e
     except Exception:
-        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Unexpected server error")
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unexpected server error"
+        )
 
 
 @router.put("/{contract_id}", status_code=status.HTTP_204_NO_CONTENT)

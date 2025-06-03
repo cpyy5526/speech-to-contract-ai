@@ -16,6 +16,7 @@ callers need only catch the custom exceptions exposed in ``__all__``.
 from datetime import datetime
 from typing import List
 from uuid import UUID
+from fastapi import HTTPException, status
 
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
@@ -25,75 +26,51 @@ from app.models.contract import Contract
 from app.models.suggestion import GptSuggestion
 from app.schemas.contract import (
     ContractResponse,
+    ContractDetailsResponse,
     ContractUpdateRequest,
     GPTSuggestionResponse,
 )
+from app.prompts.keyword_schema import keyword_schema
 
 # ⇢ Prompt‑team utilities – imported, *not* implemented here
 from app.prompts.contract_validation import validate_contract_fields  # type: ignore
-
-__all__ = [
-    "get_contracts",
-    "get_contract",
-    "update_contract",
-    "delete_contract",
-    "get_suggestions",
-    "restore_contract",
-    # Exceptions
-    "ContractNotFound",
-    "InvalidContractFields",
-    "InitialContentsMissing",
-    "DatabaseError",
-]
-
-
-# ============================================================
-# Exceptions
-# ============================================================
-
-
-class ContractNotFound(Exception):
-    """Raised when the requested contract does not exist."""
-
-
-class InvalidContractFields(Exception):
-    """Raised when a contract JSON is missing required fields."""
-
-
-class InitialContentsMissing(Exception):
-    """Raised when ``initial_contents`` is absent (should never happen)."""
-
-
-class DatabaseError(Exception):
-    """Raised when lower‑level DB errors bubble up."""
 
 
 # ============================================================
 # Internal helpers
 # ============================================================
 
+# 평탄화된 중첩 dict의 key set 리턴
+def flatten_keys(d: dict, prefix: str = "") -> set[str]:
+    keys = set()
+    for k, v in d.items():
+        full_key = f"{prefix}.{k}" if prefix else k
+        if isinstance(v, dict):
+            keys.update(flatten_keys(v, full_key))
+        else:
+            keys.add(full_key)
+    return keys
 
 def _contract_to_response(model: Contract) -> ContractResponse:  # noqa: D401
-    """Map a :class:`~app.models.contract.Contract` ORM instance → schema."""
-
-    # Enum ➜ str for the Pydantic response model
-    status_str = (
-        model.generation_status.value  # type: ignore[attr-defined]
-        if hasattr(model.generation_status, "value")
-        else str(model.generation_status)
-    )
+    """Map a :class:`~app.models.contract.Contract` ORM instance -> schema."""
 
     return ContractResponse(
         id=str(model.id),
         contract_type=model.contract_type,
-        generation_status=status_str,
         created_at=model.created_at,
         updated_at=model.updated_at,
     )
 
+def _contract_details_to_response(model: Contract) -> ContractDetailsResponse:
+    return ContractDetailsResponse(
+        contract_type=model.contract_type,
+        contents=model.contents,
+        created_at=model.created_at,
+        updated_at=model.updated_at,
+    )
 
 def _suggestion_to_response(model: GptSuggestion) -> GPTSuggestionResponse:  # noqa: D401
-    """Map a :class:`~app.models.suggestion.GptSuggestion` ORM instance → schema."""
+    """Map a :class:`~app.models.suggestion.GptSuggestion` ORM instance -> schema."""
 
     return GPTSuggestionResponse(
         field_path=model.field_path,
@@ -106,26 +83,45 @@ def _suggestion_to_response(model: GptSuggestion) -> GPTSuggestionResponse:  # n
 # ============================================================
 
 
-async def get_contracts(session: AsyncSession) -> List[ContractResponse]:
+async def get_contracts_list(
+        user_id: UUID,
+        session: AsyncSession
+) -> List[ContractResponse]:
     """Return *all* contracts (caller is expected to handle authorisation)."""
     try:
-        stmt = select(Contract).order_by(Contract.created_at.desc())
+        stmt = (
+            select(Contract)
+            .where(Contract.user_id == user_id)
+            .order_by(Contract.created_at.desc())
+        )
         result = await session.execute(stmt)
         contracts = result.scalars().all()
         return [_contract_to_response(c) for c in contracts]
-    except SQLAlchemyError as exc:  # pragma: no cover – DB layer shield
-        raise DatabaseError from exc
+    except SQLAlchemyError:
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database query failed"
+        )
 
 
-async def get_contract(contract_id: str, session: AsyncSession) -> ContractResponse:
-    """Return a single contract by *primary‑key* UUID."""
+async def get_contract(
+    contract_id: str,
+    session: AsyncSession
+) -> ContractDetailsResponse:
+    """Return a single contract by *primary-key* UUID."""
     try:
         contract = await session.get(Contract, UUID(contract_id))
         if contract is None:
-            raise ContractNotFound
-        return _contract_to_response(contract)
-    except SQLAlchemyError as exc:
-        raise DatabaseError from exc
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Contract not found"
+            )
+        return _contract_details_to_response(contract)
+    except SQLAlchemyError:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database query failed"
+        )
 
 
 async def update_contract(
@@ -133,23 +129,30 @@ async def update_contract(
     payload: ContractUpdateRequest,
     session: AsyncSession,
 ) -> None:
-    """Persist user edits to an existing contract.
-
-    Steps
-    -----
-    1. Fetch → 404 if missing
-    2. Validate required fields (prompt‑team helper)
-    3. Update JSON + timestamp → commit
-    """
+    """Persist user edits to an existing contract."""
 
     try:
         contract = await session.get(Contract, UUID(contract_id))
-        if contract is None:
-            raise ContractNotFound
+        if contract is None:   # 대상 계약서 없음
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Contract not found"
+            )
 
-        # JSON schema lite‑check (delegated)
-        if not validate_contract_fields(contract.contract_type, payload.contents):
-            raise InvalidContractFields
+        schema = keyword_schema.get(contract.contract_type)
+        if schema is None:    # 요청 데이터에 해당하는 계약 유형 정의되지 않음
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Unsupported contract type"
+            )
+
+        schema_keys = flatten_keys(schema)
+        payload_keys = flatten_keys(payload.contents)
+        if schema_keys != payload_keys:   # JSON 필드 검사: 모든 key 일치 확인
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Missing or invalid contract fields"
+            )
 
         contract.contents = payload.contents  # type: ignore[assignment]
         contract.updated_at = datetime.utcnow()
@@ -157,15 +160,15 @@ async def update_contract(
         session.add(contract)
         await session.commit()
         await session.refresh(contract)
-    except (InvalidContractFields, ContractNotFound):
-        raise
-    except SQLAlchemyError as exc:
+    except SQLAlchemyError:
         await session.rollback()
-        raise DatabaseError from exc
-
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database update failed"
+        )
 
 async def delete_contract(contract_id: str, session: AsyncSession) -> None:
-    """Hard‑delete a contract record (cascades to suggestions)."""
+    """Hard-delete a contract record (cascades to suggestions)."""
     try:
         contract = await session.get(Contract, UUID(contract_id))
         if contract is None:

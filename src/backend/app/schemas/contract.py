@@ -25,7 +25,6 @@ class ContractUpdateRequest(BaseModel):
 class ContractResponse(BaseModel):
     id: str
     contract_type: str
-    generation_status: str
     created_at: datetime
     updated_at: datetime
 
@@ -34,7 +33,6 @@ class ContractResponse(BaseModel):
             "example": {
                 "id": "contract_uuid_1",
                 "contract_type": "고용",
-                "generation_status": "done",
                 "created_at": "2024-05-01T12:00:00Z",
                 "updated_at": "2024-05-02T15:30:00Z"
             }
