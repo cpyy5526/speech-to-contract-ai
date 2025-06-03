@@ -1,16 +1,7 @@
 from __future__ import annotations
 
-"""Contracts service layer
-===========================
-Business‑logic helpers that sit between the FastAPI routers and the database layer.
-This module *must* remain side‑effect free (no network/GPT calls). GPT‑related
-logic lives in the `app.prompts.*` namespace and is *only* invoked here through
-placeholder helpers supplied by the prompt‑engineering team.
-
-Every public coroutine either returns a serialisable Pydantic schema instance
-(or list thereof) **or** ``None``.  All database mutations follow the canonical
-``add → commit → refresh`` sequence and *never* leak SQLAlchemy exceptions –
-callers need only catch the custom exceptions exposed in ``__all__``.
+"""Contracts service layer:
+Business-logic helpers that sit between the FastAPI routers and the database layer.
 """
 
 from datetime import datetime
@@ -30,26 +21,12 @@ from app.schemas.contract import (
     ContractUpdateRequest,
     GPTSuggestionResponse,
 )
-from app.prompts.keyword_schema import keyword_schema
-
-# ⇢ Prompt‑team utilities – imported, *not* implemented here
-from app.prompts.contract_validation import validate_contract_fields  # type: ignore
+from app.prompts.keyword_schema import matches_schema
 
 
 # ============================================================
 # Internal helpers
 # ============================================================
-
-# 평탄화된 중첩 dict의 key set 리턴
-def flatten_keys(d: dict, prefix: str = "") -> set[str]:
-    keys = set()
-    for k, v in d.items():
-        full_key = f"{prefix}.{k}" if prefix else k
-        if isinstance(v, dict):
-            keys.update(flatten_keys(v, full_key))
-        else:
-            keys.add(full_key)
-    return keys
 
 def _contract_to_response(model: Contract) -> ContractResponse:  # noqa: D401
     """Map a :class:`~app.models.contract.Contract` ORM instance -> schema."""
@@ -81,7 +58,6 @@ def _suggestion_to_response(model: GptSuggestion) -> GPTSuggestionResponse:  # n
 # ============================================================
 # Public service API – called by the *routers*
 # ============================================================
-
 
 async def get_contracts_list(
         user_id: UUID,
@@ -139,16 +115,8 @@ async def update_contract(
                 detail="Contract not found"
             )
 
-        schema = keyword_schema.get(contract.contract_type)
-        if schema is None:    # 요청 데이터에 해당하는 계약 유형 정의되지 않음
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Unsupported contract type"
-            )
-
-        schema_keys = flatten_keys(schema)
-        payload_keys = flatten_keys(payload.contents)
-        if schema_keys != payload_keys:   # JSON 필드 검사: 모든 key 일치 확인
+        # JSON 필드 검사: 요청 데이터의 모든 key 일치 확인
+        if not matches_schema(contract.contract_type, payload.contents):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Missing or invalid contract fields"
@@ -167,19 +135,24 @@ async def update_contract(
             detail="Database update failed"
         )
 
+
 async def delete_contract(contract_id: str, session: AsyncSession) -> None:
     """Hard-delete a contract record (cascades to suggestions)."""
     try:
         contract = await session.get(Contract, UUID(contract_id))
         if contract is None:
-            raise ContractNotFound
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Contract not found"
+            )
         await session.delete(contract)
         await session.commit()
-    except ContractNotFound:
-        raise
-    except SQLAlchemyError as exc:
+    except SQLAlchemyError:
         await session.rollback()
-        raise DatabaseError from exc
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database update failed"
+        )
 
 
 async def get_suggestions(
@@ -190,16 +163,21 @@ async def get_suggestions(
         # Existence check (cheaper than a join for clarity here)
         contract = await session.get(Contract, UUID(contract_id))
         if contract is None:
-            raise ContractNotFound
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Contract not found"
+            )
 
         stmt = select(GptSuggestion).where(GptSuggestion.contract_id == contract.id)
         result = await session.execute(stmt)
         suggestions = result.scalars().all()
         return [_suggestion_to_response(s) for s in suggestions]
-    except ContractNotFound:
-        raise
-    except SQLAlchemyError as exc:
-        raise DatabaseError from exc
+    
+    except SQLAlchemyError:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database query failed"
+        )
 
 
 async def restore_contract(contract_id: str, session: AsyncSession) -> None:
@@ -207,10 +185,15 @@ async def restore_contract(contract_id: str, session: AsyncSession) -> None:
     try:
         contract = await session.get(Contract, UUID(contract_id))
         if contract is None:
-            raise ContractNotFound
-
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Contract not found"
+            )
         if contract.initial_contents is None:
-            raise InitialContentsMissing
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Initial contents missing"
+            )
 
         contract.contents = contract.initial_contents  # type: ignore[assignment]
         contract.updated_at = datetime.utcnow()
@@ -218,8 +201,10 @@ async def restore_contract(contract_id: str, session: AsyncSession) -> None:
         session.add(contract)
         await session.commit()
         await session.refresh(contract)
-    except (ContractNotFound, InitialContentsMissing):
-        raise
-    except SQLAlchemyError as exc:
+
+    except SQLAlchemyError:
         await session.rollback()
-        raise DatabaseError from exc
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database update failed"
+        )

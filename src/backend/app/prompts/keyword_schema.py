@@ -1,3 +1,29 @@
+# 평탄화 key set 추출 함수
+def flatten_keys(d: dict, prefix: str = "") -> set[str]:
+    keys = set()
+    for k, v in d.items():
+        full_key = f"{prefix}.{k}" if prefix else k
+        if isinstance(v, dict):
+            keys.update(flatten_keys(v, full_key))
+        else:
+            keys.add(full_key)
+    return keys
+
+def is_supported_contract_type(contract_type: str) -> bool:
+    """keyword_schema에 정의된 계약 유형인지 검증"""
+    return contract_type in keyword_schema
+
+def matches_schema(contract_type: str, payload_contents: dict) -> bool:
+    """대상 계약서 JSON이 keyword_schema와 key 구조가 모두 일치하는지 검증"""
+    schema_keys = _schema_keys.get(contract_type, set())
+    payload_keys = flatten_keys(payload_contents)
+    return schema_keys == payload_keys
+
+def is_valid_field_path(contract_type: str, field_path: str) -> bool:
+    """대상 key 경로가 keyword_schema에 유효한지 검증"""
+    return field_path in _schema_keys.get(contract_type, set())
+
+
 keyword_schema = {
     "증여": {
         "contract_type": "계약의 종류를 구분하는 항목. 증여 여부를 나타냄.",
@@ -400,4 +426,9 @@ keyword_schema = {
     "기타": {
         "description": "대화 내용을 바탕으로 전체 계약 내용을 자연어로 정리한 텍스트를 작성하는 항목입니다."
     }
+}
+
+_schema_keys = {
+    contract_type: flatten_keys(schema)
+    for contract_type, schema in keyword_schema.items()
 }
