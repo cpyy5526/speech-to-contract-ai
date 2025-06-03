@@ -21,6 +21,8 @@ bcrypt = "^4.1.2"
 aiofiles = "^23.2.0"
 pydantic = "^2.7.1"
 nltk = "^3.8.1"
+google-auth = "^2.0.0"
+sendgrid = "^6.0.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.4.2"
