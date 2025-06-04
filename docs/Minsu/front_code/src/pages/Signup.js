@@ -83,6 +83,14 @@ function Signup() {
           <button type="submit" className="submit-btn">
             회원가입
           </button>
+
+          <button
+            type="button"
+            className="goto-login-btn"
+            onClick={() => navigate("/login")}
+          >
+            이미 계정이 있으신가요? 로그인 하러 가기 →
+          </button>
         </form>
       </div>
     </div>

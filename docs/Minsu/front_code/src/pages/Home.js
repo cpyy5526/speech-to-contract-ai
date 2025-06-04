@@ -14,11 +14,14 @@ function Home({ user }) {
   const menuRef = useRef();
   const [contractList, setContractList] = useState([]);
 
+
+
   const [showChangeModal, setShowChangeModal] = useState(false);
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
   
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -104,6 +107,38 @@ function Home({ user }) {
 
   return (
     <div className="home-container">
+      <div className="mobile-header">
+        <button className="hamburger" onClick={() => setSidebarOpen(true)}>☰</button>
+        <div
+          className="mobile-user"
+          onClick={() => setMenuOpen(!menuOpen)}  // ✅ 추가
+        >
+          {user?.username}님
+        </div>
+      </div>
+        {sidebarOpen && (
+        <div className="mobile-sidebar-overlay" onClick={() => setSidebarOpen(false)}>
+          <div className="mobile-sidebar" onClick={(e) => e.stopPropagation()}>
+            <h3 className="sidebar-title">계약서 작성 목록</h3>
+            <ul className="contract-list">
+              {contractList.map((item) => (
+                <li
+                  key={item.id}
+                  onClick={() => {
+                    navigate(`/download?contract_id=${item.id}`);
+                    setSidebarOpen(false); // 선택 시 닫기
+                  }}
+                >
+                  <span>{item.created_at.slice(0, 10)}</span> {item.contract_type}
+                </li>
+              ))}
+            </ul>
+            <button onClick={() => setSidebarOpen(false)}>닫기</button>
+          </div>
+        </div>
+        )}
+
+
       <div className="user-info">
         {user && (
           <div className="user-menu-wrapper" ref={menuRef} style={{ position: "relative" }}>
