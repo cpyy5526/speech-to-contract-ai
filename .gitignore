@@ -213,12 +213,10 @@ $RECYCLE.BIN/
 *.msix
 *.msm
 *.msp
-
-# Windows shortcuts
+c# Windows shortcuts
 *.lnk
 
 # End of https://www.toptal.com/developers/gitignore/api/windows,python,venv
-*.txt
 *.json
 PromptModules_yuun/user_data
 PromptModules_yuun/test_contract_pipeline.py
