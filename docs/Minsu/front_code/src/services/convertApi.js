@@ -56,10 +56,18 @@ export async function uploadAudioFile(uploadUrl, audioBlob) {
       body: audioBlob,
     });
 
-    const status = response.status;
-    if (status === 204) return
+    if (response.status === 204) return; // 성공
 
-    const detail = await extractDetailFromResponse(response);
+    const status = response.status;
+    let detail = "응답 없음";
+
+    try {
+      const errorBody = await response.json();
+      detail = errorBody?.detail || detail;
+    } catch {
+      // JSON 파싱 실패는 무시
+    }
+
     if (status === 400) {
       if (detail === "Invalid or expired upload_url") {
         alert("❗ 파일명이 누락되었습니다.");
@@ -81,11 +89,15 @@ export async function uploadAudioFile(uploadUrl, audioBlob) {
     } else {
       alert(`❌ 오류 발생: ${status}`);
     }
+
     throw new Error(`Upload failed: status ${status}`);
   } catch (error) {
+    // 네트워크 에러 또는 fetch 자체 실패만 catch
+    alert("⛔ 네트워크 오류 또는 예기치 않은 문제 발생");
     throw error;
   }
 }
+
 
 /**
  * 음성 텍스트 변환 상태 조회
@@ -96,7 +108,9 @@ export async function getTranscriptionStatus() {
     const response = await api.get("/transcription/status");
     return response.data; // 예: { status: "transcribing" }
   } catch (error) {
-    const { status, detail } = error.response?.data || {};
+    const status = error.response?.status;
+    const detail = error.response?.data?.detail || "응답 없음";
+
 
     if (status === 404) {
       if (detail === "No audio data for this user") {
@@ -127,7 +141,8 @@ export async function retryTranscription() {
     if (response.status === 202) {
     }
   } catch (error) {
-    const { status, detail } = error.response?.data || {};
+    const status = error.response?.status;
+    const detail = error.response?.data?.detail || "응답 없음";
 
     if (status === 404) {
       if (detail === "No audio data for this user") {
@@ -169,7 +184,8 @@ export async function cancelTranscription() {
     // 204 외의 응답이 올 경우 대비 (안전망)
     throw new Error(`Unexpected response status: ${response.status}`);
   } catch (error) {
-    const { status, detail } = error.response?.data || {};
+    const status = error.response?.status;
+    const detail = error.response?.data?.detail || "응답 없음";
 
     if (status === 404) {
       if (detail === "No audio data for this user") {

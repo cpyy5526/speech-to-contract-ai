@@ -11,7 +11,8 @@ export async function generateContract() {
       return response.data;
     }
   } catch (error) {
-    const { status, detail } = error.response?.data || {};
+    const status = error.response?.status;
+    const detail = error.response?.data?.detail || "응답 없음";
 
     if (status === 404) {
       if (detail === "No audio data for this user") {
@@ -50,7 +51,8 @@ export async function getContractStatus() {
     const response = await api.get("/contracts/generate/status");
     return response.data; // { status: "generating" } 또는 { status: "done", contract_id: "..." }
   } catch (error) {
-    const { status, detail } = error.response?.data || {};
+    const status = error.response?.status;
+    const detail = error.response?.data?.detail || "응답 없음";
 
     if (status === 404) {
       if (detail === "No contract generation in progress") {
@@ -79,8 +81,10 @@ export async function getContractStatus() {
 export async function cancelContractGeneration() {
   try {
     const response = await api.post("/contracts/generate/cancel");
+    if (response.status === 204) return
   } catch (error) {
-    const { status, detail } = error.response?.data || {};
+    const status = error.response?.status;
+    const detail = error.response?.data?.detail || "응답 없음";
 
     if (status === 404) {
       if (detail === "No contract generation in progress") {
@@ -118,7 +122,8 @@ export async function getContractList() {
     const response = await api.get("/contracts");
     return response.data; // 배열 형태 반환됨
   } catch(error){
-    const { status, detail } = error.response?.data || {};
+    const status = error.response?.status;
+    const detail = error.response?.data?.detail || "응답 없음";
 
     if (status === 500) {
       if (detail === "Database query failed") {
@@ -143,7 +148,8 @@ export async function getContractContent(contractId) {
   const response = await api.get(`/contracts/${contractId}`);
   return response.data; // 응답 JSON 전체 반환
   } catch(error){
-    const { status, detail } = error.response?.data || {};
+    const status = error.response?.status;
+    const detail = error.response?.data?.detail || "응답 없음";
 
     if (status === 404) {
       if (detail === "Contract not found") {
@@ -179,7 +185,8 @@ export async function updateContractContent(contractId, contents) {
   });
   return response.status; // 204 expected
   } catch(error){
-    const { status, detail } = error.response?.data || {};
+    const status = error.response?.status;
+    const detail = error.response?.data?.detail || "응답 없음";
 
     if (status === 400) {
       if (detail === "Missing or invalid contract fields") {
@@ -221,7 +228,8 @@ export async function getSuggestions(contractId) {
     const response = await api.get(`/contracts/${contractId}/suggestions`);
     return response.data; // 예: [{ field_path: "...", suggestion_text: "..." }, ...]
   } catch(error){
-    const { status, detail } = error.response?.data || {};
+    const status = error.response?.status;
+    const detail = error.response?.data?.detail || "응답 없음";
 
     if (status === 404) {
       if (detail === "Contract not found") {
@@ -257,7 +265,8 @@ export async function restoreContract(contractId) {
       console.log("✅ 계약서 초기 상태로 복구 성공 (204 No Content)");
     }
   } catch(error){
-    const { status, detail } = error.response?.data || {};
+    const status = error.response?.status;
+    const detail = error.response?.data?.detail || "응답 없음";
 
     if (status === 404) {
       if (detail === "Contract not found") {
@@ -296,7 +305,8 @@ export async function deleteContract(contractId) {
       console.log("✅ 계약서 삭제 성공 (204 No Content)");
     }
   } catch(error){
-    const { status, detail } = error.response?.data || {};
+    const status = error.response?.status;
+    const detail = error.response?.data?.detail || "응답 없음";
 
     if (status === 404) {
       if (detail === "Contract not found") {

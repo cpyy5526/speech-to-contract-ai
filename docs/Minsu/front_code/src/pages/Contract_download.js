@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import "../styles/Contract_download.css";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
@@ -11,7 +11,7 @@ import {
   getSuggestions,
   restoreContract,
   deleteContract
-} from "../services/contractApiMock";
+} from "../services/contractApi";
 
 import GiftContract from "../Contract_types/GiftContract/GiftContract";
 import ConstructionContract from "../Contract_types/ConstructionContract/ConstructionContract";
@@ -59,25 +59,26 @@ function Contract_download() {
     fetchContracts();
   }, []);
 
-  useEffect(() => {
-      if (contractId) fetchContract();
-  }, [contractId]);
-
-  const fetchContract = async () => {
+  const fetchContract = useCallback(async () => {
     try {
       const result = await getContractContent(contractId);
       setContract(result);
-
       const suggestionResult = await getSuggestions(contractId);
       setSuggestions(suggestionResult);
     } catch (err) {
       console.error("계약서 불러오기 실패:", err.response?.data?.detail || err.message);
     }
-  };
+  }, [contractId]);
+
+  useEffect(() => {
+    if (contractId) fetchContract();
+  }, [contractId, fetchContract]);
+
+
 
   const handleSave = async () => {
     try {
-    const edited = contractComponentRef .current.extract();
+    const edited = contractComponentRef.current.extract();
       await updateContractContent(contractId, edited);
       window.location.reload();
     } catch (err) {

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import "../styles/Recording.css";
 import { useNavigate } from "react-router-dom";
-import { initiateTranscription } from "../services/convertApiMock"; // 배포 시 convertApi로
+import { initiateTranscription } from "../services/convertApi"; // 배포 시 convertApi로
 
 
 function Recording() {

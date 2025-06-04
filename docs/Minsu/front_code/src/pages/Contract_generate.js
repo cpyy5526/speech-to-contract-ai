@@ -1,11 +1,11 @@
-import React, { useState, useRef } from "react";
-import "../styles/Contract_generate.css"; // 
+import React, { useState, useRef, useEffect } from "react";
+import "../styles/Contract_generate.css";
 import { useNavigate } from "react-router-dom";
 import {
   generateContract,
   getContractStatus,
   cancelContractGeneration,
-} from "../services/contractApiMock";
+} from "../services/contractApi";
 
 function ContractGenerate() {
   const [status, setStatus] = useState("");
@@ -13,31 +13,42 @@ function ContractGenerate() {
   const navigate = useNavigate();
   const intervalRef = useRef(null);
 
+  const clearPolling = () => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+      console.log("✅ polling 중지됨");
+    }
+  };
+
   const startPolling = () => {
+    if (intervalRef.current) return; // 중복 방지
+
     intervalRef.current = setInterval(async () => {
       try {
         const result = await getContractStatus();
+        console.log("📡 polling:", result.status);
         setStatus(result.status);
 
         if (result.status === "done" && result.contract_id) {
-          clearInterval(intervalRef.current);
+          clearPolling();
           setLoading(false);
           navigate(`/download?contract_id=${result.contract_id}`);
         }
 
         if (result.status === "failed") {
-          clearInterval(intervalRef.current);
+          clearPolling();
           retryGenerate();
         }
 
         if (result.status === "cancelled") {
-          clearInterval(intervalRef.current);
+          clearPolling();
           setLoading(false);
           alert("⛔ 변환이 취소되었습니다.");
           navigate("/home");
         }
       } catch (err) {
-        clearInterval(intervalRef.current);
+        clearPolling();
         setLoading(false);
         setStatus("error");
       }
@@ -56,6 +67,7 @@ function ContractGenerate() {
   };
 
   const handleClick = async () => {
+    clearPolling(); // 만약 기존 polling이 있다면 중단
     setStatus("");
     setLoading(true);
 
@@ -72,10 +84,21 @@ function ContractGenerate() {
   const handleCancel = async () => {
     try {
       await cancelContractGeneration();
+      clearPolling();
+      setLoading(false);
+      setStatus("cancelled");
     } catch (err) {
       // 에러 처리는 contractApi에서 처리됨
     }
   };
+
+  useEffect(() => {
+    handleClick(); // 페이지 진입 시 자동 실행
+
+    return () => {
+      clearPolling(); // 페이지 떠날 때 polling 정리
+    };
+  }, []);
 
   return (
     <div className="contract-generate-container">
@@ -88,15 +111,11 @@ function ContractGenerate() {
         {status === "failed" && <p>❌ 생성 실패. 다시 시도합니다...</p>}
         {status === "cancelled" && <p>⛔ 생성이 취소되었습니다.</p>}
         {status === "error" && <p>⚠️ 오류 발생</p>}
-        {!status && <p>📝 계약서를 생성하려면 아래 버튼을 누르세요.</p>}
+        {!status && <p>📝 계약서 생성을 준비중입니다...</p>}
 
         {/* 버튼 */}
-        {(status === "generating" || status === "failed") ? (
+        {(status === "generating" || status === "failed") && (
           <button onClick={handleCancel}>🛑 생성 취소</button>
-        ) : (
-          <button onClick={handleClick} disabled={loading}>
-            {loading ? "요청 중..." : "계약서 생성"}
-          </button>
         )}
       </div>
     </div>

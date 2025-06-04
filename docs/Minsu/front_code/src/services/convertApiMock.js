@@ -45,13 +45,7 @@ export async function uploadAudioFile(uploadUrl, audioBlob) {
  */
 export async function getTranscriptionStatus() {
   const possibleStatuses = [
-    "uploading",
-    "uploaded",
-    "transcribing",
     "done",
-    "upload_failed",
-    "transcription_failed",
-    "cancelled",
   ];
   const randomStatus = possibleStatuses[Math.floor(Math.random() * possibleStatuses.length)];
 
