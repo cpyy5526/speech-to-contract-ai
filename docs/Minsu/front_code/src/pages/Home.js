@@ -3,10 +3,10 @@ import "../styles/Home.css";
 import micIcon from "../images/mic_icon.png";
 import docIcon from "../images/doc_icon.png";
 import { useNavigate } from "react-router-dom";
-import { changePassword } from "../services/authApiMock"; // 또는 authApi로 교체 가능
-import { deleteAccount } from "../services/authApiMock"; // 또는 authApi
-import { getContractList } from "../services/contractApiMock";
-import { initiateTranscription } from "../services/convertApiMock";
+import { changePassword } from "../services/authApi"; // 또는 authApi로 교체 가능
+import { deleteAccount } from "../services/authApi"; // 또는 authApi
+import { getContractList } from "../services/contractApi";
+import { initiateTranscription } from "../services/convertApi";
 
 function Home({ user }) {
   const navigate = useNavigate();

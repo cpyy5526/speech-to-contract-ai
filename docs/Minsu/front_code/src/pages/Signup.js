@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import user_icon from '../images/user_icon.png'
 import "../styles/Signup.css";
-import { signup } from "../services/authApiMock"; // 또는 authApi
+import { signup } from "../services/authApi"; // 또는 authApi
 
 
 
@@ -39,7 +39,7 @@ function Signup() {
         <form className="signup-form" onSubmit={handleSubmit}>
           <label>아이디를 입력해주세요</label>
           <div className="input-box">
-            <span><img src={user_icon} className="user_icon"></img></span>
+            <span><img src={user_icon} className="user_icon" alt="아이디 아이콘"></img></span>
             <input
               type="text"
               name="username"

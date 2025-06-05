@@ -4,7 +4,8 @@ import { renderField } from "../utils";
 const ConstructionPage2 = forwardRef(({ contract, suggestions }, ref) => {
   useImperativeHandle(ref, () => ({
     extract: () => ({
-      signature_and_seal: "서명 완료", // 필요 시 필드 추가
+      special_terms: getText("special-terms-box"),
+      signature_and_seal: "서명 완료"
     }),
   }));
 
