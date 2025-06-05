@@ -7,7 +7,8 @@ export async function getCurrentUser() {
     const response = await api.get("/user/me");
     return response.data; // 예: { username: "...", email: "..." }
   } catch (error) {
-    const { status, detail } = error.response?.data || {};
+    const status = error.response?.status;
+    const detail = error.response?.data?.detail || "응답 없음";
     if (status === 500) {
       alert("서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
     } else {
@@ -31,7 +32,8 @@ export async function login(username, password) {
 
     return response.data; // { access_token, refresh_token }
   } catch (error) {
-    const { status, detail } = error.response?.data || {};
+    const status = error.response?.status;
+    const detail = error.response?.data?.detail || "응답 없음";
 
     switch (status) {
       case 400:
@@ -72,7 +74,8 @@ export async function loginWithGoogle(idToken) {
 
     return response.data; // { access_token, refresh_token }
   } catch (error) {
-    const { status, detail } = error.response?.data || {};
+    const status = error.response?.status;
+    const detail = error.response?.data?.detail || "응답 없음";
 
     if (status === 400) {
       if (detail === "Unsupported provider") {
@@ -126,7 +129,8 @@ export async function signup({ email, username, password }) {
 
     return response.status; // 204 expected
   } catch (error) {
-    const { status, detail } = error.response?.data || {};
+    const status = error.response?.status;
+    const detail = error.response?.data?.detail || "응답 없음";
 
     switch (status) {
       case 400:
@@ -165,7 +169,8 @@ export async function requestPasswordReset(email) {
     const response = await api.post("/auth/password/forgot", { email });
     return response.status; // 기대 응답: 204 No Content
   } catch (error) {
-    const { status, detail } = error.response?.data || {};
+    const status = error.response?.status;
+    const detail = error.response?.data?.detail || "응답 없음";
 
     if (status === 400) {
       if (detail === "Invalid email format") {
@@ -196,7 +201,8 @@ export async function confirmPasswordReset(token, newPassword) {
 
     return response.status; // 204 expected
   } catch (error) {
-    const { status, detail } = error.response?.data || {};
+    const status = error.response?.status;
+    const detail = error.response?.data?.detail || "응답 없음";
 
     if (status === 400) {
       if (detail === "Missing token") {
@@ -232,7 +238,8 @@ export async function changePassword(oldPassword, newPassword) {
 
     return response.status; // 204 expected
   } catch (error) {
-    const { status, detail } = error.response?.data || {};
+    const status = error.response?.status;
+    const detail = error.response?.data?.detail || "응답 없음";
 
     if (status === 400) {
       if (detail === "Missing password fields") {
@@ -263,7 +270,8 @@ export async function deleteAccount() {
     const response = await api.delete("/auth/delete-account");
     return response.status; // 204 expected
   } catch (error) {
-    const { status, detail } = error.response?.data || {};
+    const status = error.response?.status;
+    const detail = error.response?.data?.detail || "응답 없음";
 
     if (status === 401) {
       if (detail === "Missing token") {
