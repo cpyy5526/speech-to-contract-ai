@@ -7,8 +7,6 @@ from openai import AsyncOpenAI, AsyncError  # type: ignore
 
 from app.core.config import settings
 
-__all__ = ["call_gpt_api", "GPTCallError"]
-
 logger = logging.getLogger(__name__)
 
 
