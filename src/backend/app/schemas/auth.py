@@ -1,10 +1,10 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 from typing import Optional
 
 # Request Models
 
 class RegisterRequest(BaseModel):
-    email: EmailStr
+    email: str
     username: str
     password: str
 
@@ -52,7 +52,7 @@ class RefreshTokenRequest(BaseModel):
         }
 
 class PasswordResetRequest(BaseModel):
-    email: EmailStr
+    email: str
 
     class Config:
         schema_extra = {
@@ -102,8 +102,20 @@ class TokenResponse(BaseModel):
             }
         }
 
+class TokenRefreshResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "access_token": "new_access_token_here",
+                "token_type": "bearer"
+            }
+        }
+
 class UserResponse(BaseModel):
-    email: EmailStr
+    email: str
     username: str
 
     class Config:
