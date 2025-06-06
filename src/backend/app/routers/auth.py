@@ -1,75 +1,100 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from app.schemas.auth import LoginRequest, TokenResponse, RegisterRequest, PasswordResetRequest, PasswordChangeRequest
+from sqlmodel.ext.asyncio.session import AsyncSession
+
 from app.services import auth as auth_service
 from app.core.dependencies import get_session
+from app.schemas.auth import (
+    LoginRequest,
+    PasswordChangeRequest,
+    PasswordResetRequest,
+    RefreshTokenRequest,
+    RegisterRequest,
+    ResetPasswordRequest,
+    SocialLoginRequest,
+    TokenResponse,
+    TokenRefreshResponse,
+    UserResponse,
+)
+
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
 # /user/me 하나만 정의되어 있음, 별도 파일로 분리하지 않고 현재 코드에 포함. 따로 구분
 user_router = APIRouter(prefix="/user", tags=["User"])
 
+
 @router.post("/register", status_code=status.HTTP_204_NO_CONTENT)
-async def register(payload: RegisterRequest, session: AsyncSession = Depends(get_session)):
-    """
-    사용자 회원가입 처리
-    """
+async def register(
+    payload: RegisterRequest,
+    session: AsyncSession = Depends(get_session)
+):
+    """사용자 회원가입 처리"""
     try:
         await auth_service.register(payload, session)
-    except auth_service.EmailAlreadyRegistered:
-        raise HTTPException(status.HTTP_409_CONFLICT, detail="Email already registered")
-    except auth_service.UsernameAlreadyTaken:
-        raise HTTPException(status.HTTP_409_CONFLICT, detail="Username already taken")
-    except auth_service.InvalidFields:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Missing or invalid fields")
-    except auth_service.InvalidPassword:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Password does not meet security requirements")
+    except HTTPException as e:
+        raise e
     except Exception:
-        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Unexpected server error")
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unexpected server error"
+        )
 
 
 @router.post("/login", response_model=TokenResponse)
-async def login(payload: LoginRequest, session: AsyncSession = Depends(get_session)):
+async def login(
+    payload: LoginRequest,
+    session: AsyncSession = Depends(get_session)
+):
     """
     사용자 로그인을 처리하고 JWT 토큰 반환
     """
     try:
         return await auth_service.login(payload, session)
-    except auth_service.InvalidCredentials:
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="Invalid username or password")
+    except HTTPException as e:
+        raise e
     except Exception:
-        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Unexpected server error")
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unexpected server error"
+        )
 
 
 @router.post("/verify-social", response_model=TokenResponse)
-async def verify_social(payload: SocialLoginRequest, session: AsyncSession = Depends(get_session)):
+async def verify_social(
+    payload: SocialLoginRequest,
+    session: AsyncSession = Depends(get_session)
+):
     """
     소셜 로그인 토큰을 검증하고 JWT 토큰 반환
     """
     try:
         return await auth_service.verify_social(payload, session)
-    except auth_service.UnsupportedProvider:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Unsupported provider")
-    except auth_service.MissingSocialToken:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Missing social token")
-    except auth_service.InvalidSocialToken:
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="Invalid social token")
+    except HTTPException as e:
+        raise e
     except Exception:
-        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Unexpected server error")
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unexpected server error"
+        )
 
 
-@router.post("/token/refresh", response_model=TokenResponse)
-async def refresh_token(payload: RefreshTokenRequest, session: AsyncSession = Depends(get_session)):
+@router.post("/token/refresh", response_model=TokenRefreshResponse)
+async def refresh_token(
+    payload: RefreshTokenRequest,
+    session: AsyncSession = Depends(get_session)
+):
     """
     Refresh Token을 사용해 새로운 Access Token 발급
     """
     try:
         return await auth_service.refresh_token(payload, session)
-    except auth_service.InvalidToken:
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
-    except auth_service.ExpiredToken:
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="Expired token")
+    except HTTPException as e:
+        raise e
     except Exception:
-        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Unexpected server error")
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unexpected server error"
+        )
 
 
 @user_router.get("/me", response_model=UserResponse)

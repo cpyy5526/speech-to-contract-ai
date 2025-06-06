@@ -6,8 +6,6 @@ from openai import AsyncOpenAI, OpenAIError
 
 from app.core.config import settings  # type: ignore
 
-__all__ = ["transcribe_audio", "STTCallError"]
-
 logger = logging.getLogger(__name__)
 
 # --------------------------------------------------------------------------- #

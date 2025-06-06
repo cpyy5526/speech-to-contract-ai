@@ -83,4 +83,4 @@ async def extract_fields(
     try:
         return json.loads(result)
     except json.JSONDecodeError as e:
-        raise ValueError(f"❌ GPT 응답에서 JSON 파싱 실패:\n{result}\n\n에러: {e}")
+        raise ValueError(f"GPT 응답에서 JSON 파싱 실패:\n{result}\n\n에러: {e}")

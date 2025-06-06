@@ -1,37 +1,22 @@
-"""
-app/services/auth.py
-====================
-
-인증(회원, 토큰) 비즈니스-로직 계층.
-
-* 자체 회원가입 / 로그인
-* 소셜 로그인(placeholder)
-* JWT Access / Refresh 발급·저장·검증
-* 비밀번호 재설정(placeholder), 변경, 탈퇴
-* 현재 로그인 사용자 조회
-
-외부 부수 효과가 필요한 부분(e-mail 발송, 소셜 토큰 검증 등)은
-모두 TODO / placeholder 로 남겨두었으며, 본 모듈은 DB 트랜잭션과
-JWT 처리, 비밀번호 해시 등 **서비스 계층** 책임에 집중합니다.
-"""
-
 from __future__ import annotations
 
-from datetime import datetime, timedelta
-from typing import List
+import re, requests
 from uuid import UUID
+from datetime import datetime, timedelta, timezone
+from fastapi import HTTPException, status
+from jose.exceptions import ExpiredSignatureError, JWTError
 
-from pydantic import EmailStr
 from sqlalchemy import delete, select, update
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
 from app.core.security import (
     create_access_token,
     create_refresh_token,
     get_password_hash,
     verify_password,
-    verify_token,
+    decode_token,
 )
 from app.models.token import TokenType, UserToken
 from app.models.user import User
@@ -44,116 +29,34 @@ from app.schemas.auth import (
     ResetPasswordRequest,
     SocialLoginRequest,
     TokenResponse,
+    TokenRefreshResponse,
     UserResponse,
 )
 
-# --------------------------------------------------------------------------- #
-# 설정 상수
-# --------------------------------------------------------------------------- #
-
-ACCESS_TOKEN_EXPIRE_MIN: int = 15  # 15분
-REFRESH_TOKEN_EXPIRE_DAYS: int = 7  # 7일
-
-SUPPORTED_SOCIAL_PROVIDERS: set[str] = {"google", "kakao", "naver"}
-
-# --------------------------------------------------------------------------- #
-# 예외 정의 (__all__ 에 노출)
-# --------------------------------------------------------------------------- #
-
-class EmailAlreadyRegistered(Exception):
-    """이미 가입된 이메일."""
-
-class UsernameAlreadyTaken(Exception):
-    """사용 중인 사용자명."""
-
-class InvalidCredentials(Exception):
-    """아이디/비밀번호 불일치."""
-
-class InvalidPassword(Exception):
-    """비밀번호 규칙 위반 또는 불일치."""
-
-class UserNotFound(Exception):
-    """사용자 레코드 없음."""
-
-class InvalidToken(Exception):
-    """JWT 형식 오류 등 무효 토큰."""
-
-class ExpiredToken(Exception):
-    """만료된 토큰."""
-
-class RevokedToken(Exception):
-    """취소(폐기)된 토큰."""
-
-class MissingEmail(Exception):
-    """이메일 누락."""
-
-class InvalidEmailFormat(Exception):
-    """올바르지 않은 이메일 형식."""
-
-class MissingSocialToken(Exception):
-    """소셜 토큰 누락."""
-
-class UnsupportedProvider(Exception):
-    """지원하지 않는 소셜 로그인 공급자."""
-
-class InvalidCurrentPassword(Exception):
-    """현재 비밀번호 불일치."""
-
-class MissingToken(Exception):
-    """Authorization 토큰 누락."""
-
-# 라우터에서 참조하는 추가 예외 -----------------------------
-class InvalidFields(Exception):
-    """필수 필드 누락."""
-
-class InvalidSocialToken(Exception):
-    """소셜 토큰 검증 실패."""
-
-class MissingPassword(Exception):
-    """새 비밀번호 누락."""
-# ----------------------------------------------------------
-
-__all__: List[str] = [
-    # 공개 서비스 함수
-    "register",
-    "login",
-    "verify_social",
-    "refresh_token",
-    "forgot_password",
-    "reset_password",
-    "change_password",
-    "delete_account",
-    "get_me",
-    # 예외
-    "EmailAlreadyRegistered",
-    "UsernameAlreadyTaken",
-    "InvalidCredentials",
-    "InvalidPassword",
-    "UserNotFound",
-    "InvalidToken",
-    "ExpiredToken",
-    "RevokedToken",
-    "MissingEmail",
-    "InvalidEmailFormat",
-    "MissingSocialToken",
-    "UnsupportedProvider",
-    "InvalidCurrentPassword",
-    "MissingToken",
-    # 라우터 dependency용 추가 예외
-    "InvalidFields",
-    "InvalidSocialToken",
-    "MissingPassword",
-]
 
 # --------------------------------------------------------------------------- #
 # 내부 헬퍼
 # --------------------------------------------------------------------------- #
 
-def _expires(delta: timedelta) -> datetime:
-    return datetime.utcnow() + delta
+def is_strong_password(password: str) -> bool:
+    return bool(
+        re.fullmatch(
+            r"(?=.*[a-zA-Z])"
+            r"(?=.*\d)"
+            r"(?=.*[!@#$%^&*()_\-+=])"
+            r"[A-Za-z\d!@#$%^&*()_\-+=]{8,20}",
+            password
+        )
+    )
 
+def is_valid_email(email: str) -> bool:
+    return bool(
+        re.fullmatch(
+            r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$",
+            email)
+    )
 
-async def _store_token(
+async def _stage_token(
     user_id: UUID,
     token_str: str,
     token_type: TokenType,
@@ -174,91 +77,150 @@ async def _create_and_store_jwts(
     user: User,
     session: AsyncSession,
 ) -> TokenResponse:
-    access_payload = {"sub": str(user.id), "type": "access"}
-    refresh_payload = {"sub": str(user.id), "type": "refresh"}
+    access_exp = (
+        datetime.now(timezone.utc) 
+        + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    )
+    refresh_exp = (
+        datetime.now(timezone.utc)
+        + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+    )
 
-    access_token: str = create_access_token(access_payload)
-    refresh_token: str = create_refresh_token(refresh_payload)
+    access_token = create_access_token(str(user.id), access_exp)
+    refresh_token = create_refresh_token(str(user.id), refresh_exp)
 
     try:
-        await _store_token(
+        await _stage_token(
             user.id,
             access_token,
             TokenType.access,
-            _expires(timedelta(minutes=ACCESS_TOKEN_EXPIRE_MIN)),
+            access_exp,
             session,
         )
-        await _store_token(
+        await _stage_token(
             user.id,
             refresh_token,
             TokenType.refresh,
-            _expires(timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)),
+            refresh_exp,
             session,
         )
         await session.commit()
-    except SQLAlchemyError as exc:
+    except SQLAlchemyError:
         await session.rollback()
-        raise
-
-    return TokenResponse(access_token=access_token, refresh_token=refresh_token)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unexpected server error"
+        )
+    
+    return TokenResponse(
+        access_token=access_token,
+        refresh_token=refresh_token
+    )
 
 # --------------------------------------------------------------------------- #
 # 공개 서비스 함수
 # --------------------------------------------------------------------------- #
 
 async def register(payload: RegisterRequest, session: AsyncSession) -> None:
-    """자체 회원가입."""
+    """자체 회원가입"""
+    # 필드 누락 확인
+    if not payload.email or not payload.username or not payload.password:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Missing or invalid fields"
+        )
+
+    # 이메일 주소 형식 검사
+    if not is_valid_email(payload.email):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Missing or invalid fields"
+        )
+    
+    # username 형식 검사
+    if not re.fullmatch(r"^[a-zA-Z0-9_]{4,20}$", payload.username):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Missing or invalid fields"
+        )
+
+    # 비밀번호 형식 검사
+    if not is_strong_password(payload.password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password does not meet security requirements"
+        )
+    
+    hashed_pw = get_password_hash(payload.password)
+    user = User(
+        email=payload.email,
+        username=payload.username,
+        hashed_password=hashed_pw,
+    )
+
     try:
-        # 이메일‧사용자명 중복 검사
-        dup_email = await session.scalar(
-            select(User).where(User.email == payload.email)
-        )
-        if dup_email:
-            raise EmailAlreadyRegistered
-
-        dup_username = await session.scalar(
-            select(User).where(User.username == payload.username)
-        )
-        if dup_username:
-            raise UsernameAlreadyTaken
-
-        # TODO: 비밀번호 강도 검사 → InvalidPassword raise
-        hashed_pw = get_password_hash(payload.password)
-
-        user = User(
-            email=payload.email,
-            username=payload.username,
-            hashed_password=hashed_pw,
-        )
         session.add(user)
         await session.commit()
-
-    except (EmailAlreadyRegistered, UsernameAlreadyTaken, InvalidPassword):
-        raise
-    except SQLAlchemyError as exc:
+    except IntegrityError:
         await session.rollback()
-        raise
-    # 반환값 없음 (HTTP 204)
+        email_exists = await session.scalar(
+            select(User).where(User.email == payload.email)
+        )
+        if email_exists:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Email already registered"
+            )
+        username_exists = await session.scalar(
+            select(User).where(User.username == payload.username)
+        )
+        if username_exists:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Username already taken"
+            )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unexpected server error"
+        )
+    except SQLAlchemyError:
+        await session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unexpected server error"
+        )
 
 
 async def login(payload: LoginRequest, session: AsyncSession) -> TokenResponse:
     """ID/PW 로그인."""
+    if not payload.username or not payload.password:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Missing username or password"
+        )
+
     try:
-        user: User | None = await session.scalar(
+        user = await session.scalar(
             select(User).where(User.username == payload.username)
         )
-        if not user or not user.hashed_password:
-            raise InvalidCredentials
-        if not verify_password(payload.password, user.hashed_password):
-            raise InvalidCredentials
+        if not user or not verify_password(
+            payload.password,
+            user.hashed_password or ""
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid username or password"
+            )
 
         return await _create_and_store_jwts(user, session)
 
-    except InvalidCredentials:
-        raise
     except SQLAlchemyError:
         await session.rollback()
-        raise
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unexpected server error"
+        )
+    
 
 
 async def verify_social(
@@ -266,91 +228,165 @@ async def verify_social(
 ) -> TokenResponse:
     """소셜 로그인(placeholder 검증)."""
     provider = payload.provider.lower()
-    if provider not in SUPPORTED_SOCIAL_PROVIDERS:
-        raise UnsupportedProvider
+    if provider not in settings.SUPPORTED_SOCIAL_PROVIDERS:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Unsupported provider",
+        )
+    
     if not payload.social_token:
-        raise MissingSocialToken
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Missing social token",
+        )
 
-    # TODO: 실제 소셜 토큰 검증 → InvalidSocialToken raise
-    # 여기서는 토큰을 단순 해시하여 고유 값 생성
-    pseudo_id: str = str(abs(hash(payload.social_token)))
-
+    # Google 토큰 검증
+    url = (
+        f"{settings.GOOGLE_TOKENINFO_ENDPOINT}"
+        f"?id_token={payload.social_token}"
+    )
     try:
-        user: User | None = await session.scalar(
+        response = requests.get(url, timeout=15)
+        if response.status_code != 200:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid social token",
+            )
+        data = response.json()
+    except requests.RequestException:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Social server error",
+        )
+
+    google_user_id = data.get("sub")
+    if not google_user_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid social token",
+        )
+
+    # 사용자 조회
+    try:
+        user = await session.scalar(
             select(User).where(
                 (User.provider == provider)
-                & (User.provider_user_id == pseudo_id)
+                & (User.provider_user_id == google_user_id)
             )
         )
 
+        # 최초 로그인 시 사용자 등록
         if user is None:
-            # 신규 사용자 생성
-            pseudo_email = EmailStr(f"{provider}_{pseudo_id}@example.com")
-            pseudo_username = f"{provider}_user_{pseudo_id[:6]}"
+            email = data.get("email")    # "abc@gmail.com"
+            if not email:
+                raise HTTPException(
+                    status_code=401,
+                    detail="Invalid social token"
+                )
             user = User(
-                email=pseudo_email,
-                username=pseudo_username,
+                email=email,
+                username=email,
                 provider=provider,
-                provider_user_id=pseudo_id,
+                provider_user_id=google_user_id,
             )
             session.add(user)
             await session.commit()
             await session.refresh(user)
 
         return await _create_and_store_jwts(user, session)
-
-    except (UnsupportedProvider, MissingSocialToken):
-        raise
+    
     except SQLAlchemyError:
         await session.rollback()
-        raise
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unexpected server error",
+        )
 
 
 async def refresh_token(
     payload: RefreshTokenRequest, session: AsyncSession
-) -> TokenResponse:
+) -> TokenRefreshResponse:
     """Refresh 토큰으로 Access 재발급."""
+    # 1. Refresh 토큰 디코드 및 기본 검증
     try:
-        token_data = verify_token(payload.refresh_token, token_type="refresh")
-        user_id_str: str | None = token_data.get("sub")  # type: ignore[index]
+        token_data = decode_token(payload.refresh_token)
+        if token_data.get("type") != "refresh":
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token"
+            )
+        user_id_str: str | None = token_data.get("sub")
         if not user_id_str:
-            raise InvalidToken
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token"
+            )
+    except ExpiredSignatureError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Expired token"
+        )
+    except JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token"
+        )
 
-        token_in_db: UserToken | None = await session.scalar(
-            select(UserToken).where(UserToken.token == payload.refresh_token)
+    # 2. DB에서 토큰 조회 및 상태 확인
+    try:
+        token_in_db = await session.scalar(
+            select(UserToken)
+            .where(UserToken.token == payload.refresh_token)
         )
         if not token_in_db:
-            raise InvalidToken
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token"
+            )
         if token_in_db.is_revoked:
-            raise RevokedToken
-        if token_in_db.expires_at < datetime.utcnow():
-            raise ExpiredToken
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Revoked token"
+            )
+        if token_in_db.expires_at < datetime.now(timezone.utc):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Expired token"
+            )
 
-        user: User | None = await session.get(User, UUID(user_id_str))
+        user = await session.get(User, UUID(user_id_str))
         if not user:
-            raise UserNotFound
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token"
+            )
 
-        # 새 Access Token 발급
-        new_access_token = create_access_token({"sub": user_id_str, "type": "access"})
-        await _store_token(
+        # 3. 새 Access 토큰 발급
+        access_exp = (
+            datetime.now(timezone.utc)
+            + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+        )
+        new_access_token = create_access_token(str(user.id), access_exp)
+
+        await _stage_token(
             user.id,
             new_access_token,
             TokenType.access,
-            _expires(timedelta(minutes=ACCESS_TOKEN_EXPIRE_MIN)),
+            access_exp,
             session,
         )
         await session.commit()
 
-        return TokenResponse(
-            access_token=new_access_token,
-            refresh_token=payload.refresh_token,
+        return TokenRefreshResponse(
+            access_token=new_access_token
         )
 
-    except (InvalidToken, RevokedToken, ExpiredToken, UserNotFound):
-        raise
     except SQLAlchemyError:
         await session.rollback()
-        raise
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unexpected server error"
+        )
 
 
 async def forgot_password(
@@ -387,7 +423,7 @@ async def reset_password(
     if not payload.new_password:
         raise MissingPassword
     try:
-        token_data = verify_token(payload.token, token_type="access")
+        token_data = decode_token(payload.token, token_type="access")
         user_id_str: str | None = token_data.get("sub")  # type: ignore[index]
         if not user_id_str:
             raise InvalidToken

@@ -60,6 +60,11 @@ class Settings:
         self.REFRESH_TOKEN_EXPIRE_DAYS: int = int(
             os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", 7)
         )
+        providers = os.getenv("SUPPORTED_SOCIAL_PROVIDERS", "google")
+        self.SUPPORTED_SOCIAL_PROVIDERS: set[str] = {
+            p.strip().lower() for p in providers.split(",") if p.strip()
+        }
+        self.GOOGLE_TOKENINFO_ENDPOINT = os.getenv("GOOGLE_TOKENINFO_ENDPOINT")
 
         # ------------------------------------------------------------------ #
         # Celery (비동기 작업 큐)
