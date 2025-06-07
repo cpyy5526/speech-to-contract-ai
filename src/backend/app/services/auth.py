@@ -5,6 +5,8 @@ from uuid import UUID
 from datetime import datetime, timedelta, timezone
 from fastapi import HTTPException, status
 from jose.exceptions import ExpiredSignatureError, JWTError
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
 
 from sqlalchemy import delete, select, update
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
@@ -49,12 +51,14 @@ def is_strong_password(password: str) -> bool:
         )
     )
 
+
 def is_valid_email(email: str) -> bool:
     return bool(
         re.fullmatch(
             r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$",
             email)
     )
+
 
 async def _stage_token(
     user_id: UUID,
@@ -116,6 +120,29 @@ async def _create_and_store_jwts(
         access_token=access_token,
         refresh_token=refresh_token
     )
+
+
+async def _send_reset_email(to_email: str, reset_token: str) -> None:
+    reset_link = f"{settings.PASSWORD_RESET_URL_BASE}?token={reset_token}"
+    message = Mail(
+        from_email=settings.EMAIL_FROM_ADDRESS,
+        to_emails=to_email,
+        subject="[Speech-to-Contract] 비밀번호 재설정",
+        html_content=f"""
+        <p>아래 링크를 통해 비밀번호를 새로 설정하세요.</p>
+        <a href="{reset_link}">{reset_link}</a>
+        <p>이 링크는 곧 만료됩니다.</p>
+        """,
+    )
+    try:
+        sg = SendGridAPIClient(settings.SENDGRID_API_KEY)
+        sg.send(message)
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unexpected server error"
+        )
+    
 
 # --------------------------------------------------------------------------- #
 # 공개 서비스 함수
@@ -191,7 +218,10 @@ async def register(payload: RegisterRequest, session: AsyncSession) -> None:
         )
 
 
-async def login(payload: LoginRequest, session: AsyncSession) -> TokenResponse:
+async def login(
+    payload: LoginRequest,
+    session: AsyncSession,
+) -> TokenResponse:
     """ID/PW 로그인."""
     if not payload.username or not payload.password:
         raise HTTPException(
@@ -394,48 +424,83 @@ async def forgot_password(
 ) -> None:
     """비밀번호 재설정 링크 이메일 발송."""
     if not payload.email:
-        raise MissingEmail
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Missing email"
+        )
+    if not is_valid_email(payload.email):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid email format"
+        )
+    
     try:
-        user: User | None = await session.scalar(
+        user = await session.scalar(
             select(User).where(User.email == payload.email)
         )
         if not user:
-            raise UserNotFound
-
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid email format"
+            )
+        reset_exp = datetime.now(timezone.utc) + timedelta(hours=1)
         reset_token = create_access_token(
-            {"sub": str(user.id), "type": "password_reset"},
+            str(user.id), reset_exp, token_type="password_reset"
         )
 
-        # TODO: 실제 이메일 전송 (비동기 큐 또는 외부 서비스)
-        # send_reset_email(user.email, reset_token)
+        await _send_reset_email(user.email, reset_token)
 
-    except (MissingEmail, UserNotFound):
-        raise
     except SQLAlchemyError:
         await session.rollback()
-        raise
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unexpected server error"
+        )
 
 
 async def reset_password(
     payload: ResetPasswordRequest, session: AsyncSession
 ) -> None:
     """재설정 토큰으로 비밀번호 변경."""
+    if not payload.token:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Missing token"
+        )
     if not payload.new_password:
-        raise MissingPassword
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Missing new password"
+        )
+    if not is_strong_password(payload.new_password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password does not meet security requirements"
+        )
     try:
-        token_data = decode_token(payload.token, token_type="access")
-        user_id_str: str | None = token_data.get("sub")  # type: ignore[index]
+        token_data = decode_token(payload.token)
+        if token_data.get("type") != "password_reset":
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid or expired token"
+            )
+        user_id_str = token_data.get("sub")
         if not user_id_str:
-            raise InvalidToken
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid or expired token"
+            )
 
-        user: User | None = await session.get(User, UUID(user_id_str))
+        user = await session.get(User, UUID(user_id_str))
         if not user:
-            raise UserNotFound
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid or expired token"
+            )
 
         user.hashed_password = get_password_hash(payload.new_password)
         user.updated_at = datetime.utcnow()
 
-        # 기존 토큰 모두 폐기
         await session.execute(
             update(UserToken)
             .where(UserToken.user_id == user.id)
@@ -444,81 +509,113 @@ async def reset_password(
         session.add(user)
         await session.commit()
 
-    except (InvalidToken, MissingPassword, UserNotFound):
-        raise
+    except ExpiredSignatureError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token"
+        )
+    except JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token"
+        )
     except SQLAlchemyError:
         await session.rollback()
-        raise
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unexpected server error"
+        )
 
 
 async def change_password(
-    payload: PasswordChangeRequest, session: AsyncSession
+    payload: PasswordChangeRequest,
+    current_user: User,
+    session: AsyncSession,
 ) -> None:
     """로그인 사용자 비밀번호 변경."""
-    user_id: UUID | None = session.info.get("current_user_id")  # type: ignore[arg-type]
-    if not user_id:
-        raise MissingToken
-
-    try:
-        user: User | None = await session.get(User, user_id)
-        if not user or not user.hashed_password:
-            raise UserNotFound
-
-        if not verify_password(payload.old_password, user.hashed_password):
-            raise InvalidCurrentPassword
-
-        user.hashed_password = get_password_hash(payload.new_password)
-        user.updated_at = datetime.utcnow()
-        session.add(user)
-        await session.commit()
-
-    except (MissingToken, UserNotFound, InvalidCurrentPassword):
-        raise
-    except SQLAlchemyError:
-        await session.rollback()
-        raise
-
-
-async def delete_account(session: AsyncSession) -> None:
-    """사용자 탈퇴 (계정 + 토큰 전부 삭제)."""
-    user_id: UUID | None = session.info.get("current_user_id")  # type: ignore[arg-type]
-    if not user_id:
-        raise MissingToken
-
-    try:
-        user: User | None = await session.get(User, user_id)
-        if not user:
-            raise UserNotFound
-
-        # 토큰 일괄 삭제
-        await session.execute(
-            delete(UserToken).where(UserToken.user_id == user.id)
+    if not payload.old_password or not payload.new_password:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Missing password fields",
         )
-        # 사용자 삭제
-        await session.delete(user)
-        await session.commit()
 
-    except (MissingToken, UserNotFound):
-        raise
-    except SQLAlchemyError:
-        await session.rollback()
-        raise
+    if not is_strong_password(payload.new_password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password does not meet security requirements",
+        )
 
+    if not current_user.hashed_password:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token",
+        )
 
-async def get_me(session: AsyncSession) -> UserResponse:
-    """현재 로그인한 사용자 정보."""
-    user_id: UUID | None = session.info.get("current_user_id")  # type: ignore[arg-type]
-    if not user_id:
-        raise MissingToken
+    if not verify_password(
+        payload.old_password,
+        current_user.hashed_password
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid current password",
+        )
 
     try:
-        user: User | None = await session.get(User, user_id)
-        if not user:
-            raise UserNotFound
+        current_user.hashed_password = (
+            get_password_hash(payload.new_password)
+        )
+        current_user.updated_at = datetime.utcnow()
+        session.add(current_user)
+        await session.commit()
 
-        return UserResponse(email=user.email, username=user.username)
-
-    except (MissingToken, UserNotFound):
-        raise
     except SQLAlchemyError:
-        raise
+        await session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unexpected server error",
+        )
+
+
+async def delete_account(
+    current_user: User,
+    session: AsyncSession,
+) -> None:
+    """사용자 탈퇴 (계정 + 토큰 전부 삭제)."""
+    try:
+        await session.execute(
+            delete(UserToken).where(UserToken.user_id == current_user.id)
+        )
+        await session.delete(current_user)
+        await session.commit()
+
+    except SQLAlchemyError:
+        await session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unexpected server error",
+        )
+
+
+async def get_me(current_user: User) -> UserResponse:
+    """현재 로그인한 사용자 정보."""
+    return UserResponse(
+        email=current_user.email,
+        username=current_user.username
+    )
+
+
+async def logout(current_user: User, session: AsyncSession) -> None:
+    """현재 사용자 로그아웃: 모든 토큰 폐기"""
+    try:
+        await session.execute(
+            update(UserToken)
+            .where(UserToken.user_id == current_user.id)
+            .values(is_revoked=True)
+        )
+        await session.commit()
+    except SQLAlchemyError:
+        await session.rollback()
+        raise HTTPException(
+            status_code=500,
+            detail="Unexpected server error"
+        )
