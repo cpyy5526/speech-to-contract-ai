@@ -1,6 +1,6 @@
 from sqlmodel import SQLModel, Field
 from uuid import UUID, uuid4
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 class GptSuggestion(SQLModel, table=True):
@@ -12,4 +12,4 @@ class GptSuggestion(SQLModel, table=True):
     field_path: str = Field(nullable=False)
     suggestion_text: str = Field(nullable=False)
 
-    created_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), nullable=False)
