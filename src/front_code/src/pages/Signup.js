@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import user_icon from '../images/user_icon.png'
 import "../styles/Signup.css";
-import { signup } from "../services/authApiMock"; // 또는 authApi
+import { signup } from "../services/authApi"; // 또는 authApi
 
 
 

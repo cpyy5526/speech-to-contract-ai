@@ -7,7 +7,7 @@ import {
   getTranscriptionStatus,
   retryTranscription,
   cancelTranscription,
-} from "../services/convertApiMock";
+} from "../services/convertApi";
 
 function Converting() {
   const location = useLocation();
