@@ -288,6 +288,31 @@
 
 <aside>
 
+### [POST]  /auth/logout
+
+- 서버: 요청한 사용자의 모든 토큰을 무효화하고 세션 종료
+- 클라이언트: 요청 후 저장된 토큰을 삭제하고 로그인 화면으로 이동
+- **요청**
+    - Request Header
+    
+    ```json
+    Authorization: Bearer <access_token>
+    ```
+    
+- **응답**
+    - 성공: HTTP 204 No Content
+    - 실패
+    
+    | **상황** | **HTTP Status** | **detail 메시지** |
+    | --- | --- | --- |
+    | 토큰 누락 | 401 Unauthorized | “Missing token” |
+    | 토큰 형식 오류 또는 검증 실패 | 401 Unauthorized | “Invalid token” |
+    | 토큰 만료됨 | 401 Unauthorized | “Expired token” |
+    | 서버 내부 오류 | 500 Internal Server Error | “Unexpected server error” |
+</aside>
+
+<aside>
+
 ### [DELETE]  /auth/delete-account
 
 - 로그인한 사용자의 계정 삭제

@@ -115,6 +115,17 @@ class Settings:
             os.getenv("MAX_UPLOAD_SIZE_BYTES", 25 * 1024 * 1024)  # 기본 25MiB
         )
 
+        # ------------------------------------------------------------------ #
+        # SendGrid (이메일로 비밀번호 찾기 기능 관련)
+        # ------------------------------------------------------------------ #
+        self.SENDGRID_API_KEY: str = os.getenv("SENDGRID_API_KEY", "")
+        self.PASSWORD_RESET_URL_BASE: str = os.getenv(
+            "PASSWORD_RESET_URL_BASE", "http://localhost:3000/reset-password"
+        )
+        self.EMAIL_FROM_ADDRESS: str = os.getenv(
+            "EMAIL_FROM_ADDRESS", "no-reply@example.com"
+        )
+
 
 # 단일 인스턴스
 settings = Settings()
