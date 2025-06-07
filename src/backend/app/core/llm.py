@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from typing import List, Dict, Any
 
-from openai import AsyncOpenAI, AsyncError  # type: ignore
+from openai import AsyncOpenAI  # type: ignore
 
 from app.core.config import settings
 

@@ -4,6 +4,7 @@ import { renderField } from "../utils";
 const EmploymentPage2 = forwardRef(({ contract, suggestions }, ref) => {
   useImperativeHandle(ref, () => ({
     extract: () => ({
+      termination: getText("termination"),
       other_terms: getText("other-terms"),
       signature_and_seal: "서명 완료" // or 다른 처리 방식
     }),
@@ -16,6 +17,9 @@ const EmploymentPage2 = forwardRef(({ contract, suggestions }, ref) => {
 
   return (
     <>
+      <p className="section-title">7. 해고 및 계약해지</p>
+      <p className="contract-clause">{renderField("termination", contract.termination, suggestions)}</p>
+
       <p className="section-title">8. 기타사항</p>
       <div className="special-terms-box">
         {renderField("other-terms", contract.other_terms, suggestions)}

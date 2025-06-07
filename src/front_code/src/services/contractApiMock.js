@@ -234,7 +234,8 @@ export async function getContractContent(contractId) {
               wage_type:          "월급",
               wage_amount:        "3,000,000원",
               payment_date:       "매월 25일",
-              payment_method:     "계좌이체"
+              payment_method:     "계좌이체",
+              allowances : "교통비(10만원), 식비(8만원), 직책수당(20만원), 야간·초과근무수당(법정 기준), 분기 성과급(최대 50만원), 명절 상여금(30만원)을 지급합니다."
             },
             holidays:            "주말 및 법정공휴일",
             social_insurance: {

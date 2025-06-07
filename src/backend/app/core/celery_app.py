@@ -13,7 +13,10 @@ celery_app: Celery = Celery(
     "ai_contract_generator",
     broker=settings.CELERY_BROKER_URL,
     backend=settings.CELERY_RESULT_BACKEND,
-    include=["app.tasks.jobs"],
+    include=[
+        "app.tasks.generations",
+        "app.tasks.transcriptions"
+    ]
 )
 
 # 기본 설정값

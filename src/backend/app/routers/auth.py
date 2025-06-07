@@ -1,5 +1,6 @@
+from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import APIRouter, Depends, HTTPException, status
-from app.schemas.auth import LoginRequest, TokenResponse, RegisterRequest, PasswordResetRequest, PasswordChangeRequest
+from app.schemas.auth import LoginRequest, TokenResponse, RegisterRequest, PasswordResetRequest, PasswordChangeRequest, SocialLoginRequest, RefreshTokenRequest, UserResponse, ResetPasswordRequest
 from app.services import auth as auth_service
 from app.core.dependencies import get_session
 

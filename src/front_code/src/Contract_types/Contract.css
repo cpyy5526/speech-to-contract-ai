@@ -20,6 +20,7 @@
 
 /* 표 스타일 (공문서용) */
 .contract-table {
+  max-width: 754px; /* A4 기준 */
   width: 100%;
   border-collapse: collapse;
   margin-bottom: 24px;
@@ -189,3 +190,10 @@
   max-width: 100%;
   margin-left: 0;
 }
+
+
+td {
+  word-wrap: break-word;
+  white-space: pre-wrap;
+}
+

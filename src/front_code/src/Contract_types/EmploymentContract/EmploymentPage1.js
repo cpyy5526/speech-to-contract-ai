@@ -38,6 +38,7 @@ const EmploymentPage1 = forwardRef(({ contract, suggestions }, ref) => {
         wage_amount: getText("wage-amount"),
         payment_date: getText("payment-date"),
         payment_method: getText("payment-method"),
+        allowances: getText("allowances"),
       },
       holidays: getText("holidays"),
       social_insurance: {
@@ -46,7 +47,6 @@ const EmploymentPage1 = forwardRef(({ contract, suggestions }, ref) => {
         employment_insurance: getText("social-employment") === "O",
         industrial_accident_insurance: getText("social-accident") === "O",
       },
-      termination: getText("termination"),
     }),
   }));
 
@@ -109,10 +109,26 @@ const EmploymentPage1 = forwardRef(({ contract, suggestions }, ref) => {
       <p className="contract-clause">근무 시간: {renderField("work-start", contract.employment_details?.working_hours?.start_time, suggestions)} ~ {renderField("work-end", contract.employment_details?.working_hours?.end_time, suggestions)} (휴게시간: {renderField("break-time", contract.employment_details?.working_hours?.break_time, suggestions)})</p>
 
       <p className="section-title">4. 임금</p>
-      <p className="contract-clause">임금 형태: {renderField("wage-type", contract.wage_details?.wage_type, suggestions)}</p>
-      <p className="contract-clause">금액: {renderField("wage-amount", contract.wage_details?.wage_amount, suggestions)}</p>
-      <p className="contract-clause">지급일: {renderField("payment-date", contract.wage_details?.payment_date, suggestions)}</p>
-      <p className="contract-clause">지급 방법: {renderField("payment-method", contract.wage_details?.payment_method, suggestions)}</p>
+      <table className="contract-table">
+        <tbody>
+          <tr>
+            <td className="gray">임금 형태</td>
+            <td>{renderField("wage-type", contract.wage_details?.wage_type, suggestions)}</td>
+            <td className="gray">금액</td>
+            <td>{renderField("wage-amount", contract.wage_details?.wage_amount, suggestions)}</td>
+          </tr>
+          <tr>
+            <td className="gray">지급일</td>
+            <td> {renderField("payment-date", contract.wage_details?.payment_date, suggestions)}</td>
+            <td className="gray">지급 방법</td>
+            <td>{renderField("payment-method", contract.wage_details?.payment_method, suggestions)}</td>
+          </tr>
+          <tr>
+            <td className="gray">추가 급여</td>
+            <td colSpan="3"> {renderField("allowances", contract.wage_details?.allowances, suggestions)}</td>
+          </tr>
+        </tbody>
+      </table>
 
       <p className="section-title">5. 휴일 및 휴가</p>
       <p className="contract-clause">{renderField("holidays", contract.holidays, suggestions)}</p>
@@ -125,8 +141,7 @@ const EmploymentPage1 = forwardRef(({ contract, suggestions }, ref) => {
         산재보험: {renderField("social-accident", contract.social_insurance?.industrial_accident_insurance ? "O" : "X", suggestions)}
       </p>
 
-      <p className="section-title">7. 해고 및 계약해지</p>
-      <p className="contract-clause">{renderField("termination", contract.termination, suggestions)}</p>
+      
     </>
   );
 });

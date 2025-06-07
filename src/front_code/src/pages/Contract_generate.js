@@ -5,7 +5,7 @@ import {
   generateContract,
   getContractStatus,
   cancelContractGeneration,
-} from "../services/contractApi";
+} from "../services/contractApiMock";
 
 function ContractGenerate() {
   const [status, setStatus] = useState("");

@@ -17,8 +17,8 @@ class Contract(SQLModel, table=True):
     )
 
     contract_type: str = Field(nullable=False, index=True)
-    contents: Dict = Field(sa_column=Column(JSONB), nullable=False)
-    initial_contents: Dict = Field(sa_column=Column(JSONB), nullable=False)
+    contents: Dict = Field(sa_column=Column(JSONB, nullable=False))
+    initial_contents: Dict = Field(sa_column=Column(JSONB, nullable=False))
 
     created_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
     updated_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)

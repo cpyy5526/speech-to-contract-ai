@@ -5,8 +5,8 @@ import "../styles/Login.css";
 import { useNavigate } from "react-router-dom";
 import user_icon from '../images/user_icon.png';
 
-import { login, loginWithGoogle } from "../services/authApi";
-import { requestPasswordReset } from "../services/authApi";
+import { login, loginWithGoogle } from "../services/authApiMock";
+import { requestPasswordReset } from "../services/authApiMock";
 
 import { useEffect, useRef } from "react";
 
