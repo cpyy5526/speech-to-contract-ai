@@ -499,7 +499,7 @@ async def reset_password(
             )
 
         user.hashed_password = get_password_hash(payload.new_password)
-        user.updated_at = datetime.utcnow()
+        user.updated_at = datetime.now(timezone.utc)
 
         await session.execute(
             update(UserToken)
@@ -564,7 +564,7 @@ async def change_password(
         current_user.hashed_password = (
             get_password_hash(payload.new_password)
         )
-        current_user.updated_at = datetime.utcnow()
+        current_user.updated_at = datetime.now(timezone.utc)
         session.add(current_user)
         await session.commit()
 

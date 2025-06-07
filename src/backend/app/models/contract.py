@@ -1,6 +1,6 @@
 from sqlmodel import SQLModel, Field
 from uuid import UUID, uuid4
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, Optional
 
 from sqlalchemy import Column
@@ -20,5 +20,9 @@ class Contract(SQLModel, table=True):
     contents: Dict = Field(sa_column=Column(JSONB), nullable=False)
     initial_contents: Dict = Field(sa_column=Column(JSONB), nullable=False)
 
-    created_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
-    updated_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
+    created_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc), nullable=False
+    )
+    updated_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc), nullable=False
+    )

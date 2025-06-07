@@ -1,6 +1,6 @@
 from sqlmodel import SQLModel, Field
 from uuid import UUID, uuid4
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 
@@ -15,5 +15,9 @@ class User(SQLModel, table=True):
     provider_user_id: Optional[str] = Field(default=None, nullable=True)
     is_active: bool = Field(default=True, nullable=False)
 
-    created_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
-    updated_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
+    created_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc), nullable=False
+    )
+    updated_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc), nullable=False
+    )

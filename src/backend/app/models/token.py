@@ -1,8 +1,7 @@
 from sqlmodel import SQLModel, Field
 from uuid import UUID, uuid4
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
-from typing import Optional
 
 
 class TokenType(str, Enum):
@@ -21,4 +20,6 @@ class UserToken(SQLModel, table=True):
     is_revoked: bool = Field(default=False, nullable=False)
     expires_at: datetime = Field(nullable=False)
 
-    created_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
+    created_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc), nullable=False
+    )

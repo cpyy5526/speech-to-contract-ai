@@ -4,7 +4,7 @@ from __future__ import annotations
 Business-logic helpers that sit between the FastAPI routers and the database layer.
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List
 from uuid import UUID
 from fastapi import HTTPException, status
@@ -123,7 +123,7 @@ async def update_contract(
             )
 
         contract.contents = payload.contents  # type: ignore[assignment]
-        contract.updated_at = datetime.utcnow()
+        contract.updated_at = datetime.now(timezone.utc)
 
         session.add(contract)
         await session.commit()
@@ -196,7 +196,7 @@ async def restore_contract(contract_id: str, session: AsyncSession) -> None:
             )
 
         contract.contents = contract.initial_contents  # type: ignore[assignment]
-        contract.updated_at = datetime.utcnow()
+        contract.updated_at = datetime.now(timezone.utc)
 
         session.add(contract)
         await session.commit()
