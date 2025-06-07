@@ -2,7 +2,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://localhost:8000/api", // 실제 서버 주소에 맞게 수정
+  baseURL: process.env.REACT_APP_API_BASE_URL, // 실제 서버 주소에 맞게 수정
   headers: {
     "Content-Type": "application/json",
   },
