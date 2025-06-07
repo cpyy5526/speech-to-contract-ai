@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from app.models.user import User
 from app.services import auth as auth_service
-from app.core.dependencies import get_session
+from app.core.dependencies import get_session, get_current_user
 from app.schemas.auth import (
     LoginRequest,
     PasswordChangeRequest,
@@ -45,9 +46,7 @@ async def login(
     payload: LoginRequest,
     session: AsyncSession = Depends(get_session)
 ):
-    """
-    사용자 로그인을 처리하고 JWT 토큰 반환
-    """
+    """사용자 로그인을 처리하고 JWT 토큰 반환"""
     try:
         return await auth_service.login(payload, session)
     except HTTPException as e:
@@ -64,9 +63,7 @@ async def verify_social(
     payload: SocialLoginRequest,
     session: AsyncSession = Depends(get_session)
 ):
-    """
-    소셜 로그인 토큰을 검증하고 JWT 토큰 반환
-    """
+    """소셜 로그인 토큰을 검증하고 JWT 토큰 반환"""
     try:
         return await auth_service.verify_social(payload, session)
     except HTTPException as e:
@@ -83,9 +80,7 @@ async def refresh_token(
     payload: RefreshTokenRequest,
     session: AsyncSession = Depends(get_session)
 ):
-    """
-    Refresh Token을 사용해 새로운 Access Token 발급
-    """
+    """Refresh Token을 사용해 새로운 Access Token 발급"""
     try:
         return await auth_service.refresh_token(payload, session)
     except HTTPException as e:
@@ -98,81 +93,112 @@ async def refresh_token(
 
 
 @user_router.get("/me", response_model=UserResponse)
-async def get_me(session: AsyncSession = Depends(get_session)):
+async def get_me(
+    current_user: User = Depends(get_current_user),
+):
     """
     현재 로그인한 사용자 정보를 반환
     """
     try:
-        return await auth_service.get_me(session)
-    except auth_service.MissingToken:
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="Missing token")
-    except auth_service.InvalidToken:
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
-    except auth_service.ExpiredToken:
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="Expired token")
+        return await auth_service.get_me(current_user)
+    except HTTPException as e:
+        raise e
     except Exception:
-        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Unexpected server error")
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unexpected server error"
+        )
 
 
 @router.post("/password/forgot", status_code=status.HTTP_204_NO_CONTENT)
-async def forgot_password(payload: PasswordResetRequest, session: AsyncSession = Depends(get_session)):
+async def forgot_password(
+    payload: PasswordResetRequest,
+    session: AsyncSession = Depends(get_session)
+):
     """
     비밀번호 찾기 요청 처리하고 이메일로 링크 전송
     """
     try:
         await auth_service.forgot_password(payload, session)
-    except auth_service.InvalidEmailFormat:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Invalid email format")
-    except auth_service.MissingEmail:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Missing email")
+    except HTTPException as e:
+        raise e
     except Exception:
-        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Unexpected server error")
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unexpected server error"
+        )
 
 
 @router.post("/password/reset", status_code=status.HTTP_204_NO_CONTENT)
-async def reset_password(payload: ResetPasswordRequest, session: AsyncSession = Depends(get_session)):
+async def reset_password(
+    payload: ResetPasswordRequest,
+    session: AsyncSession = Depends(get_session)
+):
     """
     비밀번호 재설정 링크를 통한 새 비밀번호를 설정
     """
     try:
         await auth_service.reset_password(payload, session)
-    except auth_service.InvalidToken:
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token")
-    except auth_service.MissingPassword:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Missing new password")
-    except auth_service.InvalidPassword:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Password does not meet security requirements")
+    except HTTPException as e:
+        raise e
     except Exception:
-        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Unexpected server error")
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unexpected server error"
+        )
 
 
 @router.post("/password/change", status_code=status.HTTP_204_NO_CONTENT)
-async def change_password(payload: PasswordChangeRequest, session: AsyncSession = Depends(get_session)):
+async def change_password(
+    payload: PasswordChangeRequest,
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+):
+    """로그인한 사용자의 비밀번호 변경"""
+    try:
+        await auth_service.change_password(payload, current_user, session)
+    except HTTPException as e:
+        raise e
+    except Exception:
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unexpected server error"
+        )
+
+
+@router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
+async def logout(
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session)
+):
     """
-    로그인한 사용자의 비밀번호 변경
+    로그인된 사용자의 모든 토큰을 무효화하고 세션 종료
     """
     try:
-        await auth_service.change_password(payload, session)
-    except auth_service.InvalidToken:
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
-    except auth_service.ExpiredToken:
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="Expired token")
-    except auth_service.InvalidPassword:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Password does not meet security requirements")
-    except auth_service.InvalidCurrentPassword:
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="Invalid current password")
+        await auth_service.logout(current_user, session)
+    except HTTPException as e:
+        raise e
     except Exception:
-        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Unexpected server error")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unexpected server error"
+        )
 
 
 @router.delete("/delete-account", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_account(session: AsyncSession = Depends(get_session)):
+async def delete_account(
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session)
+):
     """
     로그인한 사용자의 계정 삭제
     """
     try:
-        await auth_service.delete_account(session)
-    except auth_service.UserNotFound:
-        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail="User not found")
+        await auth_service.delete_account(current_user, session)
+    except HTTPException as e:
+        raise e
     except Exception:
-        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Unexpected server error")
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unexpected server error"
+        )

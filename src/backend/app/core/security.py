@@ -1,20 +1,10 @@
-"""
-app/core/security.py
---------------------
-
-• JWT 생성‧검증 유틸리티
-• 비밀번호 해시‧검증 유틸리티
-
-`app/services/auth.py` 등 서비스 계층에서 import 하여 사용합니다.
-"""
-
 from __future__ import annotations
 
 from datetime import datetime
 from typing import Any, Dict
 
 import bcrypt
-from jose import JWTError, jwt
+from jose import jwt
 
 from app.core.config import settings
 
