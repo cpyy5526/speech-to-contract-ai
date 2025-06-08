@@ -2,6 +2,8 @@ from sqlmodel import SQLModel, Field
 from uuid import UUID, uuid4
 from datetime import datetime, timezone
 from enum import Enum
+from sqlalchemy import Column, DateTime
+from sqlalchemy.sql import func
 
 
 class TokenType(str, Enum):
@@ -21,5 +23,9 @@ class UserToken(SQLModel, table=True):
     expires_at: datetime = Field(nullable=False)
 
     created_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc), nullable=False
+        sa_column=Column(
+            DateTime(timezone=True),
+            server_default=func.now(),
+            nullable=False
+        ),
     )

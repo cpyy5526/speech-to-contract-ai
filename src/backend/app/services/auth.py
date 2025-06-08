@@ -1,6 +1,6 @@
+from __future__ import annotations
 import logging
 logger = logging.getLogger(__name__)
-from __future__ import annotations
 
 import re, requests
 from uuid import UUID
@@ -220,7 +220,8 @@ async def register(payload: RegisterRequest, session: AsyncSession) -> None:
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Unexpected server error"
         )
-    except SQLAlchemyError:
+    except SQLAlchemyError as e:
+        logger.error("DB 오류: %s", e, exc_info=True)
         await session.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

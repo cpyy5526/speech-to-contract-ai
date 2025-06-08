@@ -3,8 +3,8 @@ from app.core.logger import logging
 logger = logging.getLogger(__name__)
 
 import logging
-from typing import List, Dict, Any
-from openai import AsyncOpenAI, AsyncError  # type: ignore
+from typing import List, Dict
+from openai import AsyncOpenAI
 
 from app.core.config import settings
 
