@@ -197,12 +197,13 @@ async def register(payload: RegisterRequest, session: AsyncSession) -> None:
         session.add(user)
         await session.commit()
         logger.info("회원가입 성공: user_id=%s", user.id)
-    except IntegrityError:
-        logger.warning("회원가입 실패: 중복된 email 또는 username")
+    except IntegrityError as e:
+        logger.warning("회원가입 실패: 중복된 email 또는 username\nIntegrityError: %s", e, exc_info=True)
         await session.rollback()
         email_exists = await session.scalar(
             select(User).where(User.email == payload.email)
         )
+        logger.debug("DB 확인 결과 email_exists: %s", email_exists)
         if email_exists:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
@@ -211,6 +212,7 @@ async def register(payload: RegisterRequest, session: AsyncSession) -> None:
         username_exists = await session.scalar(
             select(User).where(User.username == payload.username)
         )
+        logger.debug("DB 확인 결과 username_exists: %s", username_exists)
         if username_exists:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
@@ -246,6 +248,7 @@ async def login(
         user = await session.scalar(
             select(User).where(User.username == payload.username)
         )
+        logger.debug("조회된 user 객체: %s", user)
         if not user or not verify_password(
             payload.password,
             user.hashed_password or ""
@@ -255,12 +258,14 @@ async def login(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid username or password"
             )
+        logger.debug("비밀번호 검증 통과: user_id=%s", user.id)
 
         result = await _create_and_store_jwts(user, session)
         logger.info("로그인 성공: user_id=%s", user.id)
         return result
 
-    except SQLAlchemyError:
+    except SQLAlchemyError as e:
+        logger.error("로그인 중 DB 오류 발생: %s", e, exc_info=True)
         await session.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

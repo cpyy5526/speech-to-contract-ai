@@ -1,6 +1,6 @@
 from sqlmodel import SQLModel, Field
 from uuid import UUID, uuid4
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import Column, DateTime
 from sqlalchemy.sql import func
 
@@ -15,6 +15,7 @@ class GptSuggestion(SQLModel, table=True):
     suggestion_text: str = Field(nullable=False)
 
     created_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc),
         sa_column=Column(
             DateTime(timezone=True),
             server_default=func.now(),

@@ -7,7 +7,7 @@ from pathlib import Path
 from fastapi import HTTPException, status
 from sqlmodel import select
 from sqlalchemy.exc import SQLAlchemyError
-from sqlmodel.ext.asyncio.session import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.models.transcription import Transcription, TranscriptionStatus
@@ -96,10 +96,10 @@ async def get_audio_status(user_id: UUID, session: AsyncSession) -> UploadStatus
 
     # 만약 done 상태라면, 이미 generation에 연결됐는지 추가로 검사
     if transcription.status == TranscriptionStatus.done:
-        result = await session.exec(
+        result = await session.execute(
             select(Generation).where(Generation.transcription_id == transcription.id)
         )
-        generation = result.first()
+        generation = result.scalars().first()
         if generation:
             # 이미 계약서 생성에 사용된 transcription -> 추적 대상 아님 (요청 로직 오류 방지)
             logger.warning(
@@ -181,21 +181,25 @@ def _validate_ext(filename: str) -> str:
 
 
 async def _get_latest(user_id: UUID, session: AsyncSession) -> Transcription:
+    logger.info("최신 transcription 조회 시작: user_id=%s", user_id)
     try:
-        result = await session.exec(
+        result = await session.execute(
             select(Transcription)
             .where(Transcription.user_id == user_id)
             .order_by(Transcription.created_at.desc())
             .limit(1)
         )
-        transcription = result.first()
-    except SQLAlchemyError:
+        transcription = result.scalars().first()
+        logger.info("최신 transcription 조회 결과: %s", transcription)
+    except Exception as e:
+        logger.exception("Transcription 조회 중 예기치 못한 예외 발생: %s", str(e))
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Unexpected server error"
         )
     
     if not transcription:
+        logger.warning("해당 user의 transcription 없음: user_id=%s", user_id)
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No audio data for this user"

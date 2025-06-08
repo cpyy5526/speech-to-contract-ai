@@ -7,7 +7,7 @@ from uuid import UUID
 from fastapi import HTTPException, status
 from sqlalchemy.exc import SQLAlchemyError
 from sqlmodel import select
-from sqlmodel.ext.asyncio.session import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.transcription import Transcription, TranscriptionStatus
 from app.models.generation import Generation, GenerationStatus
@@ -35,10 +35,10 @@ async def create_generation(user_id: UUID, session: AsyncSession) -> None:
 
     # 해당 transcription이 이미 사용됨 (음성 업로드 및 변환 없이 요청, 과거에 이미 처리된 작업 조회됨)
     # 404로 음성 데이터 없음 취급
-    existing = await session.exec(
+    existing = await session.execute(
         select(Generation).where(Generation.transcription_id == transcription.id)
     )
-    if existing.first():
+    if existing.scalars().first():
         logger.warning(
             "이미 사용된 transcription으로 생성 요청: user_id=%s, transcription_id=%s",
             user_id, transcription.id
@@ -145,13 +145,13 @@ async def get_generation_status(
 
     # "done"인 경우 생성된 계약서 id도 함께 contract_contents 테이블에서 찾아 반환
     if generation.status == GenerationStatus.done:
-        result = await session.exec(
+        result = await session.execute(
             select(Contract)
             .where(Contract.generation_id == generation.id)
             .limit(1)
         )
 
-        contract = result.first()
+        contract = result.scalars().first()
         if not contract:
             logger.error(
                 "generation은 완료 상태이나 계약서 없음: generation_id=%s",
@@ -205,13 +205,13 @@ async def _latest_finished_transcription(
 
     # 최신 transcription (존재해야 함)
     try:
-        result = await session.exec(
+        result = await session.execute(
             select(Transcription)
             .where(Transcription.user_id == user_id)
             .order_by(Transcription.created_at.desc())
             .limit(1)
         )
-        transcription = result.first()
+        transcription = result.scalars().first()
     except SQLAlchemyError:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -251,7 +251,7 @@ async def _get_latest_generation(
             .order_by(Generation.created_at.desc())
             .limit(1)
         )
-        generation = result.first()
+        generation = result.scalars().first()
     except SQLAlchemyError:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
