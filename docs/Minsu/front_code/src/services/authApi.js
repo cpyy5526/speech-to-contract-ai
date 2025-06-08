@@ -64,6 +64,26 @@ export async function login(username, password) {
   }
 }
 
+// 로그아웃
+export async function logout() {
+  try {
+    const response = await api.post("/auth/logout");
+    
+    return response.status; // 204 expected
+  } catch (error) {
+    const status = error.response?.status;
+    const detail = error.response?.data?.detail || "응답 없음";
+
+    if (status === 500) {
+      alert("⚠️ 서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+    } else {
+      alert("❓ 알 수 없는 오류: " + (detail || "응답 없음"));
+    }
+
+    throw error;
+  }
+}
+
 // 구글 로그인 요청
 export async function loginWithGoogle(idToken) {
   try {

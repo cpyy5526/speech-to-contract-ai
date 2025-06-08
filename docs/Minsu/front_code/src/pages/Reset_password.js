@@ -1,7 +1,7 @@
 // src/pages/ResetPassword.js
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { confirmPasswordReset } from "../services/authApiMock"; // 또는 authApi로 변경 가능
+import { confirmPasswordReset } from "../services/authApi"; // 또는 authApi로 변경 가능
 
 import "../styles/Reset_password.css";
 
