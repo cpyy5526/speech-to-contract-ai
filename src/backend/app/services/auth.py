@@ -1,3 +1,5 @@
+import logging
+logger = logging.getLogger(__name__)
 from __future__ import annotations
 
 import re, requests
@@ -92,6 +94,7 @@ async def _create_and_store_jwts(
 
     access_token = create_access_token(str(user.id), access_exp)
     refresh_token = create_refresh_token(str(user.id), refresh_exp)
+    logger.debug("JWT 발급: access_exp=%s, refresh_exp=%s", access_exp, refresh_exp)
 
     try:
         await _stage_token(
@@ -109,7 +112,10 @@ async def _create_and_store_jwts(
             session,
         )
         await session.commit()
+        logger.info("JWT 저장 성공: user_id=%s", user.id)
+
     except SQLAlchemyError:
+        logger.error("JWT 저장 실패: user_id=%s", user.id, exc_info=True)
         await session.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -150,6 +156,8 @@ async def _send_reset_email(to_email: str, reset_token: str) -> None:
 
 async def register(payload: RegisterRequest, session: AsyncSession) -> None:
     """자체 회원가입"""
+    logger.info("회원가입 시도: email=%s, username=%s", payload.email, payload.username)
+
     # 필드 누락 확인
     if not payload.email or not payload.username or not payload.password:
         raise HTTPException(
@@ -188,7 +196,9 @@ async def register(payload: RegisterRequest, session: AsyncSession) -> None:
     try:
         session.add(user)
         await session.commit()
+        logger.info("회원가입 성공: user_id=%s", user.id)
     except IntegrityError:
+        logger.warning("회원가입 실패: 중복된 email 또는 username")
         await session.rollback()
         email_exists = await session.scalar(
             select(User).where(User.email == payload.email)
@@ -223,6 +233,8 @@ async def login(
     session: AsyncSession,
 ) -> TokenResponse:
     """ID/PW 로그인."""
+    logger.info("로그인 시도: username=%s", payload.username)
+    
     if not payload.username or not payload.password:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -237,12 +249,15 @@ async def login(
             payload.password,
             user.hashed_password or ""
         ):
+            logger.warning("로그인 실패: 인증 실패 username=%s", payload.username)
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid username or password"
             )
 
-        return await _create_and_store_jwts(user, session)
+        result = await _create_and_store_jwts(user, session)
+        logger.info("로그인 성공: user_id=%s", user.id)
+        return result
 
     except SQLAlchemyError:
         await session.rollback()
@@ -278,12 +293,17 @@ async def verify_social(
     try:
         response = requests.get(url, timeout=15)
         if response.status_code != 200:
+            logger.warning(
+                "소셜 토큰 검증 실패: status_code=%s, response=%s",
+                response.status_code, response.text
+            )
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid social token",
             )
         data = response.json()
     except requests.RequestException:
+        logger.error("소셜 서버 오류: provider=%s", provider, exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail="Social server error",
@@ -323,7 +343,9 @@ async def verify_social(
             await session.commit()
             await session.refresh(user)
 
-        return await _create_and_store_jwts(user, session)
+        result = await _create_and_store_jwts(user, session)
+        logger.info("소셜 로그인 성공: provider=%s, user_id=%s", provider, user.id)
+        return result
     
     except SQLAlchemyError:
         await session.rollback()
@@ -407,6 +429,7 @@ async def refresh_token(
         )
         await session.commit()
 
+        logger.info("Access 토큰 재발급 완료: user_id=%s", user.id)
         return TokenRefreshResponse(
             access_token=new_access_token
         )
@@ -423,6 +446,8 @@ async def forgot_password(
     payload: PasswordResetRequest, session: AsyncSession
 ) -> None:
     """비밀번호 재설정 링크 이메일 발송."""
+    logger.info("비밀번호 재설정 요청 수신: email=%s", payload.email)
+    
     if not payload.email:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -439,6 +464,9 @@ async def forgot_password(
             select(User).where(User.email == payload.email)
         )
         if not user:
+            logger.warning(
+                "비밀번호 재설정 요청 실패 - 존재하지 않는 이메일: email=%s", payload.email
+            )
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Invalid email format"
@@ -449,6 +477,7 @@ async def forgot_password(
         )
 
         await _send_reset_email(user.email, reset_token)
+        logger.info("비밀번호 재설정 링크 발송 완료: user_id=%s", user.id)
 
     except SQLAlchemyError:
         await session.rollback()
@@ -500,6 +529,7 @@ async def reset_password(
 
         user.hashed_password = get_password_hash(payload.new_password)
         user.updated_at = datetime.now(timezone.utc)
+        logger.info("비밀번호 재설정 성공: user_id=%s", user.id)
 
         await session.execute(
             update(UserToken)
@@ -555,6 +585,9 @@ async def change_password(
         payload.old_password,
         current_user.hashed_password
     ):
+        logger.warning(
+            "비밀번호 변경 실패 - 기존 비밀번호 불일치: user_id=%s", current_user.id
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid current password",
@@ -567,6 +600,7 @@ async def change_password(
         current_user.updated_at = datetime.now(timezone.utc)
         session.add(current_user)
         await session.commit()
+        logger.info("비밀번호 변경 완료: user_id=%s", current_user.id)
 
     except SQLAlchemyError:
         await session.rollback()
@@ -587,6 +621,7 @@ async def delete_account(
         )
         await session.delete(current_user)
         await session.commit()
+        logger.info("계정 삭제 완료: user_id=%s", current_user.id)
 
     except SQLAlchemyError:
         await session.rollback()
@@ -613,6 +648,8 @@ async def logout(current_user: User, session: AsyncSession) -> None:
             .values(is_revoked=True)
         )
         await session.commit()
+        logger.info("로그아웃 완료: user_id=%s", current_user.id)
+
     except SQLAlchemyError:
         await session.rollback()
         raise HTTPException(

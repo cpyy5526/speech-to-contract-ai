@@ -1,3 +1,6 @@
+from app.core.logger import logging
+logger = logging.getLogger(__name__)
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -34,7 +37,8 @@ async def register(
         await auth_service.register(payload, session)
     except HTTPException as e:
         raise e
-    except Exception:
+    except Exception as e:
+        logger.error("Unexpected error in /auth/register: %s", e, exc_info=True)
         raise HTTPException(
             status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Unexpected server error"
@@ -51,7 +55,8 @@ async def login(
         return await auth_service.login(payload, session)
     except HTTPException as e:
         raise e
-    except Exception:
+    except Exception as e:
+        logger.error("Unexpected error in /auth/login: %s", e, exc_info=True)
         raise HTTPException(
             status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Unexpected server error"
@@ -68,7 +73,8 @@ async def verify_social(
         return await auth_service.verify_social(payload, session)
     except HTTPException as e:
         raise e
-    except Exception:
+    except Exception as e:
+        logger.error("Unexpected error in /auth/verify-social: %s", e, exc_info=True)
         raise HTTPException(
             status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Unexpected server error"
@@ -85,7 +91,8 @@ async def refresh_token(
         return await auth_service.refresh_token(payload, session)
     except HTTPException as e:
         raise e
-    except Exception:
+    except Exception as e:
+        logger.error("Unexpected error in /auth/token/refresh: %s", e, exc_info=True)
         raise HTTPException(
             status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Unexpected server error"
@@ -103,7 +110,8 @@ async def get_me(
         return await auth_service.get_me(current_user)
     except HTTPException as e:
         raise e
-    except Exception:
+    except Exception as e:
+        logger.error("Unexpected error in /user/me: %s", e, exc_info=True)
         raise HTTPException(
             status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Unexpected server error"
@@ -122,7 +130,8 @@ async def forgot_password(
         await auth_service.forgot_password(payload, session)
     except HTTPException as e:
         raise e
-    except Exception:
+    except Exception as e:
+        logger.error("Unexpected error in /auth/password/forgot: %s", e, exc_info=True)
         raise HTTPException(
             status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Unexpected server error"
@@ -141,7 +150,8 @@ async def reset_password(
         await auth_service.reset_password(payload, session)
     except HTTPException as e:
         raise e
-    except Exception:
+    except Exception as e:
+        logger.error("Unexpected error in /auth/password/reset: %s", e, exc_info=True)
         raise HTTPException(
             status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Unexpected server error"
@@ -159,7 +169,8 @@ async def change_password(
         await auth_service.change_password(payload, current_user, session)
     except HTTPException as e:
         raise e
-    except Exception:
+    except Exception as e:
+        logger.error("Unexpected error in /auth/password/change: %s", e, exc_info=True)
         raise HTTPException(
             status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Unexpected server error"
@@ -178,7 +189,8 @@ async def logout(
         await auth_service.logout(current_user, session)
     except HTTPException as e:
         raise e
-    except Exception:
+    except Exception as e:
+        logger.error("Unexpected error in /auth/logout: %s", e, exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Unexpected server error"
@@ -197,7 +209,8 @@ async def delete_account(
         await auth_service.delete_account(current_user, session)
     except HTTPException as e:
         raise e
-    except Exception:
+    except Exception as e:
+        logger.error("Unexpected error in /auth/delete-account: %s", e, exc_info=True)
         raise HTTPException(
             status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Unexpected server error"

@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import logging
-
 from celery import Celery
 
 from app.core.config import settings
 
+from app.core.logger import setup_logging
+setup_logging()
 logger = logging.getLogger(__name__)
 
 # Celery 인스턴스 생성
@@ -29,5 +30,3 @@ celery_app.conf.update(
 )
 
 logger.info("Celery app initialized (broker: %s)", settings.CELERY_BROKER_URL)
-
-__all__ = ["celery_app"]

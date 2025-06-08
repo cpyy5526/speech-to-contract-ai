@@ -1,18 +1,16 @@
 from __future__ import annotations
+from app.core.logger import logging
+logger = logging.getLogger(__name__)
 
 import logging
 from typing import List, Dict, Any
-
 from openai import AsyncOpenAI, AsyncError  # type: ignore
 
 from app.core.config import settings
 
-logger = logging.getLogger(__name__)
-
 
 class GPTCallError(Exception):
     """GPT 호출 실패 시 발생하는 예외."""
-
 
 # 전역 싱글턴 클라이언트
 _client = AsyncOpenAI(
@@ -41,7 +39,7 @@ async def call_gpt_api(messages: List[Dict[str, str]]) -> str:
     GPTCallError
         API 호출 오류, 파싱 오류 등 모든 실패 상황.
     """
-    logger.debug("GPT 요청 시작 | 모델=%s | 메시지 수=%d", settings.OPENAI_MODEL, len(messages))
+    logger.debug("GPT 요청 시작. 메시지 길이=%d", settings.OPENAI_MODEL, len(messages))
 
     try:
         response = await _client.chat.completions.create(

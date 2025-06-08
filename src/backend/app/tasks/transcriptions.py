@@ -16,6 +16,8 @@ def process_uploaded_audio(transcription_id: str) -> None:
     """Whisper 기반 STT 변환 Celery 태스크."""
 
     async def _run(tid: UUID):
+        logger.info("STT 태스크 시작: transcription_id=%s", tid)
+
         async with async_session() as session:
             transcription = await session.get(Transcription, tid)
             if not transcription or transcription.status in {
@@ -27,6 +29,7 @@ def process_uploaded_audio(transcription_id: str) -> None:
             # 상태: transcribing
             transcription.status = TranscriptionStatus.transcribing
             await session.commit()
+            logger.info("transcription 상태 'transcribing' 설정 완료: transcription_id=%s", tid)
 
             try:
                 # Whisper API 호출 및 변환
@@ -39,6 +42,7 @@ def process_uploaded_audio(transcription_id: str) -> None:
             except Exception as exc:
                 transcription.status = TranscriptionStatus.transcription_failed
                 await session.commit()
+                logger.error("STT 변환 실패: transcription_id=%s", transcription.id, exc_info=True)
                 raise exc
             else:
                 updated_transcription = await session.get(Transcription, tid)
@@ -49,6 +53,10 @@ def process_uploaded_audio(transcription_id: str) -> None:
                 transcription.script_file = processed_filename
                 transcription.status = TranscriptionStatus.done
                 await session.commit()
+                logger.info(
+                    "STT 및 전처리 완료: transcription_id=%s, 파일=%s",
+                    transcription.id, processed_filename
+                )
 
                 # 음성파일 삭제
                 try:
