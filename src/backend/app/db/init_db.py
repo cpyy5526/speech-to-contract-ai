@@ -6,6 +6,7 @@ from app.models import (  # noqa: F401
     token,         # noqa
     contract,      # noqa
     transcription, # noqa
+    generation,    # noqa
     suggestion,    # noqa
 )
 
