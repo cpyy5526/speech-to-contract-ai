@@ -5,6 +5,7 @@ import docIcon from "../images/doc_icon.png";
 import { useNavigate } from "react-router-dom";
 import { changePassword } from "../services/authApi"; // 또는 authApi로 교체 가능
 import { deleteAccount } from "../services/authApi"; // 또는 authApi
+import { logout } from "../services/authApi"; 
 import { getContractList } from "../services/contractApi";
 import { initiateTranscription } from "../services/convertApi";
 
@@ -48,11 +49,18 @@ function Home({ user }) {
   fetchContractList();
 }, []);
 
-  const handleLogout = () => {
-    localStorage.clear();
-    window.location.href = "/login";
-  };
+  const handleLogout = async () => {
+    try {
+      const status = await logout();
+      if (status === 204) {
+        alert("로그아웃 되었습니다.");
+        localStorage.clear();
+        navigate("/login");
+      }
+    } catch (err) {
+    }
 
+  };
   const handleDeleteAccount = async () => {
     if (!window.confirm("⚠️ 정말 계정을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.")) return;
 
