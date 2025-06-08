@@ -20,6 +20,8 @@ async def protected_route(
 """
 
 from __future__ import annotations
+from app.core.logger import logging
+logger = logging.getLogger(__name__)
 
 from uuid import UUID
 from typing import AsyncGenerator
@@ -63,6 +65,7 @@ async def get_current_user(
 
     # 1. 헤더 존재 여부 확인
     if not authorization:
+        logger.warning("인증 헤더 누락")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Missing token",
@@ -85,11 +88,13 @@ async def get_current_user(
                 detail="Invalid token"
             )
     except ExpiredSignatureError:
+        logger.warning("JWT 만료")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Expired token",
         )
     except JWTError:
+        logger.warning("JWT 디코딩 실패")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token",

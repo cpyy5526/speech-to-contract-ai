@@ -1,4 +1,6 @@
 from __future__ import annotations
+from app.core.logger import logging
+logger = logging.getLogger(__name__)
 
 """Contracts service layer:
 Business-logic helpers that sit between the FastAPI routers and the database layer.
@@ -64,6 +66,7 @@ async def get_contracts_list(
         session: AsyncSession
 ) -> List[ContractResponse]:
     """Return *all* contracts (caller is expected to handle authorisation)."""
+
     try:
         stmt = (
             select(Contract)
@@ -73,7 +76,9 @@ async def get_contracts_list(
         result = await session.execute(stmt)
         contracts = result.scalars().all()
         return [_contract_to_response(c) for c in contracts]
+    
     except SQLAlchemyError:
+        logger.error("DB 오류: 계약서 목록 조회 실패: user_id=%s", user_id, exc_info=True)
         raise HTTPException(
             status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Database query failed"
@@ -85,15 +90,19 @@ async def get_contract(
     session: AsyncSession
 ) -> ContractDetailsResponse:
     """Return a single contract by *primary-key* UUID."""
+
     try:
         contract = await session.get(Contract, UUID(contract_id))
         if contract is None:
+            logger.warning("계약서 조회 실패 - 존재하지 않는 ID: contract_id=%s", contract_id)
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Contract not found"
             )
         return _contract_details_to_response(contract)
+    
     except SQLAlchemyError:
+        logger.error("DB 오류: 계약서 조회 실패: contract_id=%s", contract_id, exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Database query failed"
@@ -110,6 +119,7 @@ async def update_contract(
     try:
         contract = await session.get(Contract, UUID(contract_id))
         if contract is None:   # 대상 계약서 없음
+            logger.warning("계약서 수정 실패 - 존재하지 않음: contract_id=%s", contract_id)
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Contract not found"
@@ -117,6 +127,7 @@ async def update_contract(
 
         # JSON 필드 검사: 요청 데이터의 모든 key 일치 확인
         if not matches_schema(contract.contract_type, payload.contents):
+            logger.warning("계약서 수정 실패 - 필드 불일치: contract_id=%s", contract_id)
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Missing or invalid contract fields"
@@ -128,7 +139,9 @@ async def update_contract(
         session.add(contract)
         await session.commit()
         await session.refresh(contract)
+
     except SQLAlchemyError:
+        logger.error("DB 오류: 계약서 수정 실패: contract_id=%s", contract_id, exc_info=True)
         await session.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -138,16 +151,20 @@ async def update_contract(
 
 async def delete_contract(contract_id: str, session: AsyncSession) -> None:
     """Hard-delete a contract record (cascades to suggestions)."""
+
     try:
         contract = await session.get(Contract, UUID(contract_id))
         if contract is None:
+            logger.warning("계약서 삭제 실패 - 존재하지 않음: contract_id=%s", contract_id)
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Contract not found"
             )
         await session.delete(contract)
         await session.commit()
+
     except SQLAlchemyError:
+        logger.error("DB 오류: 계약서 삭제 실패: contract_id=%s", contract_id, exc_info=True)
         await session.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -163,6 +180,7 @@ async def get_suggestions(
         # Existence check (cheaper than a join for clarity here)
         contract = await session.get(Contract, UUID(contract_id))
         if contract is None:
+            logger.warning("GPT 제안 조회 실패 - 계약서 없음: contract_id=%s", contract_id)
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Contract not found"
@@ -174,6 +192,7 @@ async def get_suggestions(
         return [_suggestion_to_response(s) for s in suggestions]
     
     except SQLAlchemyError:
+        logger.error("DB 오류: GPT 제안 조회 실패: contract_id=%s", contract_id, exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Database query failed"
@@ -185,11 +204,13 @@ async def restore_contract(contract_id: str, session: AsyncSession) -> None:
     try:
         contract = await session.get(Contract, UUID(contract_id))
         if contract is None:
+            logger.warning("계약서 복원 실패 - 존재하지 않음: contract_id=%s", contract_id)
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Contract not found"
             )
         if contract.initial_contents is None:
+            logger.warning("계약서 복원 실패 - 초기 내용 없음: contract_id=%s", contract_id)
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Initial contents missing"
@@ -203,6 +224,7 @@ async def restore_contract(contract_id: str, session: AsyncSession) -> None:
         await session.refresh(contract)
 
     except SQLAlchemyError:
+        logger.error("DB 오류: 계약서 복원 실패: contract_id=%s", contract_id, exc_info=True)
         await session.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

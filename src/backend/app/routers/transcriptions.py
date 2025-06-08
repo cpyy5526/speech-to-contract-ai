@@ -1,3 +1,6 @@
+from app.core.logger import logging
+logger = logging.getLogger(__name__)
+
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status, Response
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -27,6 +30,10 @@ async def initiate_upload(
     if not data.filename.strip():
         raise HTTPException(status_code=400, detail="Missing file name")
     try:
+        logger.info(
+            "업로드 예약 요청 수신: user_id=%s, filename=%s",
+            current_user.id, data.filename
+        )
         return await svc.register_upload(data.filename, current_user.id, session)
     except HTTPException as e:
         raise e
@@ -92,7 +99,9 @@ async def uploaded_notify(
 ):
     """nginx 업로드 완료 Callback"""
     try:
+        logger.info("업로드 완료 Callback 수신: transcription_id=%s", transcription_id)
         await svc.trigger_transcription(transcription_id, session)
+        logger.info("STT 태스크 등록 완료: transcription_id=%s", transcription_id)
         return
     except HTTPException as e:
         raise e

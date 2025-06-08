@@ -61,6 +61,7 @@ async def transcribe_audio(audio_filename: str) -> str:
     """
     input_path = Path(settings.AUDIO_UPLOAD_DIR) / audio_filename
     if not input_path.is_file():
+        logger.warning("Whisper 입력 파일 없음: %s", input_path)
         raise STTCallError(f"Audio file not found: {input_path}")
 
     client = _get_client()
@@ -85,7 +86,8 @@ async def transcribe_audio(audio_filename: str) -> str:
 
         async with aiofiles.open(output_path, "w", encoding="utf-8") as f:
             await f.write(text_out)
-        
+            
+        logger.info("Whisper 결과 저장 완료: 파일=%s", output_path)
         return output_filename
 
     except (OpenAIError, Exception) as exc:  # noqa: BLE001

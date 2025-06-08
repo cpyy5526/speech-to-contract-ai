@@ -1,3 +1,6 @@
+from app.core.logger import logging
+logger = logging.getLogger(__name__)
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -20,13 +23,16 @@ async def get_contracts_list(
 ):
     """사용자가 생성한 계약서 목록 조회"""
     try:
-        return await contracts_service.get_contracts_list(
+        result = await contracts_service.get_contracts_list(
             current_user.id,
             session
         )
+        logger.info("계약서 목록 조회 성공: user_id=%s", current_user.id)
+        return result
     except HTTPException as e:
         raise e
     except Exception:
+        logger.error("계약서 목록 조회 실패: user_id=%s", current_user.id, exc_info=True)
         raise HTTPException(
             status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Unexpected server error"
@@ -40,10 +46,13 @@ async def get_contract(
 ):
     """특정 계약서의 내용 조회"""
     try:
-        return await contracts_service.get_contract(contract_id, session)
+        result = await contracts_service.get_contract(contract_id, session)
+        logger.info("계약서 조회 성공: contract_id=%s", contract_id)
+        return result
     except HTTPException as e:
         raise e
     except Exception:
+        logger.error("계약서 조회 실패: contract_id=%s", contract_id, exc_info=True)
         raise HTTPException(
             status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Unexpected server error"
@@ -59,9 +68,11 @@ async def update_contract(
     """특정 계약서 수정 및 저장"""
     try:
         await contracts_service.update_contract(contract_id, payload, session)
+        logger.info("계약서 수정 성공: contract_id=%s", contract_id)
     except HTTPException as e:
         raise e
     except Exception:
+        logger.error("계약서 수정 실패: contract_id=%s", contract_id, exc_info=True)
         raise HTTPException(
             status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Unexpected server error"
@@ -78,10 +89,13 @@ async def get_suggestions(
 ):
     """계약서의 빈 필드에 대한 GPT 제안 텍스트 조회"""
     try:
-        return await contracts_service.get_suggestions(contract_id, session)
+        result = await contracts_service.get_suggestions(contract_id, session)
+        logger.info("GPT 제안 조회 성공: contract_id=%s", contract_id)
+        return result
     except HTTPException as e:
         raise e
     except Exception:
+        logger.error("GPT 제안 조회 실패: contract_id=%s", contract_id, exc_info=True)
         raise HTTPException(
             status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Unexpected server error"
@@ -96,9 +110,11 @@ async def restore_contract(
     """최초 생성된 버전으로 계약서 복원"""
     try:
         await contracts_service.restore_contract(contract_id, session)
+        logger.info("계약서 복원 성공: contract_id=%s", contract_id)
     except HTTPException as e:
         raise e
     except Exception:
+        logger.error("계약서 복원 실패: contract_id=%s", contract_id, exc_info=True)
         raise HTTPException(
             status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Unexpected server error"
@@ -113,9 +129,11 @@ async def delete_contract(
     """특정 계약서 삭제"""
     try:
         await contracts_service.delete_contract(contract_id, session)
+        logger.info("계약서 삭제 성공: contract_id=%s", contract_id)
     except HTTPException as e:
         raise e
     except Exception:
+        logger.error("계약서 삭제 실패: contract_id=%s", contract_id, exc_info=True)
         raise HTTPException(
             status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Unexpected server error"

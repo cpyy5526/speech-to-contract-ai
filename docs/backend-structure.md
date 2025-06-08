@@ -12,7 +12,8 @@ backend/
 │   │   ├── config.py               # 환경 변수 및 설정값 로드 (.env 파일 불러오기 등)
 │   │   ├── security.py             # JWT 발급 및 검증, 비밀번호 암호화 관련 함수
 │   │   ├── dependencies.py         # 공통으로 필요한 객체(DB 세션, 사용자 정보 등) 주입 함수
-│   │   └── celery_app.py           # Celery 객체(비동기 작업 처리 큐) 초기화 설정
+│   │   ├── celery_app.py           # Celery 객체(비동기 작업 처리 큐) 초기화 설정
+│   │   └── logger.py               # logger 전역 설정
 │   │
 │   ├── db/                       # 데이터베이스 연결 설정
 │   │   ├── session.py              # DB 세션 생성 (-> FastAPI에서 async로 DB 접근)
