@@ -23,6 +23,7 @@ pydantic = "^2.7.1"
 nltk = "^3.8.1"
 sendgrid = "^6.0.0"
 requests = "^2.32.3"
+greenlet = "^3.2.3"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.4.2"
