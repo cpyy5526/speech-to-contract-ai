@@ -43,7 +43,7 @@ async def register_upload(
         logger.error("업로드 세션 등록 중 DB 오류: user_id=%s", user_id, exc_info=True)
         raise HTTPException(status_code=500, detail="Unexpected server error")
     
-    upload_url = f"{settings.UPLOAD_BASE_URL}/upload/audio/{transcription.id}"
+    upload_url = f"{settings.UPLOAD_BASE_URL}/upload/audio/{transcription.audio_file}"
     return UploadInitResponse(upload_url=upload_url)
 
 

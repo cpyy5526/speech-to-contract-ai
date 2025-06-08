@@ -14,7 +14,7 @@ celery_app: Celery = Celery(
     "ai_contract_generator",
     broker=settings.CELERY_BROKER_URL,
     backend=settings.CELERY_RESULT_BACKEND,
-    include=["app.tasks.jobs"],
+    include=["app.tasks.transcriptions", "app.tasks.generations"],
 )
 
 # 기본 설정값
@@ -24,8 +24,8 @@ celery_app.conf.update(
     task_serializer="json",
     accept_content=["json"],
     result_serializer="json",
-    timezone="Asia/Seoul",
-    enable_utc=False,
+    timezone="UTC",
+    enable_utc=True,
     worker_max_tasks_per_child=100,    # 메모리 누수 방지
 )
 
