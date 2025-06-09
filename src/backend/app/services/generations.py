@@ -33,23 +33,7 @@ async def create_generation(user_id: UUID, session: AsyncSession) -> None:
         "가장 최근 Transcription 조회 성공: user_id=%s, transcription_id=%s",
         user_id, transcription.id
     )
-
-    # 해당 transcription이 이미 사용됨 (음성 업로드 및 변환 없이 요청, 과거에 이미 처리된 작업 조회됨)
-    # 404로 음성 데이터 없음 취급
-    existing = await session.execute(
-        select(Generation).where(Generation.transcription_id == transcription.id)
-    )
-    if existing.scalars().first():
-        logger.warning(
-            "이미 사용된 transcription으로 생성 요청: user_id=%s, transcription_id=%s",
-            user_id, transcription.id
-        )
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No audio data for this user",
-        )
-    logger.info("기존 Generation 중복 확인 완료")
-
+    
     latest_gen = await _get_latest_generation(user_id, session, raise_if_none=False)
 
     # 이미 해당 Transcription에 대한 Generation 레코드 존재
@@ -99,6 +83,22 @@ async def create_generation(user_id: UUID, session: AsyncSession) -> None:
                     detail="Unexpected server error",
                 )
             return
+
+    # 해당 transcription이 이미 사용됨 (음성 업로드 및 변환 없이 요청, 과거에 이미 처리된 작업 조회됨)
+    # 404로 음성 데이터 없음 취급
+    existing = await session.execute(
+        select(Generation).where(Generation.transcription_id == transcription.id)
+    )
+    if existing.scalars().first():
+        logger.warning(
+            "이미 사용된 transcription으로 생성 요청: user_id=%s, transcription_id=%s",
+            user_id, transcription.id
+        )
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No audio data for this user",
+        )
+    logger.info("기존 Generation 중복 확인 완료")
 
     # 새 Generation 레코드 객체 생성
     generation = Generation(

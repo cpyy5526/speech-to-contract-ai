@@ -6,7 +6,7 @@ import librosa
 import soundfile as sf
 '''
 
-import os, aiofiles
+import os
 # from hanspell import spell_checker
 from nltk.tokenize import word_tokenize
 
@@ -145,15 +145,15 @@ nltk.download('stopwords')
 '''
 
 # 텍스트 전처리
-async def text_preprocess(
+def text_preprocess(
     script_filename: str,
     output_filename: str
 ):
     input_path = os.path.join(settings.TEXT_UPLOAD_DIR, script_filename)
     output_path = os.path.join(settings.TEXT_UPLOAD_DIR, output_filename)
 
-    async with aiofiles.open(input_path, "r", encoding="utf-8") as f:
-        original_text = await f.read()
+    with open(input_path, "r", encoding="utf-8") as f:
+        original_text = f.read()
         
     '''
     서버 환경에서는 py-hanspell 맞춤법 검사 비활성화:
@@ -195,5 +195,5 @@ async def text_preprocess(
     processed_text = " ".join(filtered)
     
     # 결과 저장
-    async with aiofiles.open(output_path, "w", encoding="utf-8") as f:
-        await f.write(processed_text)
+    with open(output_path, "w", encoding="utf-8") as f:
+        f.write(processed_text)

@@ -45,6 +45,7 @@ class Settings:
         # Database (PostgreSQL‧SQLModel)
         # ------------------------------------------------------------------ #
         self.DATABASE_URL: str = os.getenv("DATABASE_URL", "")
+        self.SYNC_DATABASE_URL: str = os.getenv("SYNC_DATABASE_URL", "")
 
         # ------------------------------------------------------------------ #
         # JWT / 보안

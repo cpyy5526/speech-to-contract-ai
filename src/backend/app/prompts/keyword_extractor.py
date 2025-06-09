@@ -1,17 +1,17 @@
 # 계약서 키워드 추출 모듈
 
-import json, os, aiofiles
-from typing import Callable, List, Dict, Awaitable
+import json, os
+from typing import Callable, List, Dict
 
 from app.prompts.keyword_schema import keyword_schema
 from app.core.config import settings
     
 # 대화 내용에서 계약서 필드를 JSON 형식으로 추출하기
-async def extract_fields(
+def extract_fields(
     script_filename: str,
     contract_type: str,
-    gpt_caller: Callable[[List[Dict[str, str]]], Awaitable[str]]
-    ) -> dict:
+    gpt_caller: Callable[[List[Dict[str, str]]], str]
+) -> dict:
     
     schema = keyword_schema.get(contract_type, {})
     
@@ -43,8 +43,8 @@ async def extract_fields(
     )
 
     file_path = os.path.join(settings.TEXT_UPLOAD_DIR, script_filename)
-    async with aiofiles.open(file_path, 'r', encoding='utf-8') as f:
-        conversation_text = await f.read()
+    with open(file_path, 'r', encoding='utf-8') as f:
+        conversation_text = f.read()
 
     prompt = f"""
         다음은 작성된 계약에 관한 대화입니다.
@@ -78,7 +78,7 @@ async def extract_fields(
 
     messages = [{"role": "system", "content": "당신은 계약서를 분석하는 법률 전문가 AI입니다."},
                 {"role": "user", "content": prompt}]
-    result = await gpt_caller(messages)
+    result = gpt_caller(messages)
 
     try:
         return json.loads(result)
