@@ -1,13 +1,13 @@
 import json
-from typing import Callable, List, Dict, Awaitable
+from typing import Callable, List, Dict
 
 from app.prompts.review_schema import contract_review_schema
 
 # 입력 매개변수로 필요한 것 - 계약서 유형, 계약서 생성 모듈의 출력 json 결과
-async def annotate_contract_text(
+def annotate_contract_text(
     contract_type: str,
     contract_fields: dict,
-    gpt_caller: Callable[[List[Dict[str, str]]], Awaitable[str]]  # dict들의 리스트를 인자로 받아 문자열을 리턴하는 함수
+    gpt_caller: Callable[[List[Dict[str, str]]], str] # dict들의 리스트를 인자로 받아 문자열을 리턴하는 함수
 ) -> dict:
     
     schema = contract_review_schema.get(contract_type, {})
@@ -95,7 +95,7 @@ async def annotate_contract_text(
         }
     ]
     
-    result = await gpt_caller(messages)
+    result = gpt_caller(messages)
     
     try:
         suggestions = json.loads(result)

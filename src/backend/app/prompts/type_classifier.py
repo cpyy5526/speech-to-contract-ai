@@ -1,7 +1,7 @@
 # 계약서 유형 타입 추출 모듈
 
-import os, aiofiles
-from typing import Callable, List, Dict, Awaitable
+import os
+from typing import Callable, List, Dict
 from app.core.config import settings
 
 # 사전 정의된 계약 유형 리스트
@@ -10,14 +10,14 @@ CONTRACT_TYPES = [
 ]
 
 #계약 유형 추출
-async def get_contract_type(
+def get_contract_type(
     script_filename: str,
-    gpt_caller: Callable[[List[Dict[str, str]]], Awaitable[str]]
-    ) -> str:
+    gpt_caller: Callable[[List[Dict[str, str]]], str]
+) -> str:
     
     file_path = os.path.join(settings.TEXT_UPLOAD_DIR, script_filename)
-    async with aiofiles.open(file_path, 'r', encoding='utf-8') as f:
-        conversation_text = await f.read()
+    with open(file_path, 'r', encoding='utf-8') as f:
+        conversation_text = f.read()
 
     type_prompt=f"""
         당신은 대화 내용을 분석하여 계약 유형을 정확히 판단하는 법률 전문가 AI입니다. 
@@ -64,7 +64,7 @@ async def get_contract_type(
             },
         ]
     
-    result = await gpt_caller(messages)
+    result = gpt_caller(messages)
     result_type= result.split()[-1]
     
     # 보정: 결과가 예상 유형이 아닐 경우 '기타' 처리

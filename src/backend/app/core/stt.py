@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-import uuid, aiofiles
+import uuid
 from pathlib import Path
-from openai import AsyncOpenAI, OpenAIError
+from openai import OpenAI, OpenAIError
 
 from app.core.config import settings  # type: ignore
 
@@ -21,19 +21,19 @@ class STTCallError(RuntimeError):
 # OpenAI Whisper Client (global singleton)
 # --------------------------------------------------------------------------- #
 
-_client: AsyncOpenAI | None = None
+_client: OpenAI | None = None
 
 
-def _get_client() -> AsyncOpenAI:
-    """Create (once) and return an AsyncOpenAI client instance."""
+def _get_client() -> OpenAI:
+    """Create (once) and return an OpenAI client instance."""
     global _client
     if _client is None:
-        _client = AsyncOpenAI(
+        _client = OpenAI(
             api_key=settings.OPENAI_API_KEY,  # loaded from .env
             base_url=settings.OPENAI_API_BASE,
             timeout=settings.OPENAI_TIMEOUT,
         )
-        logger.debug("AsyncOpenAI client initialized for Whisper STT")
+        logger.debug("OpenAI client initialized for Whisper STT")
     return _client
 
 
@@ -41,7 +41,7 @@ def _get_client() -> AsyncOpenAI:
 # Internal API
 # --------------------------------------------------------------------------- #
 
-async def transcribe_audio(audio_filename: str) -> str:
+def transcribe_audio(audio_filename: str) -> str:
     """
     Convert an audio file to text using OpenAI Whisper.
 
@@ -72,7 +72,7 @@ async def transcribe_audio(audio_filename: str) -> str:
         # NOTE: ``file`` must be a binary file object
         # NOTE: Whisper API는 동기식 파일 객체만 받음
         with open(input_path, "rb") as fh:
-            response = await client.audio.transcriptions.create(
+            response = client.audio.transcriptions.create(
                 model="whisper-1",
                 file=fh,
                 response_format="text",
@@ -86,8 +86,8 @@ async def transcribe_audio(audio_filename: str) -> str:
         output_filename = f"{text_uuid}.txt"
         output_path = Path(settings.TEXT_UPLOAD_DIR) / output_filename
 
-        async with aiofiles.open(output_path, "w", encoding="utf-8") as f:
-            await f.write(text_out)
+        with open(output_path, "w", encoding="utf-8") as f:
+            f.write(text_out)
             
         logger.info("Whisper 결과 저장 완료: 파일=%s", output_path)
         return output_filename

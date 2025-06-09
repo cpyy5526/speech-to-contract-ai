@@ -4,7 +4,7 @@ logger = logging.getLogger(__name__)
 
 import logging
 from typing import List, Dict
-from openai import AsyncOpenAI
+from openai import OpenAI
 
 from app.core.config import settings
 
@@ -13,14 +13,14 @@ class GPTCallError(Exception):
     """GPT 호출 실패 시 발생하는 예외."""
 
 # 전역 싱글턴 클라이언트
-_client = AsyncOpenAI(
+_client = OpenAI(
     api_key=settings.OPENAI_API_KEY,
     base_url=settings.OPENAI_API_BASE,
     timeout=settings.OPENAI_TIMEOUT,
 )
 
 
-async def call_gpt_api(messages: List[Dict[str, str]]) -> str:
+def call_gpt_api(messages: List[Dict[str, str]]) -> str:
     """
     OpenAI Chat Completion API를 호출하여 응답 메시지 content를 반환합니다.
 
@@ -42,7 +42,7 @@ async def call_gpt_api(messages: List[Dict[str, str]]) -> str:
     logger.debug("GPT 요청 시작. 메시지 길이=%d", settings.OPENAI_MODEL, len(messages))
 
     try:
-        response = await _client.chat.completions.create(
+        response = _client.chat.completions.create(
             model=settings.OPENAI_MODEL,
             messages=messages,
             temperature=settings.OPENAI_TEMPERATURE,
