@@ -5,8 +5,11 @@ from typing import Any, Dict
 
 import bcrypt
 from jose import jwt
+from jose.exceptions import ExpiredSignatureError, JWTError
 
 from app.core.config import settings
+from app.core.logger import logging
+logger = logging.getLogger(__name__)
 
 
 # ────────────────────────────────────────────────────────────────────────────
@@ -69,10 +72,17 @@ def decode_token(token: str) -> Dict[str, Any]:
     """
     JWT 를 디코드하여 payload(dict)를 반환합니다.
     """
-    payload: Dict[str, Any] = jwt.decode(
-        token,
-        settings.SECRET_KEY,
-        algorithms=[settings.ALGORITHM],
-    )
-
-    return payload
+    try:
+        payload: Dict[str, Any] = jwt.decode(
+            token,
+            settings.SECRET_KEY,
+            algorithms=[settings.ALGORITHM],
+        )
+        logger.info("토큰 디코딩 성공: sub=%s, exp=%s", payload.get("sub"), payload.get("exp"))
+        return payload
+    except ExpiredSignatureError:
+        logger.warning("토큰 만료됨: %s", token, exc_info=True)
+        raise
+    except JWTError:
+        logger.warning("토큰 디코딩 실패: %s", token, exc_info=True)
+        raise

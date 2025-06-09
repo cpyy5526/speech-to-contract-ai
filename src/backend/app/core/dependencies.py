@@ -29,10 +29,12 @@ from typing import AsyncGenerator
 from fastapi import Depends, Header, HTTPException, status
 from jose.exceptions import ExpiredSignatureError, JWTError
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 
 from app.db.session import async_session
 from app.core.security import decode_token
 from app.models.user import User
+from app.models.token import UserToken
 
 
 # ---------------------------------------------------------------------------
@@ -117,6 +119,29 @@ async def get_current_user(
         )
 
     if not user or not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token",
+        )
+    
+    # 4. 폐기된 토큰 검사
+    try:
+        token_record = await session.execute(
+            select(UserToken).where(
+                UserToken.token == token,
+                UserToken.token_type == "access"
+            )
+        )
+        token_obj = token_record.scalars().first()
+
+        if not token_obj or token_obj.is_revoked:
+            logger.warning("폐기된 토큰 사용 시도")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token",
+            )
+    except Exception:
+        logger.warning("토큰 유효성 검사 중 DB 오류")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token",

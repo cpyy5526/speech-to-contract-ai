@@ -2,12 +2,25 @@ from __future__ import annotations
 
 import logging
 from celery import Celery
-
 from app.core.config import settings
+
+import nltk
+nltk.data.path.append(settings.NLTK_DATA_PATH) # NLTK 리소스 경로 추가
+try: nltk.data.find("tokenizers/punkt")
+except LookupError: nltk.download("punkt", download_dir=settings.NLTK_DATA_PATH)
+try: nltk.data.find("tokenizers/punkt_tab")
+except LookupError: nltk.download("punkt_tab", download_dir=settings.NLTK_DATA_PATH)
+try: nltk.data.find("corpora/stopwords")
+except LookupError: nltk.download("stopwords", download_dir=settings.NLTK_DATA_PATH)
+
 
 from app.core.logger import setup_logging
 setup_logging()
 logger = logging.getLogger(__name__)
+
+from app.models import (
+    user, token, contract, transcription, generation, suggestion
+)
 
 # Celery 인스턴스 생성
 celery_app: Celery = Celery(

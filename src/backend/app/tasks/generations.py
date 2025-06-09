@@ -4,10 +4,10 @@ logger = logging.getLogger(__name__)
 import asyncio, logging
 from uuid import UUID
 from pathlib import Path
-from sqlmodel.ext.asyncio.session import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.celery_app import celery_app
-from app.db.session import async_session
+from app.db.session import get_session
 
 from app.models.transcription import Transcription
 from app.models.generation import Generation, GenerationStatus
@@ -39,7 +39,7 @@ def process_generation_pipeline(generation_id: str) -> None:
     async def _run(gid: UUID):
         logger.info("계약서 생성 파이프라인 시작: generation_id=%s", gid)
 
-        async with async_session() as session:
+        async with get_session() as session:
             try:
                 # 생성된 generation 레코드 가져오기
                 generation = await session.get(Generation, gid)

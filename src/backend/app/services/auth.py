@@ -1,5 +1,5 @@
 from __future__ import annotations
-import logging
+from app.core.logger import logging
 logger = logging.getLogger(__name__)
 
 import re, requests

@@ -3,7 +3,7 @@ logger = logging.getLogger(__name__)
 
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status, Response
-from sqlmodel.ext.asyncio.session import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.dependencies import get_session, get_current_user
 from app.schemas.transcription import (

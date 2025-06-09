@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-import uuid, aiofiles, logging
+import uuid, aiofiles
 from pathlib import Path
 from openai import AsyncOpenAI, OpenAIError
 
 from app.core.config import settings  # type: ignore
 
+from app.core.logger import logging
 logger = logging.getLogger(__name__)
 
 # --------------------------------------------------------------------------- #
@@ -69,7 +70,8 @@ async def transcribe_audio(audio_filename: str) -> str:
     try:
         logger.debug("Starting Whisper transcription for %s", input_path)
         # NOTE: ``file`` must be a binary file object
-        async with input_path.open("rb") as fh:  # pyright: ignore[reportUnknownMemberType]
+        # NOTE: Whisper API는 동기식 파일 객체만 받음
+        with open(input_path, "rb") as fh:
             response = await client.audio.transcriptions.create(
                 model="whisper-1",
                 file=fh,

@@ -2,7 +2,7 @@ from app.core.logger import logging
 logger = logging.getLogger(__name__)
 
 from fastapi import APIRouter, Depends, HTTPException, status, Response
-from sqlmodel.ext.asyncio.session import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.dependencies import get_session, get_current_user
 from app.schemas.generation import GenerationStatusResponse
@@ -10,7 +10,7 @@ from app.services import generations as generation_service
 
 router = APIRouter(prefix="/contracts/generate", tags=["Generations"])
 
-@router.post("/", status_code=status.HTTP_202_ACCEPTED)
+@router.post("", status_code=status.HTTP_202_ACCEPTED)
 async def generate_contract(
     session: AsyncSession = Depends(get_session),
     current_user=Depends(get_current_user),
