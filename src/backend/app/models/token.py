@@ -18,7 +18,7 @@ class UserToken(SQLModel, table=True):
     user_id: UUID = Field(foreign_key="auth_users.id", nullable=False, index=True)
 
     token_type: TokenType = Field(nullable=False, index=True)
-    token: str = Field(nullable=False)
+    token: str = Field(nullable=False, unique=True)
     is_revoked: bool = Field(default=False, nullable=False)
     expires_at: datetime = Field(
         sa_column=Column(DateTime(timezone=True), nullable=False)

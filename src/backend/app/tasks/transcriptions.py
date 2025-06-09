@@ -1,14 +1,15 @@
-import asyncio, logging
+import asyncio
 from uuid import UUID
 from pathlib import Path
 
 from app.core.celery_app import celery_app
-from app.db.session import async_session
+from app.db.session import get_session
 from app.core.stt import transcribe_audio
 from app.models.transcription import Transcription, TranscriptionStatus
 from app.prompts.preprocessor import text_preprocess
 from app.core.config import settings
 
+from app.core.logger import logging
 logger = logging.getLogger(__name__)
 
 @celery_app.task(name="tasks.transcriptions.process_uploaded_audio")
@@ -18,7 +19,7 @@ def process_uploaded_audio(transcription_id: str) -> None:
     async def _run(tid: UUID):
         logger.info("STT 태스크 시작: transcription_id=%s", tid)
 
-        async with async_session() as session:
+        async with get_session() as session:
             transcription = await session.get(Transcription, tid)
             if not transcription or transcription.status in {
                 TranscriptionStatus.cancelled,

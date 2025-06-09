@@ -2,7 +2,7 @@ from app.core.logger import logging
 logger = logging.getLogger(__name__)
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlmodel.ext.asyncio.session import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.dependencies import get_session, get_current_user
 from app.models.user import User
@@ -16,7 +16,7 @@ from app.services import contracts as contracts_service
 
 router = APIRouter(prefix="/contracts", tags=["Contracts"])
 
-@router.get("/", response_model=list[ContractResponse])
+@router.get("", response_model=list[ContractResponse])
 async def get_contracts_list(
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
@@ -42,7 +42,8 @@ async def get_contracts_list(
 @router.get("/{contract_id}", response_model=ContractDetailsResponse)
 async def get_contract(
     contract_id: str,
-    session: AsyncSession = Depends(get_session)
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user)
 ):
     """특정 계약서의 내용 조회"""
     try:
@@ -64,6 +65,7 @@ async def update_contract(
     contract_id: str,
     payload: ContractUpdateRequest,
     session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user)
 ):
     """특정 계약서 수정 및 저장"""
     try:
@@ -85,7 +87,8 @@ async def update_contract(
 )
 async def get_suggestions(
     contract_id: str,
-    session: AsyncSession = Depends(get_session)
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user)
 ):
     """계약서의 빈 필드에 대한 GPT 제안 텍스트 조회"""
     try:
@@ -105,7 +108,8 @@ async def get_suggestions(
 @router.post("/{contract_id}/restore", status_code=status.HTTP_204_NO_CONTENT)
 async def restore_contract(
     contract_id: str,
-    session: AsyncSession = Depends(get_session)
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user)
 ):
     """최초 생성된 버전으로 계약서 복원"""
     try:
@@ -124,7 +128,8 @@ async def restore_contract(
 @router.delete("/{contract_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_contract(
     contract_id: str,
-    session: AsyncSession = Depends(get_session)
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user)
 ):
     """특정 계약서 삭제"""
     try:

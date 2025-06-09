@@ -26,6 +26,7 @@ async def create_generation(user_id: UUID, session: AsyncSession) -> None:
     기존 "failed" 레코드에 대해 재시도하고,
     비동기 Celery task queue에 계약서 생성 파이프라인을 등록합니다.
     """
+    logger.info("create_generation 진입: user_id=%s", user_id)
 
     transcription = await _latest_finished_transcription(user_id, session)
     logger.info(
@@ -47,11 +48,14 @@ async def create_generation(user_id: UUID, session: AsyncSession) -> None:
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No audio data for this user",
         )
+    logger.info("기존 Generation 중복 확인 완료")
 
     latest_gen = await _get_latest_generation(user_id, session, raise_if_none=False)
 
     # 이미 해당 Transcription에 대한 Generation 레코드 존재
     if latest_gen:
+        logger.info("이전 generation 상태 확인: %s", latest_gen.status)
+
         # "generating": 동일한 계약서 생성 파이프라인이 이미 실행 중, 충돌 방지
         if latest_gen.status == GenerationStatus.generating:
             logger.warning(
@@ -104,6 +108,7 @@ async def create_generation(user_id: UUID, session: AsyncSession) -> None:
     )
 
     # contracts_generations 테이블에 새 레코드 추가
+    logger.info("Generation 레코드 추가 전: transcription_id=%s", transcription.id)
     try:
         session.add(generation)
         await session.commit()
@@ -120,6 +125,7 @@ async def create_generation(user_id: UUID, session: AsyncSession) -> None:
 
     # Celery task queue에 계약서 생성 파이프라인 등록
     try:
+        logger.info("Celery task 등록 시도: generation_id=%s", generation.id)
         process_generation_pipeline.delay(str(generation.id))
         logger.info("generation Celery 등록 완료: generation_id=%s", generation.id)
     except Exception:
@@ -242,7 +248,7 @@ async def _get_latest_generation(
     """사용자의 최신 Generation 레코드 조회"""
 
     try:
-        result = await session.exec(
+        result = await session.execute(
             select(Generation)
             .where(
                 Generation.user_id == user_id,
@@ -253,6 +259,7 @@ async def _get_latest_generation(
         )
         generation = result.scalars().first()
     except SQLAlchemyError:
+        logger.error("Generation 조회 중 DB 오류 발생", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Unexpected server error",

@@ -1,5 +1,6 @@
 from typing import AsyncGenerator
 
+from contextlib import asynccontextmanager
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from sqlmodel import SQLModel
@@ -24,5 +25,11 @@ async_session_factory: sessionmaker[AsyncSession] = sessionmaker(
 
 # FastAPI dependency
 async def async_session() -> AsyncGenerator[AsyncSession, None]:
+    async with async_session_factory() as session:
+        yield session
+
+# Session for Celery
+@asynccontextmanager
+async def get_session() -> AsyncGenerator[AsyncSession, None]:
     async with async_session_factory() as session:
         yield session
