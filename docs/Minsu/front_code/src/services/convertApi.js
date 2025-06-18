@@ -48,6 +48,7 @@ export async function initiateTranscription(filename) {
  */
 export async function uploadAudioFile(uploadUrl, audioBlob) {
   try {
+    console.log("uploadUrl:", uploadUrl);
     const response = await fetch(uploadUrl, {
       method: "PUT",
       headers: {
@@ -57,7 +58,7 @@ export async function uploadAudioFile(uploadUrl, audioBlob) {
     });
 
     const status = response.status;
-    if (status === 204) return
+    if (status === 202) return
     let detail = "응답 없음";
 
     try {

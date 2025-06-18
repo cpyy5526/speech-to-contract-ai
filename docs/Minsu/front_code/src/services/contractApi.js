@@ -146,6 +146,7 @@ export async function getContractList() {
 export async function getContractContent(contractId) {
   try {
   const response = await api.get(`/contracts/${contractId}`);
+  console.log(response.data.contents);
   return response.data; // 응답 JSON 전체 반환
   } catch(error){
     const status = error.response?.status;
