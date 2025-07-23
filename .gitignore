@@ -219,3 +219,7 @@ c# Windows shortcuts
 # End of https://www.toptal.com/developers/gitignore/api/windows,python,venv
 PromptModules_yuun/user_data
 PromptModules_yuun/test_contract_pipeline.py
+
+# Backend data & uploads (not tracked)
+src/backend/nltk_data/
+src/backend/uploads/
