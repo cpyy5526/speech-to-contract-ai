@@ -35,6 +35,7 @@ app = FastAPI(
 )
 
 
+'''
 # CORS 설정 ---------------------------------------------------------------------
 app.add_middleware(
     CORSMiddleware,
@@ -43,6 +44,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+'''
 
 
 # 라우터 등록 --------------------------------------------------------------------
@@ -53,6 +55,7 @@ app.include_router(generations.router)
 app.include_router(contracts.router)
 
 
+'''
 # 로컬 실행 ---------------------------------------------------------------------
 if __name__ == "__main__":
     import uvicorn
@@ -63,3 +66,4 @@ if __name__ == "__main__":
         port=8000,
         reload=getattr(settings, "DEBUG", False),
     )
+'''
