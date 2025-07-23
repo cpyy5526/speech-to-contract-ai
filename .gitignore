@@ -224,3 +224,8 @@ PromptModules_yuun/test_contract_pipeline.py
 src/backend/nltk_data/
 src/backend/uploads/
 src/backend/logs
+src/backend/fastcgi_temp/
+src/backend/uwsgi_temp
+src/backend/scgi_temp/
+src/backend/proxy_temp/
+src/backend/client_body_temp/
