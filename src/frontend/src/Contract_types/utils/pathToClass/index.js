@@ -13,7 +13,7 @@ const pathMap = {
   "금전 대여 계약": loan,
   "매매 계약": sale,
   "교환 계약": exchange,
-  "고용 계약": employment,
+  "고용": employment,
   "공사 계약": construction,
   "사용대차 계약": usageLoan,
 };
