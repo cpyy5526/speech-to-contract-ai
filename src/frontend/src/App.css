@@ -11,3 +11,10 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+@font-face {
+  font-family: 'Spoqa Han Sans Neo';
+  src: url('/fonts/SpoqaHanSansNeo-Regular.otf') format('opentype');
+  font-weight: 400;
+  font-display: swap;  /* ✅ 이것 추가 */
+}
