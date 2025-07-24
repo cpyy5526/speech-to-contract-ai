@@ -8,7 +8,6 @@ import { deleteAccount } from "../services/authApi"; // 또는 authApi
 import { logout } from "../services/authApi"; 
 import { getContractList } from "../services/contractApi";
 import { initiateTranscription } from "../services/convertApi";
-import "swiper/css";
 
 
 
