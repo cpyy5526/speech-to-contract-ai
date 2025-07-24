@@ -8,12 +8,16 @@ import { deleteAccount } from "../services/authApi"; // 또는 authApi
 import { logout } from "../services/authApi"; 
 import { getContractList } from "../services/contractApi";
 import { initiateTranscription } from "../services/convertApi";
+import "swiper/css";
+
+
 
 function Home({ user }) {
   const navigate = useNavigate();
   const fileInputRef = useRef();
   const menuRef = useRef();
   const [contractList, setContractList] = useState([]);
+  const [fileList, setFileList] = useState([]);
 
 
 
@@ -112,6 +116,22 @@ function Home({ user }) {
       console.error("비밀번호 변경 실패:", err);
     }
   };
+
+  useEffect(() => {
+    fetch("/contractForms/files.json")
+      .then((res) => res.json())
+      .then((data) => setFileList(data))
+      .catch((err) => console.error("파일 목록 불러오기 실패:", err));
+  }, []);
+  
+
+  const handleDownload = (fileName) => {
+    const link = document.createElement("a");
+    link.href = `/contractForms/${fileName}`;
+    link.download = fileName;
+    link.click();
+  };
+
 
   return (
     <div className="home-container">
@@ -214,7 +234,22 @@ function Home({ user }) {
           </div>
         </div>
 
+        <hr style={{ margin: "40px 0", borderTop: "2px solid #ccc", width: "90%" }} />
+
         
+          <h1 className="main-header">계약서 양식</h1>
+          <div className="contract-grid">
+            {fileList.map((fileName, idx) => (
+              <button
+                key={idx}
+                className="custom-download-button"
+                onClick={() => handleDownload(fileName)}
+              >
+                {fileName}
+              </button>
+            ))}
+          </div>
+              
       </main>
 
       {showChangeModal && (
@@ -244,8 +279,7 @@ function Home({ user }) {
             </div>
           </div>
         </div>
-       )}
-
+      )}
     </div>
   );
 }

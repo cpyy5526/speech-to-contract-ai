@@ -7,7 +7,7 @@ import Recording from "./pages/Recording";
 import Converting from "./pages/Converting";
 import Generating from "./pages/Contract_generate"
 import Download from "./pages/Contract_download";
-import { getCurrentUser } from "./services/authApi";  // ✅ axios 방식 반영
+import { getCurrentUser } from "./services/authApiMock";  // ✅ axios 방식 반영
 import Reset from "./pages/Reset_password";
 
 
