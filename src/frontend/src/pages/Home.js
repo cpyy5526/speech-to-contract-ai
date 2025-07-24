@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { changePassword } from "../services/authApi"; // 또는 authApi로 교체 가능
 import { deleteAccount } from "../services/authApi"; // 또는 authApi
 import { logout } from "../services/authApi"; 
-import { getContractList } from "../services/contractApiMock";
+import { getContractList } from "../services/contractApi";
 import { initiateTranscription } from "../services/convertApi";
 
 

@@ -11,7 +11,7 @@ import {
   getSuggestions,
   restoreContract,
   deleteContract
-} from "../services/contractApiMock";
+} from "../services/contractApi";
 
 import GiftContract from "../Contract_types/GiftContract/GiftContract";
 import ConstructionContract from "../Contract_types/ConstructionContract/ConstructionContract";
