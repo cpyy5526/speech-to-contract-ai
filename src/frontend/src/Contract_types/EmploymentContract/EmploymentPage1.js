@@ -2,6 +2,7 @@ import React, { forwardRef, useImperativeHandle } from "react";
 import { renderField } from "../utils";
 
 const EmploymentPage1 = forwardRef(({ contract, suggestions }, ref) => {
+  console.log(contract["employee.name"]);
   useImperativeHandle(ref, () => ({
     extract: () => ({
       contract_type: getText("contract-main-title"),
@@ -13,7 +14,7 @@ const EmploymentPage1 = forwardRef(({ contract, suggestions }, ref) => {
         contact: getText("employer-contact"),
       },
       employee: {
-        name: getText("employee-name"),
+        name: getText("employee.name"),
         resident_number: getText("employee-id"),
         address: getText("employee-address"),
         contact: getText("employee-contact"),
@@ -85,7 +86,7 @@ const EmploymentPage1 = forwardRef(({ contract, suggestions }, ref) => {
         <tbody>
           <tr>
             <td className="gray">성명</td>
-            <td>{renderField("employee-name", contract.employee?.name, suggestions)}</td>
+            <td>{renderField("employee.name", contract.employee?.name, suggestions)}</td>
             <td className="gray">주민등록번호</td>
             <td>{renderField("employee-id", contract.employee?.resident_number, suggestions)}</td>
           </tr>
@@ -102,10 +103,10 @@ const EmploymentPage1 = forwardRef(({ contract, suggestions }, ref) => {
 
       <p className="section-title">3. 근로 조건</p>
       <p className="contract-clause">직책: {renderField("position", contract.employment_details?.position, suggestions)}</p>
-      <p className="contract-clause">업무 내용: {renderField("job-duties", contract.employment_details?.duties, suggestions)}</p>
-      <p className="contract-clause">근무 장소: {renderField("job-workplace", contract.employment_details?.workplace, suggestions)}</p>
-      <p className="contract-clause">계약 기간: {renderField("job-start", contract.employment_details?.contract_period?.start_date, suggestions)} ~ {renderField("job-end", contract.employment_details?.contract_period?.end_date, suggestions)}</p>
-      <p className="contract-clause">근무일: {renderField("job-days", contract.employment_details?.working_days, suggestions)}</p>
+      <p className="contract-clause">업무 내용: {renderField("duties", contract.employment_details?.duties, suggestions)}</p>
+      <p className="contract-clause">근무 장소: {renderField("workplace", contract.employment_details?.workplace, suggestions)}</p>
+      <p className="contract-clause">계약 기간: {renderField("contract-start", contract.employment_details?.contract_period?.start_date, suggestions)} ~ {renderField("contract-end", contract.employment_details?.contract_period?.end_date, suggestions)}</p>
+      <p className="contract-clause">근무일: {renderField("working-days", contract.employment_details?.working_days, suggestions)}</p>
       <p className="contract-clause">근무 시간: {renderField("work-start", contract.employment_details?.working_hours?.start_time, suggestions)} ~ {renderField("work-end", contract.employment_details?.working_hours?.end_time, suggestions)} (휴게시간: {renderField("break-time", contract.employment_details?.working_hours?.break_time, suggestions)})</p>
 
       <p className="section-title">4. 임금</p>
