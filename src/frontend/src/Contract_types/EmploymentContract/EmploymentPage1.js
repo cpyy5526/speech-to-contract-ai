@@ -2,8 +2,6 @@ import React, { forwardRef, useImperativeHandle } from "react";
 import { renderField } from "../utils";
 
 const EmploymentPage1 = forwardRef(({ contract, suggestions }, ref) => {
-  console.log("✅ EmploymentPage1 렌더됨");
-  console.log("✅ 전달받은 suggestions:", suggestions);
   useImperativeHandle(ref, () => ({
     extract: () => ({
       contract_type: getText("contract-main-title"),
