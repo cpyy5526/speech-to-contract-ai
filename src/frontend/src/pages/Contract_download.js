@@ -65,14 +65,10 @@ function Contract_download() {
       setContract(result);
       
       const suggestionResult = await getSuggestions(contractId);
-      const normalizedSuggestions = Array.isArray(suggestionResult)
-      ? suggestionResult
-      : Object.entries(suggestionResult).map(([field_path, suggestion_text]) => ({
-          field_path,
-          suggestion_text,
-        }));
-    
-    setSuggestions(normalizedSuggestions);
+      console.log(suggestionResult);
+      setSuggestions(suggestionResult);
+
+
     } catch (err) {
       console.error("계약서 불러오기 실패:", err.response?.data?.detail || err.message);
     }
