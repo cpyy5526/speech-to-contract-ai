@@ -170,25 +170,25 @@ function Contract_download() {
         <div  ref={contractRef}>
           {!contract ? (
             <p>계약서를 선택해주세요</p>
-              ) : contract.contract_type === "증여 계약" ? (
+              ) : contract.contract_type === "증여" ? (
                 <GiftContract ref={contractComponentRef } contract={contract} suggestions={suggestions} />
-              ) : contract.contract_type === "공사 계약" ? (
+              ) : contract.contract_type === "도급" ? (
                 <ConstructionContract ref={contractComponentRef } contract={contract} suggestions={suggestions} />
-              ) : contract.contract_type === "고용 계약" ? (
-                <EmploymentContract ref={contractComponentRef } contract={contract} suggestions={suggestions} />
-              ) : contract.contract_type === "교환 계약" ? (
+              ) : contract.contract_type === "고용" ? (
+                <EmploymentContract ref={contractComponentRef } contract={contract.contents} suggestions={suggestions} />
+              ) : contract.contract_type === "교환" ? (
                 <ExchangeContract ref={contractComponentRef } contract={contract} suggestions={suggestions} />
-              ) : contract.contract_type === "임대차 계약" ? (
+              ) : contract.contract_type === "임대차" ? (
                 <LeaseContract ref={contractComponentRef } contract={contract} suggestions={suggestions} />
-              ) : contract.contract_type === "금전 대여 계약" ? (
+              ) : contract.contract_type === "소비대차" ? (
                 <LoanContract ref={contractComponentRef } contract={contract} suggestions={suggestions} />
-              ) : contract.contract_type === "매매 계약" ? (
+              ) : contract.contract_type === "매매" ? (
                 <SaleContract ref={contractComponentRef } contract={contract} suggestions={suggestions} />
-              ) : contract.contract_type === "사용대차 계약" ? (
+              ) : contract.contract_type === "사용대차" ? (
                 <UsageLoanContract ref={contractComponentRef } contract={contract} suggestions={suggestions} />
               ) : (
                 <p>지원되지 않는 계약서 유형입니다: {contract.contract_type}</p>
-              )}
+            )}
         </div>
         
 
