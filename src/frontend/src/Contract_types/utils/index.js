@@ -18,6 +18,7 @@ export const renderField = (className, content, suggestionMap = {}) => {
   const suggestion = suggestionMap[className];
   const isPlaceholder = !content || content === "________";
   const displayText = !content ? suggestion || "________" : content;
+
   const style = !content
     ? suggestion
       ? { color: "#888" }
@@ -26,13 +27,14 @@ export const renderField = (className, content, suggestionMap = {}) => {
       ? { color: "#ccc" }
       : {};
 
-  const handleInput = (e) => {
+  const handleFocus = (e) => {
     const el = e.currentTarget;
     if (el.dataset.suggestion === "true") {
       el.innerText = "";
       el.dataset.suggestion = "false";
       el.style.color = "#000";
 
+      // 커서 맨 끝으로 이동
       const range = document.createRange();
       const sel = window.getSelection();
       range.selectNodeContents(el);
@@ -65,7 +67,7 @@ export const renderField = (className, content, suggestionMap = {}) => {
       suppressContentEditableWarning
       style={style}
       data-suggestion={isPlaceholder ? "true" : "false"}
-      onInput={handleInput}
+      onFocus={handleFocus}
       onBlur={handleBlur}
       onKeyDown={handleKeyDown}
     >
@@ -73,5 +75,3 @@ export const renderField = (className, content, suggestionMap = {}) => {
     </span>
   );
 };
-
-
