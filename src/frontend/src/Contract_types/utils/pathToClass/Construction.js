@@ -1,4 +1,6 @@
 const pathToClass = (path) => ({
+  "contract-date": "contract-date",
+  
   "contract_details.construction_name": "construction-name",
   "contract_details.construction_location": "construction-location",
   "contract_details.construction_period.start_date": "construction-start",
@@ -9,7 +11,7 @@ const pathToClass = (path) => ({
   "contract_amount.payment_method": "amount-method",
   "contract_amount.payment_schedule": "amount-schedule",
 
-  "obligation_and_rights.ordering_party_obligation": "obligation-ordering",
+  "obligation_and_rights.ordering_party_obligation": "obligation-order",
   "obligation_and_rights.contractor_obligation": "obligation-contractor",
 
   "delay_penalty": "delay-penalty",

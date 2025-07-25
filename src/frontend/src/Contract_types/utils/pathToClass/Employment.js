@@ -1,4 +1,6 @@
 const pathToClass = (path) => ({
+  "contract-date": "contract-date",
+
   "employment_details.duties": "duties",
   "employment_details.workplace": "workplace",
   "employment_details.contract_period.start_date": "contract-start",

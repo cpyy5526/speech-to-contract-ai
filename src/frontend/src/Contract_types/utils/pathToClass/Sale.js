@@ -1,4 +1,6 @@
 const pathToClass = (path) => ({
+  "contract-date": "contract-date",
+  
   "property.location": "property-location",
 
   "sale_price.total_price": "price-total",

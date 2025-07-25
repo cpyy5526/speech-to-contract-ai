@@ -23,7 +23,7 @@ const LoanContract = forwardRef(({ contract, suggestions }, ref) => {
   return (
     <div className="pdf-container">
       <div className="page">
-        <LoanPage1 ref={page1Ref} contract={contract} suggestions={suggestionMap} />
+        <LoanPage1 ref={page1Ref} contract={contract.contents} suggestions={suggestionMap} />
       </div>
     </div>
   );

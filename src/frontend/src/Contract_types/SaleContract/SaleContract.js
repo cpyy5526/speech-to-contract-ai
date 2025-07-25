@@ -22,7 +22,7 @@ const SaleContract = forwardRef(({ contract, suggestions }, ref) => {
   return (
     <div className="pdf-container">
       <div className="page">
-        <SalePage1 ref={page1Ref} contract={contract} suggestions={suggestionMap} />
+        <SalePage1 ref={page1Ref} contract={contract.contents} suggestions={suggestionMap} />
       </div>
     </div>
   );

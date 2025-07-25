@@ -17,10 +17,10 @@ const [currentPage, setCurrentPage] = useState(0);
 
   const pages = [
     <div className="page" key="page1">
-      <LeasePage1 ref={page1Ref} contract={contract} suggestions={suggestionMap} />
+      <LeasePage1 ref={page1Ref} contract={contract.contents} suggestions={suggestionMap} />
     </div>,
     <div className="page" key="page2">
-      <LeasePage2 ref={page2Ref} contract={contract} suggestions={suggestionMap} />
+      <LeasePage2 ref={page2Ref} contract={contract.contents} suggestions={suggestionMap} />
     </div>,
   ];
 
