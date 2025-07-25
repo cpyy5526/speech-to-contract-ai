@@ -39,18 +39,23 @@
   white-space: nowrap;
 }
 
-/* 조항 스타일 */
 .contract-clause {
   margin: 12px 0;
   font-size: 14px;
-  text-indent: 1.5em;
   line-height: 1.8;
-
-  /* ✅ 추가: 줄바꿈 및 반응형 대응 */
   white-space: normal;
   word-break: break-word;
-  display: inline-block;
+  overflow-wrap: break-word;
   max-width: 100%;
+
+  padding-left: 3.0em;
+  text-indent: -1.5em;
+}
+
+
+.nowrap {
+  margin: 12px 0;
+  white-space: nowrap;
 }
 
 
@@ -86,12 +91,11 @@
 
 /* 단일 페이지 스타일 (A4 크기 기준) */
 .page {
-  min-width: 210mm;
+  width: 210mm;
   height: 297mm;
   padding: 20mm;
   background: white;
   box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
-  flex-shrink: 0;
   overflow: hidden;
   box-sizing: border-box;
 }

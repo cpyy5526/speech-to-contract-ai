@@ -15,10 +15,6 @@ const EmploymentContract = forwardRef(({ contract, suggestions }, ref) => {
   const pathToClass = getPathToClass(contract.contract_type);
   const suggestionMap = buildSuggestionMap(suggestions, pathToClass);
 
-  console.log("✅ 원본 suggestions:", suggestions);
-  console.log("✅ 변환된 suggestionMap:", suggestionMap);
-  console.log("✅ suggestionMap keys:", Object.keys(suggestionMap));
-
   const pages = [
     <div className="page" key="page1">
       <EmploymentPage1 ref={page1Ref} contract={contract.contents} suggestions={suggestionMap} />

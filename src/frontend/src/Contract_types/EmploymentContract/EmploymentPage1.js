@@ -104,9 +104,9 @@ const EmploymentPage1 = forwardRef(({ contract, suggestions }, ref) => {
       <p className="contract-clause">직책: {renderField("position", contract.employment_details?.position, suggestions)}</p>
       <p className="contract-clause">업무 내용: {renderField("duties", contract.employment_details?.duties, suggestions)}</p>
       <p className="contract-clause">근무 장소: {renderField("workplace", contract.employment_details?.workplace, suggestions)}</p>
-      <p className="contract-clause">계약 기간: {renderField("contract-start", contract.employment_details?.contract_period?.start_date, suggestions)} ~ {renderField("contract-end", contract.employment_details?.contract_period?.end_date, suggestions)}</p>
+      <p className="contract-clause">계약 기간: {renderField("contract-start", contract.employment_details?.contract_period?.start_date, suggestions)}  <span className="nowrap"> ~ {renderField("contract-end", contract.employment_details?.contract_period?.end_date, suggestions)} </span></p>
       <p className="contract-clause">근무일: {renderField("working-days", contract.employment_details?.working_days, suggestions)}</p>
-      <p className="contract-clause">근무 시간: {renderField("work-start", contract.employment_details?.working_hours?.start_time, suggestions)} ~ {renderField("work-end", contract.employment_details?.working_hours?.end_time, suggestions)} (휴게시간: {renderField("break-time", contract.employment_details?.working_hours?.break_time, suggestions)})</p>
+      <p className="contract-clause">근무 시간: {renderField("work-start", contract.employment_details?.working_hours?.start_time, suggestions)}<span className="nowrap"> ~ {renderField("work-end", contract.employment_details?.working_hours?.end_time, suggestions)}</span> (휴게시간: {renderField("break-time", contract.employment_details?.working_hours?.break_time, suggestions)})</p>
 
       <p className="section-title">4. 임금</p>
       <p className="contract-clause">임금 형태: {renderField("wage-type", contract.wage_details?.wage_type, suggestions)}</p>
