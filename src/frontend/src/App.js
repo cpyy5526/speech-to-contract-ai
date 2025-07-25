@@ -31,7 +31,7 @@ function AppWithAuthCheck() {
 
   useEffect(() => {
     const checkLogin = async () => {
-      if (location.pathname === "/login" || location.pathname === "/signup") {
+      if (location.pathname === "/login" || location.pathname === "/signup" || location.pathname === "/") {
         setLoading(false);
         return;
       }
