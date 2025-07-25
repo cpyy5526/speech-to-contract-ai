@@ -17,8 +17,13 @@ export const buildSuggestionMap = (suggestions, pathToClassFn) => {
 
 export const renderField = (className, content, suggestionMap = {}) => {
   const suggestion = suggestionMap[className];
-  const displayText = content || suggestion || "________";
-  const style = content ? {} : suggestion ? { color: "#888" } : { color: "#ccc" };
+  const isEmptyContent = !content || content === "________";
+  const displayText = !content ? suggestion || "________" : content;
+  const style = !content
+    ? suggestion
+      ? { color: "#888" }
+      : { color: "#ccc" }
+    : {};
 
   const handleInput = (e) => {
     const el = e.currentTarget;
@@ -42,7 +47,7 @@ export const renderField = (className, content, suggestionMap = {}) => {
       contentEditable
       suppressContentEditableWarning
       style={style}
-      data-suggestion={content ? "false" : suggestion ? "true" : "false"}
+      data-suggestion={isEmptyContent && suggestion ? "true" : "false"}
       onInput={handleInput}
     >
       {typeof displayText === "string" ? displayText : String(displayText)}
