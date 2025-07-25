@@ -16,6 +16,14 @@ const ConstructionPage2 = forwardRef(({ contract, suggestions }, ref) => {
 
   return (
     <>
+    <p className="section-title">6. 4대 보험 가입 여부 (O/X)</p>
+      <p className="contract-clause">
+        국민연금: {renderField("social-pension", contract.social_insurance?.national_pension ? "O" : "X", suggestions)},
+        건강보험: {renderField("social-health", contract.social_insurance?.health_insurance ? "O" : "X", suggestions)},
+        고용보험: {renderField("social-employment", contract.social_insurance?.employment_insurance ? "O" : "X", suggestions)},
+        산재보험: {renderField("social-accident", contract.social_insurance?.industrial_accident_insurance ? "O" : "X", suggestions)}
+      </p>
+      
       <p className="section-title">8. 특약사항</p>
         <div className="special-terms-box">
             {renderField("", contract.special_terms, suggestions)}

@@ -40,14 +40,6 @@ const EmploymentPage1 = forwardRef(({ contract, suggestions }, ref) => {
         payment_method: getText("payment-method"),
         allowances: getText("allowances"),
       },
-      holidays: getText("holidays"),
-      social_insurance: {
-        national_pension: getText("social-pension") === "O",
-        health_insurance: getText("social-health") === "O",
-        employment_insurance: getText("social-employment") === "O",
-        industrial_accident_insurance: getText("social-accident") === "O",
-      },
-      termination: getText("termination"),
     }),
   }));
 

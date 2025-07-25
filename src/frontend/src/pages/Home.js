@@ -3,11 +3,12 @@ import "../styles/Home.css";
 import micIcon from "../images/mic_icon.png";
 import docIcon from "../images/doc_icon.png";
 import { useNavigate } from "react-router-dom";
-import { changePassword } from "../services/authApi"; // 또는 authApi로 교체 가능
-import { deleteAccount } from "../services/authApi"; // 또는 authApi
+import { changePassword } from "../services/authApiMock"; // 또는 authApi로 교체 가능
+import { deleteAccount } from "../services/authApiMock"; // 또는 authApi
 import { logout } from "../services/authApi"; 
-import { getContractList } from "../services/contractApi";
-import { initiateTranscription } from "../services/convertApi";
+import { getContractList } from "../services/contractApiMock";
+import { initiateTranscription } from "../services/convertApiMock";
+import "swiper/css";
 
 
 
@@ -25,8 +26,12 @@ function Home({ user }) {
   const [newPassword, setNewPassword] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
   
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-
+  const [sidebarVisible, setSidebarVisible] = useState(false);
+    
+  const toggleSidebar = () => {
+    setSidebarVisible((prev) => !prev);
+  };
+  
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
@@ -145,41 +150,33 @@ function Home({ user }) {
       console.error("다운로드 오류:", error);
     }
   };
+  
 
 
   return (
     <div className="home-container">
-      <div className="mobile-header">
-        <button className="hamburger" onClick={() => setSidebarOpen(true)}>☰</button>
-        <div
-          className="mobile-user"
-          onClick={() => setMenuOpen(!menuOpen)}  // ✅ 추가
-        >
-          {user?.username}님
-        </div>
-      </div>
-        {sidebarOpen && (
-        <div className="mobile-sidebar-overlay" onClick={() => setSidebarOpen(false)}>
-          <div className="mobile-sidebar" onClick={(e) => e.stopPropagation()}>
-            <h3 className="sidebar-title">계약서 작성 목록</h3>
-            <ul className="contract-list">
-              {contractList.map((item) => (
-                <li
-                  key={item.id}
-                  onClick={() => {
-                    navigate(`/download?contract_id=${item.id}`);
-                    setSidebarOpen(false); // 선택 시 닫기
-                  }}
-                >
-                  <span>{item.created_at.slice(0, 10)}</span> {item.contract_type}
-                </li>
-              ))}
-            </ul>
-            <button onClick={() => setSidebarOpen(false)}>닫기</button>
-          </div>
-        </div>
-        )}
 
+    {sidebarVisible && (
+      <div className="overlay-sidebar">
+        <aside className="modal-sidebar">
+          <button className="close-btn" onClick={toggleSidebar}>✖</button>
+          <h3 className="sidebar-title">계약서 작성 목록</h3>
+          <ul className="contract-list">
+            {contractList.map((item) => (
+              <li
+                key={item.id}
+                onClick={() => {
+                  navigate(`/download?contract_id=${item.id}`);
+                  setSidebarVisible(false);
+                }}
+              >
+                <span>{item.created_at.slice(0, 10)}</span> {item.contract_type}
+              </li>
+            ))}
+          </ul>
+        </aside>
+      </div>
+    )}
 
       <div className="user-info">
         {user && (
@@ -212,41 +209,38 @@ function Home({ user }) {
         )}
       </div>
 
-      <aside className="sidebar">
-        <h3 className="sidebar-title">계약서 작성 목록</h3>
-        <ul className="contract-list">
-          {contractList.map((item) => (
-            <li
-              key={item.id}
-              onClick={() => navigate(`/download?contract_id=${item.id}`)}
-              style={{ cursor: "pointer" }}
-            >
-              <span>{item.created_at.slice(0, 10)}</span> {item.contract_type}
-            </li>
-          ))}
-        </ul>
-      </aside>
 
-
-      <main className="main-area">
+      <main className={"main-area"}>
+        {/* 햄버거 메뉴 버튼 */}
+        <button className="toggle-sidebar-btn" onClick={toggleSidebar}>
+          ☰
+        </button>
         <header className="main-header">
           <h1>SMART CONTRACT</h1>
         </header>
 
-        <div className="record-box">
-          <p className="record-text">대화 내용의 녹음을 시작하거나 대화 내용 녹음 파일을 업로드해주세요</p>
-          <div className="record-icons">
-            <img src={micIcon} onClick={() => navigate("/recording")} alt="Mic" />
-            <img src={docIcon} onClick={handleUploadClick} alt="Doc" />
-            <input
-              type="file"
-              accept="audio/*"
-              ref={fileInputRef}
-              onChange={handleFileChange}
-              style={{ display: "none" }}
-            />
+        <div className="record-box-wrapper">
+          <div className="record-box">
+            <p className="record-text">녹음 시작</p>
+            <div className="record-icons">
+              <img src={micIcon} onClick={() => navigate("/recording")} alt="Mic" />
+            </div>
+          </div>
+          <div className="record-box">
+            <p className="record-text">녹음 파일 업로드</p>
+            <div className="record-icons">
+              <img src={docIcon} onClick={handleUploadClick} alt="Doc" />
+              <input
+                type="file"
+                accept="audio/*"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                style={{ display: "none" }}
+              />
+            </div>
           </div>
         </div>
+
 
         <hr style={{ margin: "40px 0", borderTop: "2px solid #ccc", width: "90%" }} />
 

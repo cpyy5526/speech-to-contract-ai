@@ -1,6 +1,7 @@
 
 .home-container {
   display: flex;
+  width: auto;
   height: 100vh;
   background-color: #f5f6f8;
   font-family: 'Noto Sans KR', sans-serif;
@@ -82,6 +83,7 @@
 
 .main-area {
   flex: 1;
+  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -94,12 +96,21 @@
   margin-bottom: 60px;
 }
 
+.record-box-wrapper {
+  display: flex;
+  justify-content: center; /* 가운데 정렬 (선택) */
+  gap: 40px; /* 박스 사이 간격 */
+  margin-top: 20px;
+  flex-wrap: wrap; /* 반응형 줄바꿈 허용 */
+  width: 100%;
+}
+
 
 .record-box {
   background-color: #eeeeee;
   border-radius: 10px;
   padding: 30px 40px;
-  width: 600px;
+  width: 20%;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -226,144 +237,6 @@
   transition: background-color 0.2s ease;
 }
 
-@media (min-width: 1033px) {
-  .mobile-header,
-  .mobile-sidebar-overlay {
-    display: none;
-  }
-}
-
-
-@media (max-width: 1032px) {
-  .home-container {
-    flex-direction: column;
-    height: auto;
-  }
-
-  .sidebar {
-    display: none;
-  }
-
-  .mobile-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 16px;
-    height: 50px;
-    background: white;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    z-index: 999;
-  }
-
-  .hamburger {
-  font-size: 20px;
-  padding: 6px;
-  }
-
-    .mobile-user {
-  font-size: 13px;
-  color: #333;
-  max-width: 70%;         /* ✅ 이름이 긴 경우 대비 */
-  overflow: hidden;        /* ✅ 넘치는 텍스트 잘라냄 */
-  text-overflow: ellipsis; /* ✅ 말줄임표 표시 */
-  white-space: nowrap;     /* ✅ 한 줄로 유지 */
-  text-align: right;
-  }
-
-  .mobile-sidebar-overlay {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100vw; height: 100vh;
-    background: rgba(0,0,0,0.3);
-    z-index: 998;
-    display: flex;
-    justify-content: flex-start;
-  }
-
-  .mobile-sidebar {
-    width: 260px;
-    background: white;
-    height: 100%;
-    padding: 20px;
-    box-shadow: 2px 0 6px rgba(0,0,0,0.1);
-    display: flex;
-    flex-direction: column;
-  }
-
-  .mobile-sidebar button.close-btn {
-    margin-top: auto;
-    background-color: #eee;
-    border: none;
-    padding: 8px;
-    font-size: 14px;
-    cursor: pointer;
-    border-radius: 4px;
-  }
-
-  .main-area {
-    width: auto;
-    padding: 70px 20px 20px; /* 모바일 헤더 공간 확보 */
-    align-items: center;
-  }
-
-  .record-box {
-    background-color: #eeeeee;
-    border-radius: 10px;
-    padding: 20px;
-    width: calc(100% - 32px); /* 좌우 여백 확보 */
-    margin: 0 auto;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 20px;
-    text-align: center;
-  }
-
-
-    .record-text {
-    font-size: 14px;
-    line-height: 1.6;
-    white-space: normal;
-    word-break: keep-all;
-  }
-
-  .record-icons {
-    display: flex;
-    flex-direction: row;  /* 가로로 나란히 */
-    justify-content: center;
-    gap: 20px;
-  }
-
-  .record-icons img {
-    width: 36px;
-    height: 36px;
-    cursor: pointer;
-  }
-
-    .user-info {
-    display: block;
-    position: fixed;
-    top: 50px;
-    right: 10px;
-    z-index: 1000;
-  }
-
-  .user-info .user-name {
-    display: none; /* 중복 사용자명 숨기기 */
-  }
-
-  .user-menu {
-    right: 0 !important;
-    top: 0 !important;
-    width: 120px;
-    background: white;
-    border: 1px solid #ccc;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    padding: 8px;
-    border-radius: 6px;
-  }
-}
 
 
 .section-divider {
@@ -418,3 +291,37 @@
   background-color: #5145cd;
 }
 
+/* 전체 사이드바를 감싸는 오버레이 */
+.overlay-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.2); /* 선택사항: 배경 어둡게 */
+}
+
+/* 실제 사이드바 */
+.modal-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 260px;
+  height: 100%;
+  background-color: #f3f4f5;
+  padding: 30px 20px;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.2);
+  overflow-y: auto;
+}
+
+/* 닫기 버튼 */
+.close-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+}
