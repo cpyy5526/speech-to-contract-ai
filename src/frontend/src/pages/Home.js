@@ -8,9 +8,6 @@ import { deleteAccount } from "../services/authApiMock"; // 또는 authApi
 import { logout } from "../services/authApi"; 
 import { getContractList } from "../services/contractApiMock";
 import { initiateTranscription } from "../services/convertApiMock";
-import "swiper/css";
-
-
 
 function Home({ user }) {
   const navigate = useNavigate();
