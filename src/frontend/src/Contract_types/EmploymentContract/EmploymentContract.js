@@ -21,10 +21,10 @@ const EmploymentContract = forwardRef(({ contract, suggestions }, ref) => {
 
   const pages = [
     <div className="page" key="page1">
-      <EmploymentPage1 ref={page1Ref} contract={contract} suggestions={suggestionMap} />
+      <EmploymentPage1 ref={page1Ref} contract={contract.contents} suggestions={suggestionMap} />
     </div>,
     <div className="page" key="page2">
-      <EmploymentPage2 ref={page2Ref} contract={contract} suggestions={suggestionMap} />
+      <EmploymentPage2 ref={page2Ref} contract={contract.contents} suggestions={suggestionMap} />
     </div>,
   ];
 
