@@ -38,6 +38,7 @@ const EmploymentPage1 = forwardRef(({ contract, suggestions }, ref) => {
         wage_amount: getText("wage-amount"),
         payment_date: getText("payment-date"),
         payment_method: getText("payment-method"),
+        allowances: getText("allowances"),
       },
       holidays: getText("holidays"),
       social_insurance: {
@@ -113,6 +114,8 @@ const EmploymentPage1 = forwardRef(({ contract, suggestions }, ref) => {
       <p className="contract-clause">금액: {renderField("wage-amount", contract.wage_details?.wage_amount, suggestions)}</p>
       <p className="contract-clause">지급일: {renderField("payment-date", contract.wage_details?.payment_date, suggestions)}</p>
       <p className="contract-clause">지급 방법: {renderField("payment-method", contract.wage_details?.payment_method, suggestions)}</p>
+      <p className="contract-clause">보조금: {renderField("allowances", contract.wage_details?.allowances, suggestions)}</p>
+
 
       <p className="section-title">5. 휴일 및 휴가</p>
       <p className="contract-clause">{renderField("holidays", contract.holidays, suggestions)}</p>
