@@ -125,8 +125,7 @@ const EmploymentPage1 = forwardRef(({ contract, suggestions }, ref) => {
         산재보험: {renderField("social-accident", contract.social_insurance?.industrial_accident_insurance ? "O" : "X", suggestions)}
       </p>
 
-      <p className="section-title">7. 해고 및 계약해지</p>
-      <p className="contract-clause">{renderField("termination", contract.termination, suggestions)}</p>
+     
     </>
   );
 });

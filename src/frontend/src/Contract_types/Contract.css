@@ -45,7 +45,14 @@
   font-size: 14px;
   text-indent: 1.5em;
   line-height: 1.8;
+
+  /* ✅ 추가: 줄바꿈 및 반응형 대응 */
+  white-space: normal;
+  word-break: break-word;
+  display: inline-block;
+  max-width: 100%;
 }
+
 
 /* 특약사항 박스 */
 .special-terms-box {
