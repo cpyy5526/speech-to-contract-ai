@@ -111,15 +111,6 @@ const EmploymentPage1 = forwardRef(({ contract, suggestions }, ref) => {
 
       <p className="section-title">5. 휴일 및 휴가</p>
       <p className="contract-clause">{renderField("holidays", contract.holidays, suggestions)}</p>
-
-      <p className="section-title">6. 4대 보험 가입 여부 (O/X)</p>
-      <p className="contract-clause">
-        국민연금: {renderField("social-pension", contract.social_insurance?.national_pension ? "O" : "X", suggestions)},
-        건강보험: {renderField("social-health", contract.social_insurance?.health_insurance ? "O" : "X", suggestions)},
-        고용보험: {renderField("social-employment", contract.social_insurance?.employment_insurance ? "O" : "X", suggestions)},
-        산재보험: {renderField("social-accident", contract.social_insurance?.industrial_accident_insurance ? "O" : "X", suggestions)}
-      </p>
-
      
     </>
   );
