@@ -178,7 +178,7 @@ function Contract_download() {
               ) : contract.contract_type === "도급" ? (
                 <ConstructionContract ref={contractComponentRef } contract={contract} suggestions={suggestions} />
               ) : contract.contract_type === "고용" ? (
-                <EmploymentContract ref={contractComponentRef } contract={contract.contents} suggestions={suggestions} />
+                <EmploymentContract ref={contractComponentRef } contract={contract} suggestions={suggestions} />
               ) : contract.contract_type === "교환" ? (
                 <ExchangeContract ref={contractComponentRef } contract={contract} suggestions={suggestions} />
               ) : contract.contract_type === "임대차" ? (
