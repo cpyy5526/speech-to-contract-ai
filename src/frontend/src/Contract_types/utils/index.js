@@ -1,6 +1,13 @@
 export const buildSuggestionMap = (suggestions, pathToClassFn) => {
   const suggestionMap = {};
-  suggestions.forEach(({ field_path, suggestion_text }) => {
+
+  const baseSuggestions = [
+    { field_path: "contract-date", suggestion_text: "날짜를 입력해주세요" },
+  ];
+
+  const allSuggestions = [...baseSuggestions, ...suggestions];
+
+  allSuggestions.forEach(({ field_path, suggestion_text }) => {
     const className = pathToClassFn(field_path);
     if (className) suggestionMap[className] = suggestion_text;
   });
