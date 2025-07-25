@@ -14,7 +14,6 @@ export const buildSuggestionMap = (suggestions, pathToClassFn) => {
   return suggestionMap;
 };
 
-
 export const renderField = (className, content, suggestionMap = {}) => {
   const suggestion = suggestionMap[className];
   const isPlaceholder = !content || content === "________";
@@ -34,7 +33,6 @@ export const renderField = (className, content, suggestionMap = {}) => {
       el.dataset.suggestion = "false";
       el.style.color = "#000";
 
-      // 커서 맨 끝으로 이동
       const range = document.createRange();
       const sel = window.getSelection();
       range.selectNodeContents(el);
@@ -53,6 +51,13 @@ export const renderField = (className, content, suggestionMap = {}) => {
     }
   };
 
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault(); // 줄바꿈 방지
+      e.currentTarget.blur(); // 입력 종료
+    }
+  };
+
   return (
     <span
       className={className}
@@ -62,9 +67,11 @@ export const renderField = (className, content, suggestionMap = {}) => {
       data-suggestion={isPlaceholder ? "true" : "false"}
       onInput={handleInput}
       onBlur={handleBlur}
+      onKeyDown={handleKeyDown}
     >
       {typeof displayText === "string" ? displayText : String(displayText)}
     </span>
   );
 };
+
 
