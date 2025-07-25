@@ -24,6 +24,7 @@
   border-collapse: collapse;
   margin-bottom: 24px;
   font-size: 14px;
+  table-layout: fixed; /* 셀 너비 고정 */
 }
 
 .contract-table td {
