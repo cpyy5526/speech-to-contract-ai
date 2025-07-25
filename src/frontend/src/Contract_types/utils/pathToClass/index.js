@@ -8,14 +8,14 @@ import construction from "./Construction";
 import usageLoan from "./UsageLoan";
 
 const pathMap = {
-  "증여 계약": gift,
-  "임대차 계약": lease,
-  "금전 대여 계약": loan,
-  "매매 계약": sale,
-  "교환 계약": exchange,
+  "증여": gift,
+  "임대차": lease,
+  "소비대차": loan,
+  "매매": sale,
+  "교환": exchange,
   "고용": employment,
-  "공사 계약": construction,
-  "사용대차 계약": usageLoan,
+  "도급": construction,
+  "사용대차": usageLoan,
 };
 
 /**

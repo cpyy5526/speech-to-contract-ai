@@ -124,11 +124,26 @@ function Home({ user }) {
   }, []);
   
 
-  const handleDownload = (fileName) => {
-    const link = document.createElement("a");
-    link.href = `/contractForms/${fileName}`;
-    link.download = fileName;
-    link.click();
+  const handleDownload = async (fileName) => {
+    try {
+      const response = await fetch(`/contractForms/${fileName}`);
+      if (!response.ok) {
+        throw new Error("파일 다운로드 실패");
+      }
+  
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+  
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = fileName;
+      link.click();
+  
+      window.URL.revokeObjectURL(url); // 메모리 해제
+    } catch (error) {
+      alert("파일을 다운로드할 수 없습니다.");
+      console.error("다운로드 오류:", error);
+    }
   };
 
 
