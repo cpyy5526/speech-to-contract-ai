@@ -17,13 +17,15 @@ export const buildSuggestionMap = (suggestions, pathToClassFn) => {
 
 export const renderField = (className, content, suggestionMap = {}) => {
   const suggestion = suggestionMap[className];
-  const isEmptyContent = !content || content === "________";
+  const isPlaceholder = !content || content === "________";
   const displayText = !content ? suggestion || "________" : content;
   const style = !content
     ? suggestion
       ? { color: "#888" }
       : { color: "#ccc" }
-    : {};
+    : content === "________"
+      ? { color: "#ccc" }
+      : {};
 
   const handleInput = (e) => {
     const el = e.currentTarget;
@@ -32,6 +34,7 @@ export const renderField = (className, content, suggestionMap = {}) => {
       el.dataset.suggestion = "false";
       el.style.color = "#000";
 
+      // 커서 맨 끝으로 이동
       const range = document.createRange();
       const sel = window.getSelection();
       range.selectNodeContents(el);
@@ -41,14 +44,24 @@ export const renderField = (className, content, suggestionMap = {}) => {
     }
   };
 
+  const handleBlur = (e) => {
+    const el = e.currentTarget;
+    if (el.innerText.trim() === "") {
+      el.innerText = "________";
+      el.dataset.suggestion = "true";
+      el.style.color = "#ccc";
+    }
+  };
+
   return (
     <span
       className={className}
       contentEditable
       suppressContentEditableWarning
       style={style}
-      data-suggestion={isEmptyContent && suggestion ? "true" : "false"}
+      data-suggestion={isPlaceholder ? "true" : "false"}
       onInput={handleInput}
+      onBlur={handleBlur}
     >
       {typeof displayText === "string" ? displayText : String(displayText)}
     </span>
