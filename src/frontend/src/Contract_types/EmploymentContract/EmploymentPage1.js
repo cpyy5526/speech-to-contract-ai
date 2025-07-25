@@ -13,7 +13,7 @@ const EmploymentPage1 = forwardRef(({ contract, suggestions }, ref) => {
         contact: getText("employer-contact"),
       },
       employee: {
-        name: getText("employee.name"),
+        name: getText("employee-name"),
         resident_number: getText("employee-id"),
         address: getText("employee-address"),
         contact: getText("employee-contact"),
@@ -86,7 +86,7 @@ const EmploymentPage1 = forwardRef(({ contract, suggestions }, ref) => {
         <tbody>
           <tr>
             <td className="gray">성명</td>
-            <td>{renderField("employee.name", contract.employee?.name, suggestions)}</td>
+            <td>{renderField("employee-name", contract.employee?.name, suggestions)}</td>
             <td className="gray">주민등록번호</td>
             <td>{renderField("employee-id", contract.employee?.resident_number, suggestions)}</td>
           </tr>

@@ -22,6 +22,8 @@ import LoanContract from "../Contract_types/LoanContract/LoanContract";
 import SaleContract from "../Contract_types/SaleContract/SaleContract";
 import UsageLoanContract from "../Contract_types/UsageLoanContract/UsageLoanContract";
 
+// 예: Home.jsx, Recording.jsx 등
+import { toast } from "react-toastify";
 
 
 function Contract_download() {
@@ -82,7 +84,7 @@ function Contract_download() {
     try {
     const edited = contractComponentRef.current.extract();
       await updateContractContent(contractId, edited);
-      window.location.reload();
+      toast.success("✅ 계약서가 저장되었습니다.");
     } catch (err) {
       console.error("❌ 저장 실패:", err);
     }
@@ -121,7 +123,7 @@ function Contract_download() {
 
     try {
       await restoreContract(contractId);
-      alert("복구 완료");
+      toast.success("복구 완료");
       fetchContract();
     } catch (err) {
       console.error("❌ 복구 실패:", err.response?.data?.detail || err.message);
@@ -133,7 +135,7 @@ function Contract_download() {
 
     try {
       await deleteContract(contractId);
-      alert("✅ 계약서가 삭제되었습니다.");
+      toast.success("✅ 계약서가 삭제되었습니다.");
       setContractList((prevList) => prevList.filter(item => item.id !== contractId));
       setContract(null);
       navigate("/download");

@@ -1,24 +1,33 @@
 import React, { useEffect, useState } from "react";
-import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useNavigate,
+  useLocation,
+} from "react-router-dom";
+
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Home from "./pages/Home";
 import Recording from "./pages/Recording";
 import Converting from "./pages/Converting";
-import Generating from "./pages/Contract_generate"
+import Generating from "./pages/Contract_generate";
 import Download from "./pages/Contract_download";
-import { getCurrentUser } from "./services/authApiMock";  // ✅ axios 방식 반영
 import Reset from "./pages/Reset_password";
 
+import { getCurrentUser } from "./services/authApi"; // ✅ axios 방식 반영
 
-//  로그인 확인 컴포넌트
+// ✅ toast 추가
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
+// 로그인 확인 컴포넌트
 function AppWithAuthCheck() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
-
 
   useEffect(() => {
     const checkLogin = async () => {
@@ -28,11 +37,10 @@ function AppWithAuthCheck() {
       }
 
       try {
-        const userData = await getCurrentUser(); // ✅ Axios 사용
+        const userData = await getCurrentUser();
         setUser(userData);
       } catch (err) {
         console.error("로그인 체크 실패:", err);
-        // 이미 authApi에서 처리함
       } finally {
         setLoading(false);
       }
@@ -44,18 +52,22 @@ function AppWithAuthCheck() {
   if (loading) return <p>Loading...</p>;
 
   return (
-    <Routes>
-      <Route path="/" element={<Login />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/signup" element={<Signup />} />
-      <Route path="/reset" element={<Reset />} />
-      <Route path="/home" element={<Home user={user} />} />
-      <Route path="/recording" element={<Recording user={user} />} />
-      <Route path="/reset" element={<Reset />} />
-      <Route path="/converting" element={<Converting user={user} />} />
-      <Route path="/generating" element={<Generating user={user} />} />
-      <Route path="/download" element={<Download user={user} />} />
-    </Routes>
+    <>
+      <Routes>
+        <Route path="/" element={<Login />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/reset" element={<Reset />} />
+        <Route path="/home" element={<Home user={user} />} />
+        <Route path="/recording" element={<Recording user={user} />} />
+        <Route path="/converting" element={<Converting user={user} />} />
+        <Route path="/generating" element={<Generating user={user} />} />
+        <Route path="/download" element={<Download user={user} />} />
+      </Routes>
+
+      {/* ✅ 전역 알림용 ToastContainer 추가 */}
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop={false} />
+    </>
   );
 }
 
@@ -84,4 +96,3 @@ function App() {
 }
 
 export default App;
-

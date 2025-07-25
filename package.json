@@ -1,5 +1,6 @@
 {
   "dependencies": {
-    "react-swipeable": "^7.0.2"
+    "react-swipeable": "^7.0.2",
+    "react-toastify": "^11.0.5"
   }
 }
