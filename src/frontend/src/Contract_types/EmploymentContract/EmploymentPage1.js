@@ -58,7 +58,7 @@ const EmploymentPage1 = forwardRef(({ contract, suggestions }, ref) => {
   return (
     <>
       <h1 className="contract-main-title">{renderField("contract-main-title", contract.contract_type, suggestions)}</h1>
-      <p className="contract-date">{renderField("contract-date", contract.contract_date, suggestions)}</p>
+      <p className="contract-date">{renderField("contract-date", contract.contract_date, "날짜을 입력해주세요")}</p>
 
       <p className="section-title">1. 사업주 정보</p>
       <table className="contract-table">
