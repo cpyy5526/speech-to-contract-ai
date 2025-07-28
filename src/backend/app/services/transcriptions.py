@@ -43,8 +43,41 @@ async def register_upload(
         logger.error("업로드 세션 등록 중 DB 오류: user_id=%s", user_id, exc_info=True)
         raise HTTPException(status_code=500, detail="Unexpected server error")
     
+
+    '''
+    # ========================= 실제 배포용 (시작) ========================
     upload_url = f"{settings.UPLOAD_BASE_URL}/upload/audio/{transcription.audio_file}"
     return UploadInitResponse(upload_url=upload_url)
+    # ========================= 실제 배포용(끝) =========================
+    '''
+
+    # ========================= 사내 시연용 (시작) ========================
+    import socket, requests
+
+    # 1. 서버 내부 ip 얻기
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(('8.8.8.8', 80))
+        internal_ip = s.getsockname()[0]
+    except Exception: internal_ip = '127.0.0.1'
+    finally: s.close()
+
+    # 2. ngrok 8080 터널 주소 얻기
+    try:
+        resp = requests.get("http://127.0.0.1:4040/api/tunnels/ngrok-http-8080", timeout=1)
+        data = resp.json()
+        public_url = data.get("public_url")
+    except Exception: pass
+
+    # 3. upload_url 조합
+    internal_upload_url = f"http://{internal_ip}:8080/upload/audio/{transcription.audio_file}"
+    external_upload_url = f"{public_url}/upload/audio/{transcription.audio_file}" if public_url else ""
+
+    return UploadInitResponse(
+        internal_upload_url=internal_upload_url,
+        external_upload_url=external_upload_url,
+    )
+    # ========================= 사내 시연용 (끝) =========================
 
 
 async def trigger_transcription(transcription_id: UUID, session: AsyncSession) -> None:
