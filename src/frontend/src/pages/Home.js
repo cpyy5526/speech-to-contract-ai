@@ -229,7 +229,6 @@ function Home({ user }) {
               <img src={docIcon} onClick={handleUploadClick} alt="Doc" />
               <input
                 type="file"
-                accept="audio/*"
                 ref={fileInputRef}
                 onChange={handleFileChange}
                 style={{ display: "none" }}
