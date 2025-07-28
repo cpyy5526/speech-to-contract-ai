@@ -11,7 +11,11 @@ export async function initiateTranscription(filename) {
     const response = await api.post("/transcription/initiate", { filename });
 
     if (response.status === 202) {
-      return response.data.upload_url;
+      // 실제 배포용
+      // return response.data.upload_url;
+
+      // 사내 시연용
+      return response.data;
     }
   } catch (error) {
     const status = error.response?.status;
@@ -48,16 +52,46 @@ export async function initiateTranscription(filename) {
  */
 export async function uploadAudioFile(uploadUrl, audioBlob) {
   try {
-    const response = await fetch(uploadUrl, {
+    // 실제 배표용
+    // const response = await fetch(uploadUrl, {
+    //   method: "PUT",
+    //   headers: {
+    //     "Content-Type": "application/octet-stream",
+    //   },
+    //   body: audioBlob,
+    // });
+
+    // 사내 시연용 (시작)
+    const response = await fetch(uploadUrl.internal_upload_url, {
       method: "PUT",
       headers: {
         "Content-Type": "application/octet-stream",
       },
       body: audioBlob,
     });
+    
+    const status_internal = response.status;
+    if (status_internal === 202) return
+    // 사내 시연용 (끝)
 
-    const status = response.status;
+    // 실제 배포용
+    // const status = response.status;
+    // if (status === 202) return
+    
+    // 사내 시연용 (시작)
+    const response_external = await fetch(uploadUrl.external_upload_url, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/octet-stream",
+      },
+      body: audioBlob,
+    });
+        
+    const status = response_external.status;
     if (status === 202) return
+    // 사내 시연용 (끝)
+
+
     let detail = "응답 없음";
 
     try {
@@ -66,6 +100,8 @@ export async function uploadAudioFile(uploadUrl, audioBlob) {
     } catch {
       // JSON 파싱 실패는 무시
     }
+
+    
 
     if (status === 400) {
       if (detail === "Invalid or expired upload_url") {
