@@ -118,7 +118,11 @@ function Recording() {
         }
 
         const result = await initiateTranscription(filename);
-        const uploadUrl = result.upload_url;
+        // 사내 시연용
+        const uploadUrl = result;
+
+        // 실제 배포용
+        // const uploadUrl = result.upload_url;
 
         // Converting 페이지로 uploadUrl과 audioBlob 전달
         navigate("/converting", { state: { uploadUrl, audioBlob, filename } });
