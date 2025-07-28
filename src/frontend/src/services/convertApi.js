@@ -61,34 +61,37 @@ export async function uploadAudioFile(uploadUrl, audioBlob) {
     //   body: audioBlob,
     // });
 
-    // 사내 시연용 (시작)
-    const response = await fetch(uploadUrl.internal_upload_url, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/octet-stream",
-      },
-      body: audioBlob,
-    });
-    
-    const status_internal = response.status;
-    if (status_internal === 202) return
-    // 사내 시연용 (끝)
-
     // 실제 배포용
     // const status = response.status;
     // if (status === 202) return
     
     // 사내 시연용 (시작)
-    const response_external = await fetch(uploadUrl.external_upload_url, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/octet-stream",
-      },
-      body: audioBlob,
-    });
-        
-    const status = response_external.status;
-    if (status === 202) return
+    const isHttps = window.location.protocol === "https:";
+
+    let response, status;
+
+    if (isHttps) {
+      response = await fetch(uploadUrl.external_upload_url, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/octet-stream",
+        },
+        body: audioBlob,
+      });
+      status = response.status;
+      if (status === 202) return;
+    }
+    else {
+      response = await fetch(uploadUrl.internal_upload_url, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/octet-stream",
+        },
+        body: audioBlob,
+      });
+      status = response.status;
+      if (status === 202) return;
+    }
     // 사내 시연용 (끝)
 
 
