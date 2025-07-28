@@ -195,7 +195,7 @@ function Recording() {
             {isStopped && (
               <>
                 <button className="stop-btn" onClick={startRecording}>🔁 재시작</button>
-                <button className="finish-btn" onClick={handleFinish}>✅ 텍스트로 변환하기</button>
+                <button className="finish-btn" onClick={handleFinish}>✅ 계약서 생성하기</button>
               </>
             )}
           </>
